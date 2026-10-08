@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "text-slop": {
+      "source": "./.agents/skills/text-slop",
+      "sourceType": "local",
+      "computedHash": "f875b6ea1f2a629f135d7174e2ac914137b2a2febb56657923de2b95778c80d9"
+    }
+  }
+}

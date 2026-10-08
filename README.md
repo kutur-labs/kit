@@ -1,12 +1,10 @@
 # Kutur Kit
 
-Composable, Effect-native building blocks for modern applications.
-
-The repository currently contains the pnpm/Turborepo workspace bootstrap. Library implementations are planned in [DRAFT_SPEC.md](./DRAFT_SPEC.md).
+TypeScript libraries and tooling built around Effect.
 
 ## Development
 
-Use Node.js 24.21.0 (pinned in `.node-version`) and the exact pnpm version in `package.json`. With fnm, run `fnm install` and `fnm use` from the repository root first.
+Use the Node.js version in `.node-version` and pnpm version in `package.json`.
 
 ```sh
 pnpm install
@@ -14,8 +12,13 @@ pnpm build
 pnpm check
 ```
 
-`pnpm dev` starts package development tasks. `pnpm lint`, `pnpm typecheck` and `pnpm test` run individual checks. These commands run package scripts as packages are added; the initial workspace has no package tasks yet.
+Use `pnpm format` and `pnpm lint:fix` to apply fixes.
 
-Libraries live in `packages/`, applications in `apps/`, runnable examples in `examples/` and repository tooling in `tooling/`.
+Installation patches TypeScript and Oxlint for Effect diagnostics. Run `pnpm prepare` if install scripts were skipped. Use the workspace TypeScript SDK in your editor.
 
-See [AGENTS.md](./AGENTS.md) for dependency placement, exact version pins and named catalog conventions. CI and reproducible installs should use `pnpm install --frozen-lockfile`.
+## Packages
+
+- [@kutur-kit/tsconfig](./packages/tsconfig/README.md): TypeScript and Effect presets.
+- [@kutur-kit/oxc](./packages/oxc/README.md): Oxlint rules and Oxfmt configuration.
+
+See [AGENTS.md](./AGENTS.md) for repository conventions.

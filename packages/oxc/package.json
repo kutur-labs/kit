@@ -1,0 +1,78 @@
+{
+  "name": "@kutur-kit/oxc",
+  "version": "0.0.0",
+  "description": "Oxlint and Oxfmt presets for TypeScript, with optional Effect rules.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/oxc"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    "./base": "./src/base.ts",
+    "./effect": "./src/effect.ts",
+    "./format": "./src/format.ts",
+    "./anti-slop": "./src/anti-slop.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      "./base": {
+        "types": "./dist/base.d.ts",
+        "default": "./dist/base.js"
+      },
+      "./effect": {
+        "types": "./dist/effect.d.ts",
+        "default": "./dist/effect.js"
+      },
+      "./format": {
+        "types": "./dist/format.d.ts",
+        "default": "./dist/format.js"
+      },
+      "./anti-slop": {
+        "types": "./dist/anti-slop.d.ts",
+        "default": "./dist/anti-slop.js"
+      }
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsc -p tsconfig.build.json",
+    "lint:package": "publint --pack pnpm --strict",
+    "prepack": "pnpm run build",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@oxlint/plugins": "catalog:runtime"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "catalog:tooling",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@types/node": "catalog:tooling",
+    "oxfmt": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "oxlint-tsgolint": "catalog:tooling",
+    "publint": "catalog:tooling",
+    "typescript": "catalog:tooling"
+  },
+  "peerDependencies": {
+    "@effect/tsgo": "catalog:peers",
+    "oxfmt": "catalog:peers",
+    "oxlint": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@effect/tsgo": {
+      "optional": true
+    },
+    "oxlint": {
+      "optional": true
+    },
+    "oxfmt": {
+      "optional": true
+    }
+  }
+}

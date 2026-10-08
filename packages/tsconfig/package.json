@@ -1,0 +1,29 @@
+{
+  "name": "@kutur-kit/tsconfig",
+  "version": "0.0.0",
+  "description": "Strict TypeScript presets with optional Effect diagnostics.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/tsconfig"
+  },
+  "files": [
+    "base.json",
+    "effect.json"
+  ],
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./effect.json": "./effect.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "lint:package": "publint --pack pnpm --strict"
+  },
+  "devDependencies": {
+    "publint": "catalog:tooling"
+  }
+}

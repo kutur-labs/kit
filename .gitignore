@@ -48,6 +48,7 @@ playwright-report/
 *.sqlite3-journal
 
 # Logs and temporary files
+scratchpad/
 *.log
 tmp/
 temp/

@@ -1,0 +1,9 @@
+{
+  "extends": "@kutur-kit/tsconfig/effect.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src/**/*.ts"]
+}

@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/@effect/tsgo/schema.json",
+  "extends": "@kutur-kit/tsconfig/effect.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostics": false
+      }
+    ],
+    "types": ["node"]
+  },
+  "include": ["*.config.ts"]
+}

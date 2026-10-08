@@ -1,49 +1,43 @@
-# Repository guidance
+# Kutur Kit
 
-Kutur Kit is a collection of independent, composable Effect-native TypeScript libraries. See `DRAFT_SPEC.md` for the proposed architecture and roadmap; it does not describe completed functionality.
+## Dependencies
 
-## Package management
+- Use pnpm at the version in `packageManager`. Use `.node-version` for development and CI; keep `engines.node` in sync. Published packages declare their tested Node versions separately.
+- Keep external versions in `pnpm-workspace.yaml`; manifests use `catalog:<name>`. Use exact versions except for published peer dependency ranges.
+- Use `workspace:*` for local dependencies and `workspace:^` for local peers.
+- Add catalog entries when a package needs them. Run `pnpm install` after dependency changes and use `--frozen-lockfile` in CI.
+- Use `pnpm exec` for installed tools or `pnpm dlx <tool>@<exact-version>` for one-off tools.
+- Manage agent skills with `pnpm exec skills` ([skills.sh](https://skills.sh)); keep `skills-lock.json` updated.
 
-- Use the exact Node.js version in `.node-version` for development and CI. Keep the root `engines.node` pin in sync; prefer the latest patch of an LTS line. Published libraries should declare their own tested runtime compatibility ranges rather than copying the repository's development pin.
-- Always use pnpm. Use the exact version pinned in the root `packageManager` field. Do not use npm, Yarn, Bun's package manager or alternate lockfiles.
-- Keep `pnpm-lock.yaml` in version control. Run `pnpm install` after manifest or catalog changes and `pnpm install --frozen-lockfile` for reproducible verification and CI.
-- Centralize external dependency versions in `pnpm-workspace.yaml`. Package manifests must reference `catalog:<name>` instead of repeating external versions.
-- Pin installed dependencies to exact versions, including prereleases. Do not use `latest`, `*`, caret or tilde ranges for runtime, tooling, testing or example installs.
-- Peer compatibility ranges are the deliberate exception: they describe supported consumer versions, not the version installed for development.
-- Use `workspace:*` for local runtime/dev dependencies and `workspace:^` for local peer compatibility. Do not use relative `file:` links or registry versions to consume another workspace package.
-- Use `pnpm exec` for installed tools. If a one-off tool is necessary, use `pnpm dlx <tool>@<exact-version>`.
+| Catalog    | Use                                                             |
+| ---------- | --------------------------------------------------------------- |
+| `runtime`  | Runtime dependencies and pinned development copies of peers     |
+| `tooling`  | Build, compiler, lint and format tools in `devDependencies`     |
+| `testing`  | Test-only tools in `devDependencies`                            |
+| `examples` | Example-only dependencies; reuse `runtime` for shared libraries |
+| `peers`    | Tested consumer compatibility ranges in `peerDependencies`      |
 
-## Catalogs and dependency ownership
+Declare dependencies in the package that imports them. Put build and test tools in `devDependencies`. Libraries use peers for dependencies supplied by consumers, with pinned development copies for checks. Mark a peer optional only if core imports work without it. Apps and examples install required peers themselves. Test compatibility before widening peer ranges.
 
-Create named catalogs only when they have a consumer. The catalog chooses a version; the manifest field determines dependency ownership.
+## Workspace and checks
 
-| Catalog | Contents | Manifest usage |
-| --- | --- | --- |
-| `runtime` | Exact versions of runtime libraries and local development copies of peers | `dependencies`, or `devDependencies` when testing a peer |
-| `tooling` | Exact versions of compilers, linters, formatters and build tools | `devDependencies` |
-| `testing` | Exact versions of test runners, coverage tools and test-only helpers | `devDependencies` |
-| `examples` | Exact versions of dependencies used only by demos or example apps | Example `dependencies` or `devDependencies`, according to use |
-| `peers` | Intentional, tested compatibility ranges for consumer-provided libraries | Published library `peerDependencies` only |
+- Publish ESM only, with `type: module` and explicit package exports. Keep `types` first in conditional exports. Test packed packages outside the workspace before changing exports or build output.
+- Put public packages in `packages/` and private workspaces in `apps/`, `examples/` or `tooling/`.
+- Put disposable scripts, experiments and archives in ignored `scratchpad/`. Keep them out of the workspace. Use a package-local scratchpad when it needs that package's dependencies.
+- Package scripts run tools; root scripts use Turbo for tasks across packages. Use `build`, `dev`, `lint`, `typecheck` and `test`; `test` must exit without watching.
+- Declare generated files in Turbo `outputs`. Use `^build` for tasks that consume built dependencies. Keep `$TURBO_DEFAULT$` when adding inputs and include config files and environment variables that affect the task. Disable caching for tasks that publish, deploy or otherwise change external state.
+- Run `pnpm build` and `pnpm check` for code/config changes. Use `pnpm format` to format.
 
-- A library's `dependencies` contain what its implementation needs at runtime. Keep test tools, example frameworks and development tooling out of published runtime dependencies.
-- Use `peerDependencies` for ecosystem packages the consumer must provide, such as Effect when it is part of the public API. Also declare an exact development copy via `catalog:runtime` in that library's `devDependencies` so it can build and test independently.
-- Mark a peer optional in `peerDependenciesMeta` only when its integration is genuinely optional. Core imports must work without it.
-- Examples and apps are private consumers. They declare their actual runtime dependencies in `dependencies`, including the peers required by the libraries they use. Reuse `catalog:runtime` for shared libraries; use `catalog:examples` only for example-only dependencies rather than duplicating versions.
-- Tests and fixtures use their owning package's `devDependencies` and `catalog:testing`. A standalone test workspace must be private and declare its own dependencies.
-- Declare a tool in each package that invokes it. The root holds repository-wide orchestration tools, not dependencies that packages silently borrow.
-- Do not widen peer ranges beyond verified compatibility or use an exact runtime catalog pin as a published peer range. Use distinct named peer catalogs if packages intentionally support different compatibility lines.
+## Comments and docs
 
-To add a dependency, first add its exact version (or peer compatibility range) to the appropriate catalog, then add `"<dependency>": "catalog:<name>"` to the owning manifest and run `pnpm install`. `catalogMode: strict` helps `pnpm add` use catalogs, but does not replace review of manually edited manifests.
+- Explain constraints and decisions in comments; do not restate the code. Preserve useful issue links.
+- Package READMEs cover usage, requirements and limitations. Omit promotional claims and monorepo workflow details.
 
-## Workspace and tasks
+## Effect tooling
 
-- `packages/*`: publishable `@kutur-kit/*` libraries and shared configurations.
-- `apps/*`: private applications, including documentation.
-- `examples/*`: private, independently runnable examples.
-- `tooling/*`: private repository tooling packages.
-- Use one package per direct child directory. Add packages when implementing them; do not create empty publishable stubs.
-- Package scripts run their own tools; root scripts orchestrate them through Turbo. Never call the root Turbo wrapper from a package task.
-- Use `build`, `dev`, `lint`, `typecheck` and `test` consistently. Tests used by `pnpm test` must finish rather than enter watch mode.
-- Default builds emit to `dist/`. Override Turbo outputs in package configuration when a framework uses another output directory.
-- Keep Turbo cache inputs and environment declarations accurate. Add package-specific environment inputs as integrations are introduced. Tasks with external side effects or live-service tests must not be cached.
-- Run `pnpm build` and `pnpm check` for implemented packages affected by a change. With no package implementations yet, these commands validate orchestration but run no package tasks.
+- Check Effect APIs against installed types or source for the version in use.
+- Extend `@kutur-kit/tsconfig/effect.json`; set output options and paths in each package. Use `@kutur-kit/oxc/effect` and `@kutur-kit/oxc/format`. Keep the base and format presets usable without Effect tooling.
+- TypeScript 7 uses `@effect/tsgo`; the plugin key remains `@effect/language-service`. Root `prepare` patches TypeScript and Oxlint. Upgrade TypeScript, Oxlint, oxlint-tsgolint and @effect/tsgo as a compatible set.
+- Vendored anti-slop rules are in `packages/oxc/src/vendor/anti-slop`; see its `UPSTREAM.md` before updating. Pin `@oxlint/plugins` to the same version as Oxlint.
+- Use the workspace native TypeScript server. Keep compiler Effect diagnostics enabled; editor overrides may disable duplicates when Oxlint supplies them. See package READMEs for setup.
+- If using the local Effect checkout at `~/.local/share/effect-solutions/effect`, check out the tag matching the dependency version. Builds must not depend on this checkout.

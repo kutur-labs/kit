@@ -10,7 +10,14 @@
       "persistent": true
     },
     "lint": {
-      "outputs": []
+      "outputs": [],
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/oxlint.config.ts",
+        "$TURBO_ROOT$/tsconfig.json",
+        "$TURBO_ROOT$/packages/oxc/src/vendor/anti-slop/**"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -18,7 +25,21 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": []
+    },
+    "//#lint:repo": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "//#typecheck:repo": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "lint:package": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml", "$TURBO_ROOT$/.gitignore"],
+      "outputs": []
     }
-  }
+  },
+  "globalDependencies": [".node-version"]
 }

@@ -4,18 +4,32 @@ packages:
   - examples/*
   - tooling/*
 
-# Keep installed dependency versions exact and centrally managed.
-savePrefix: ''
+# Pin dependency versions in catalogs.
+savePrefix: ""
 catalogMode: strict
 catalogPrune: true
 engineStrict: true
 
-# Each package must supply its own development/test copies of peers.
+# Require each package to install its own peers for development and tests.
 autoInstallPeers: false
 strictPeerDependencies: true
 resolvePeersFromWorkspaceRoot: false
 
-# Add runtime, testing, examples and peers catalogs as needed; see AGENTS.md.
+# Catalog usage is documented in AGENTS.md.
 catalogs:
+  runtime:
+    "@oxlint/plugins": 1.87.0
   tooling:
     turbo: 2.11.7
+    typescript: 7.0.2
+    "@effect/tsgo": 0.51.1
+    oxlint: 1.87.0
+    oxlint-tsgolint: 7.0.2003
+    oxfmt: 0.72.0
+    publint: 0.3.25
+    skills: 1.7.1
+    "@types/node": 24.19.1
+  peers:
+    "@effect/tsgo": ~0.51.1
+    oxlint: ~1.87.0
+    oxfmt: ~0.72.0
