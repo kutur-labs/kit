@@ -9,20 +9,19 @@
 - Use `pnpm exec` for installed tools or `pnpm dlx <tool>@<exact-version>` for one-off tools.
 - Manage agent skills with `pnpm exec skills` ([skills.sh](https://skills.sh)); keep `skills-lock.json` updated.
 
-| Catalog    | Use                                                             |
-| ---------- | --------------------------------------------------------------- |
-| `runtime`  | Runtime dependencies and pinned development copies of peers     |
-| `tooling`  | Build, compiler, lint and format tools in `devDependencies`     |
-| `testing`  | Test-only tools in `devDependencies`                            |
-| `examples` | Example-only dependencies; reuse `runtime` for shared libraries |
-| `peers`    | Tested consumer compatibility ranges in `peerDependencies`      |
+| Catalog   | Use                                                         |
+| --------- | ----------------------------------------------------------- |
+| `runtime` | Runtime dependencies and pinned development copies of peers |
+| `tooling` | Build, compiler, lint and format tools in `devDependencies` |
+| `testing` | Test-only tools in `devDependencies`                        |
+| `peers`   | Tested consumer compatibility ranges in `peerDependencies`  |
 
-Declare dependencies in the package that imports them. Put build and test tools in `devDependencies`. Libraries use peers for dependencies supplied by consumers, with pinned development copies for checks. Mark a peer optional only if core imports work without it. Apps and examples install required peers themselves. Test compatibility before widening peer ranges.
+Declare dependencies in the package that imports them. Put build and test tools in `devDependencies`. Libraries use peers for dependencies supplied by consumers, with pinned development copies for checks. Mark a peer optional only if core imports work without it. Apps install required peers themselves. Test compatibility before widening peer ranges.
 
 ## Workspace and checks
 
 - Publish ESM only, with `type: module` and explicit package exports. Keep `types` first in conditional exports. Test packed packages outside the workspace before changing exports or build output.
-- Put public packages in `packages/` and private workspaces in `apps/`, `examples/` or `tooling/`.
+- Put public packages in `packages/` and private workspaces in `apps/` or `tooling/`.
 - Put disposable scripts, experiments and archives in ignored `scratchpad/`. Keep them out of the workspace. Use a package-local scratchpad when it needs that package's dependencies.
 - Package scripts run tools; root scripts use Turbo for tasks across packages. Use `build`, `dev`, `lint`, `typecheck` and `test`; `test` must exit without watching.
 - Declare generated files in Turbo `outputs`. Use `^build` for tasks that consume built dependencies. Keep `$TURBO_DEFAULT$` when adding inputs and include config files and environment variables that affect the task. Disable caching for tasks that publish, deploy or otherwise change external state.

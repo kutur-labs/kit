@@ -5,6 +5,19 @@ import { defineConfig } from "oxlint";
 export default defineConfig({
   extends: [effect, antiSlop],
   options: { typeAware: true, maxWarnings: 0 },
+  rules: {
+    "no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            regex: "(^|/)examples?(/|$)",
+            message: "Do not import examples. Import library code or test fixtures instead.",
+          },
+        ],
+      },
+    ],
+  },
   ignorePatterns: [
     "**/dist/**",
     "**/coverage/**",
