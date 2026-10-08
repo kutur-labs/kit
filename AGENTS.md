@@ -28,6 +28,12 @@ Declare dependencies in the package that imports them. Put build and test tools 
 - Declare generated files in Turbo `outputs`. Use `^build` for tasks that consume built dependencies. Keep `$TURBO_DEFAULT$` when adding inputs and include config files and environment variables that affect the task. Disable caching for tasks that publish, deploy or otherwise change external state.
 - Run `pnpm build` and `pnpm check` for code/config changes. Use `pnpm format` to format.
 
+## File names
+
+- Use PascalCase for public Effect modules, such as `ApprovalRequest.ts`, and match their exported module names.
+- Use kebab-case for other files and directories, such as `approval-store.ts` and `drizzle-sqlite/`. Keep suffixes lowercase: `ApprovalRequest.test.ts`.
+- Preserve tool-required names, standard files such as `README.md` and vendored filenames.
+
 ## Comments and docs
 
 - Explain constraints and decisions in comments; do not restate the code. Preserve useful issue links.

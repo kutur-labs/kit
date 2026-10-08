@@ -1,0 +1,26 @@
+{
+  "$schema": "node_modules/konsistent/konsistent.schema.json",
+  "version": "v1",
+  "conventions": [
+    {
+      "name": "kebab-case-directories",
+      "description": "Use kebab-case for directory names.",
+      "paths": [
+        "packages/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}",
+        "apps/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}",
+        "examples/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}",
+        "tooling/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}"
+      ],
+      "excludeFiles": [
+        "**/node_modules/**",
+        "**/dist/**",
+        "**/.*/**",
+        "**/scratchpad/**",
+        "**/vendor/**"
+      ],
+      "mustNot": {
+        "haveType": "directory"
+      }
+    }
+  ]
+}

@@ -39,6 +39,9 @@
       "dependsOn": ["build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml", "$TURBO_ROOT$/.gitignore"],
       "outputs": []
+    },
+    "//#lint:structure": {
+      "outputs": []
     }
   },
   "globalDependencies": [".node-version"]
