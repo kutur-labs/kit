@@ -1,0 +1,61 @@
+# Dependencies and package manager caches
+node_modules/
+.pnpm-store/
+
+# Build output and tool caches
+dist/
+build/
+.output/
+.turbo/
+.cache/
+.vite/
+.nitro/
+.tanstack/
+*.tsbuildinfo
+
+# Test output
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Local environment and secrets (keep example files versioned)
+.env
+.env.*
+!.env.example
+!.env.*.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+!.dev.vars.*.example
+
+# Local infrastructure state
+.alchemy/
+.wrangler/
+
+# Local SQLite databases
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+*.sqlite3
+*.sqlite3-shm
+*.sqlite3-wal
+*.sqlite3-journal
+
+# Logs and temporary files
+*.log
+tmp/
+temp/
+
+# OS and editor artifacts
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+*~
