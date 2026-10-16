@@ -2,7 +2,7 @@
 
 Typed audit events for Effect. Each kind of event is defined once with schemas for what it is about and what it records. Logging fills in the time, the actor and the trace, keeps secrets out of entries and fails the action when its entry cannot be stored. Storage is a service: PostgreSQL through Drizzle is included.
 
-Tested with Effect 4.0.2.
+Tested with Effect 4.0.5.
 
 ```sh
 pnpm add @kutur-kit/audit effect

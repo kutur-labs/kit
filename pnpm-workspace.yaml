@@ -19,7 +19,7 @@ resolvePeersFromWorkspaceRoot: false
 catalogs:
   runtime:
     drizzle-orm: 1.0.0-rc.4
-    effect: 4.0.2
+    effect: 4.0.5
     "@oxlint/plugins": 1.87.0
     eslint-plugin-sonarjs: 4.2.2
     eslint: 10.12.0
@@ -40,10 +40,13 @@ catalogs:
     skills: 1.7.1
     "@types/node": 24.19.1
   testing:
-    "@effect/sql-pg": 4.0.2
+    "@effect/sql-pg": 4.0.5
     "@testcontainers/postgresql": 12.2.1
     testcontainers: 12.2.1
-    "@effect/vitest": 4.0.2
+    "@effect/vitest": 4.0.5
+    "@yielded/auth": 0.1.0-beta.42
+    "@yielded/auth-persistence-drizzle": 0.1.0-beta.42
+    "@yielded/crypto": 0.1.0-beta.42
     "@stryker-mutator/core": 10.0.0
     "@stryker-mutator/vitest-runner": 10.0.0
     vitest: 5.0.3
@@ -62,3 +65,10 @@ allowBuilds:
 patchedDependencies:
   "@stryker-mutator/vitest-runner@10.0.0": patches/@stryker-mutator__vitest-runner@10.0.0.patch
   drizzle-orm@1.0.0-rc.4: patches/drizzle-orm@1.0.0-rc.4.patch
+minimumReleaseAgeExclude:
+  - "@yielded/auth-persistence-drizzle@0.1.0-beta.42"
+  - "@yielded/auth-persistence@0.1.0-beta.42"
+  - "@yielded/auth@0.1.0-beta.42"
+  - "@yielded/crypto@0.1.0-beta.42"
+  - "@yielded/jose@0.1.0-beta.42"
+  - "@yielded/oauth@0.1.0-beta.42"

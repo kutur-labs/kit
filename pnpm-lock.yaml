@@ -196,8 +196,8 @@ catalogs:
       specifier: 1.0.0-rc.4
       version: 1.0.0-rc.4
     effect:
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.5
+      version: 4.0.5
     eslint:
       specifier: 10.12.0
       version: 10.12.0
@@ -206,11 +206,11 @@ catalogs:
       version: 4.2.2
   testing:
     '@effect/sql-pg':
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.5
+      version: 4.0.5
     '@effect/vitest':
-      specifier: 4.0.2
-      version: 4.0.2
+      specifier: 4.0.5
+      version: 4.0.5
     '@stryker-mutator/core':
       specifier: 10.0.0
       version: 10.0.0
@@ -220,6 +220,15 @@ catalogs:
     '@testcontainers/postgresql':
       specifier: 12.2.1
       version: 12.2.1
+    '@yielded/auth':
+      specifier: 0.1.0-beta.42
+      version: 0.1.0-beta.42
+    '@yielded/auth-persistence-drizzle':
+      specifier: 0.1.0-beta.42
+      version: 0.1.0-beta.42
+    '@yielded/crypto':
+      specifier: 0.1.0-beta.42
+      version: 0.1.0-beta.42
     testcontainers:
       specifier: 12.2.1
       version: 12.2.1
@@ -334,13 +343,13 @@ importers:
     devDependencies:
       '@effect/sql-pg':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)
+        version: 4.0.5(effect@4.0.5)
       '@effect/tsgo':
         specifier: catalog:tooling
         version: 0.51.1
       '@effect/vitest':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
       '@kutur-kit/access':
         specifier: workspace:*
         version: link:../packages/access
@@ -356,15 +365,24 @@ importers:
       '@types/node':
         specifier: catalog:tooling
         version: 24.19.1
+      '@yielded/auth':
+        specifier: catalog:testing
+        version: 0.1.0-beta.42(effect@4.0.5)
+      '@yielded/auth-persistence-drizzle':
+        specifier: catalog:testing
+        version: 0.1.0-beta.42(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(drizzle-orm@1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5))(effect@4.0.5)
+      '@yielded/crypto':
+        specifier: catalog:testing
+        version: 0.1.0-beta.42(effect@4.0.5)
       drizzle-kit:
         specifier: catalog:tooling
         version: 1.0.0-rc.4
       drizzle-orm:
         specifier: catalog:runtime
-        version: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.2(effect@4.0.2))(@effect/sql-pglite@4.0.2(effect@4.0.2))(@effect/sql-sqlite-node@4.0.2(effect@4.0.2))(@electric-sql/pglite@0.5.8)(effect@4.0.2)(zod@4.6.5)
+        version: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5)
       effect:
         specifier: catalog:runtime
-        version: 4.0.2
+        version: 4.0.5
       typescript:
         specifier: catalog:tooling
         version: 7.0.2
@@ -376,13 +394,13 @@ importers:
     devDependencies:
       '@effect/sql-pg':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)
+        version: 4.0.5(effect@4.0.5)
       '@effect/tsgo':
         specifier: catalog:tooling
         version: 0.51.1
       '@effect/vitest':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
       '@kutur-kit/audit':
         specifier: workspace:*
         version: link:../audit
@@ -406,10 +424,10 @@ importers:
         version: 1.0.0-rc.4
       drizzle-orm:
         specifier: catalog:runtime
-        version: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.2(effect@4.0.2))(@effect/sql-pglite@4.0.2(effect@4.0.2))(@effect/sql-sqlite-node@4.0.2(effect@4.0.2))(@electric-sql/pglite@0.5.8)(effect@4.0.2)(zod@4.6.5)
+        version: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5)
       effect:
         specifier: catalog:runtime
-        version: 4.0.2
+        version: 4.0.5
       publint:
         specifier: catalog:tooling
         version: 0.3.25
@@ -424,13 +442,13 @@ importers:
     devDependencies:
       '@effect/sql-pg':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)
+        version: 4.0.5(effect@4.0.5)
       '@effect/tsgo':
         specifier: catalog:tooling
         version: 0.51.1
       '@effect/vitest':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
       '@kutur-kit/testcontainers':
         specifier: workspace:*
         version: link:../../tooling/testcontainers
@@ -451,10 +469,10 @@ importers:
         version: 1.0.0-rc.4
       drizzle-orm:
         specifier: catalog:runtime
-        version: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.2(effect@4.0.2))(@effect/sql-pglite@4.0.2(effect@4.0.2))(@effect/sql-sqlite-node@4.0.2(effect@4.0.2))(@electric-sql/pglite@0.5.8)(effect@4.0.2)(zod@4.6.5)
+        version: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5)
       effect:
         specifier: catalog:runtime
-        version: 4.0.2
+        version: 4.0.5
       publint:
         specifier: catalog:tooling
         version: 0.3.25
@@ -512,13 +530,13 @@ importers:
     dependencies:
       '@effect/sql-pg':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)
+        version: 4.0.5(effect@4.0.5)
       '@testcontainers/postgresql':
         specifier: catalog:testing
         version: 12.2.1
       effect:
         specifier: catalog:runtime
-        version: 4.0.2
+        version: 4.0.5
       testcontainers:
         specifier: catalog:testing
         version: 12.2.1
@@ -531,7 +549,7 @@ importers:
         version: 0.51.1
       '@effect/vitest':
         specifier: catalog:testing
-        version: 4.0.2(effect@4.0.2)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
+        version: 4.0.5(effect@4.0.5)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))
       '@kutur-kit/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -834,10 +852,10 @@ packages:
   '@drizzle-team/brocli@0.12.1':
     resolution: {integrity: sha512-yHwomvolVafvUXhy5TdiJVkuNCxXn+bKOs2aWiWEQh/5YaV97Oa/abJz3dmx7lxgIUsUlS1Jl4mEfvJPo3YsVw==}
 
-  '@effect/sql-pg@4.0.2':
-    resolution: {integrity: sha512-i2N5F0L5s1S8Nx2I8V7k+awBinP26b5xiiHL1zn5b6RALNnloiU7FK1yS4dAkmqG9B0EcOVxvJrIpoMWwrB4hw==}
+  '@effect/sql-pg@4.0.5':
+    resolution: {integrity: sha512-F9tG76H+aryhYcp5pvgd+MwWrNltv3XAuLcZSBsOOX6q+PEl+IM4zkQKzx0TF9OsEMH/SQ+3gZRdYWOsDF+vJQ==}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
 
   '@effect/sql-pglite@4.0.2':
     resolution: {integrity: sha512-WVuNSNSsYsY/tG0ZKIuG1GeHjTIo8clqdZG/kUGDBfBldtTKfHgmq/pOI5zidWif9n4BaW4gB8DwJR3P8rtmkw==}
@@ -888,10 +906,10 @@ packages:
     resolution: {integrity: sha512-i6mA6cNah+0mkPdu8qZILCO3Pnd9kWo03/s82Ju+1DFhdL28HFagi+1PRGxqgq1uMaHziWQ+ciKvOmIoks2RdA==}
     hasBin: true
 
-  '@effect/vitest@4.0.2':
-    resolution: {integrity: sha512-Zb72nu7iUy3rNdBp9J1Xu5oUQGwJ8cOYsUwmYgujj88aqyvASRDjOS01SjlcPViqf77csduetKdCJTVndMNfzw==}
+  '@effect/vitest@4.0.5':
+    resolution: {integrity: sha512-q64paZ/i4V2NiRhTyqCmT2KiDbFjlxc2EZrZca8GGt+Nf8844946HyJM5bPk/q+YeRkFSxIrlCs+J+LSfky/wA==}
     peerDependencies:
-      effect: ^4.0.2
+      effect: ^4.0.5
       vitest: '>=5.0.0 <6.0.0'
 
   '@electric-sql/pglite@0.5.8':
@@ -2119,6 +2137,65 @@ packages:
   '@vitest/spy@5.0.3':
     resolution: {integrity: sha512-XhFysQTB8AZ+P4gMi+Lpo99vg2AZi0qKpaB9yXQl37+CaMEAPO3iH/wGVnSyL5MPERiLezpqTVtrR6UZH5GCXg==}
 
+  '@yielded/auth-persistence-drizzle@0.1.0-beta.42':
+    resolution: {integrity: sha512-oMa0OuKsMmxUBz4VGD9ZVFimHv8vtT7GGSARFZqW4r9nca2zpzbUQaImrzj1x6xdunJY85RwCA09EXe9rLj0Cw==}
+    peerDependencies:
+      '@effect/sql-d1': '>=4.0.0'
+      '@effect/sql-libsql': '>=4.0.0'
+      '@effect/sql-mysql2': '>=4.0.0'
+      '@effect/sql-pg': '>=4.0.0'
+      '@effect/sql-pglite': '>=4.0.0'
+      '@effect/sql-sqlite-bun': '>=4.0.0'
+      '@effect/sql-sqlite-do': '>=4.0.0'
+      '@effect/sql-sqlite-node': '>=4.0.0'
+      '@effect/sql-sqlite-wasm': '>=4.0.0'
+      drizzle-orm: '>=1.0.0-rc.4'
+      effect: ^4.0.3
+    peerDependenciesMeta:
+      '@effect/sql-d1':
+        optional: true
+      '@effect/sql-libsql':
+        optional: true
+      '@effect/sql-mysql2':
+        optional: true
+      '@effect/sql-pg':
+        optional: true
+      '@effect/sql-pglite':
+        optional: true
+      '@effect/sql-sqlite-bun':
+        optional: true
+      '@effect/sql-sqlite-do':
+        optional: true
+      '@effect/sql-sqlite-node':
+        optional: true
+      '@effect/sql-sqlite-wasm':
+        optional: true
+
+  '@yielded/auth-persistence@0.1.0-beta.42':
+    resolution: {integrity: sha512-+qZRu+hSO7C9hzX50HWstNYThMQysx+1WBEOtTg4Djioeas0yfWpNTWV68I/wM02b/Ok7/lYzATscKmsihFpaA==}
+    peerDependencies:
+      effect: ^4.0.3
+
+  '@yielded/auth@0.1.0-beta.42':
+    resolution: {integrity: sha512-eYcK1bVHL+H6U6xvF8oxzHYmfl7oFFS+xMe5l8qaz35jyA81EXpOpAAfjqUHuM6GObg97FKlViKG9LS5vHbPjg==}
+    peerDependencies:
+      effect: ^4.0.3
+
+  '@yielded/crypto@0.1.0-beta.42':
+    resolution: {integrity: sha512-FcerWq+9gyYiya6QsFyqHSLL3u/8KURhJxAVzW4FQkDm6slAepP0izIcmHQHtoKaQClttbI69iDqC8CPIkQd0g==}
+    peerDependencies:
+      effect: ^4.0.3
+
+  '@yielded/jose@0.1.0-beta.42':
+    resolution: {integrity: sha512-YD0UOFEeTK2Mh0hpE24X3pAFISwhxNUvMPfkzI3WfTniJLOcWfdC1RygKtJ4vU5h6HOI73GbP3MX1/KO2wfqrg==}
+    peerDependencies:
+      effect: ^4.0.3
+
+  '@yielded/oauth@0.1.0-beta.42':
+    resolution: {integrity: sha512-m6qTxnN+NzYwZj+QcW373nC0JIsVAlm3fGFydARO1e2VH8fdyLh1rwzLqQoS3/yps76v4RZILFWif2+eMpETiQ==}
+    peerDependencies:
+      effect: ^4.0.3
+
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
     engines: {node: '>=6.5'}
@@ -2601,8 +2678,8 @@ packages:
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
 
-  effect@4.0.2:
-    resolution: {integrity: sha512-YeYnLqSFrL4+tCOXRrfNP03w8FILoF/wDl+ukraJAGzXrjcS383W7LAAvGBbLatEyktmLxRq+9xJinx7QzXW5A==}
+  effect@4.0.5:
+    resolution: {integrity: sha512-BY4/28NlpOd99yzmV741xbVGmp+1U7tks4oB7F/Png64bTa5tm5eCA6W0RiXsnuLDDoJpjfVSo4Dnq4BZb/89Q==}
 
   electron-to-chromium@1.5.456:
     resolution: {integrity: sha512-8hboqI6xesozteFb8aa7OGknvxUtTeRJLz0FoePysUEh/oWbddykIGdgpEJRbPRg/nIMfBf2DFos+H2MtvJl2A==}
@@ -4192,19 +4269,19 @@ snapshots:
 
   '@drizzle-team/brocli@0.12.1': {}
 
-  '@effect/sql-pg@4.0.2(effect@4.0.2)':
+  '@effect/sql-pg@4.0.5(effect@4.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
 
-  '@effect/sql-pglite@4.0.2(effect@4.0.2)':
+  '@effect/sql-pglite@4.0.2(effect@4.0.5)':
     dependencies:
       '@electric-sql/pglite': 0.5.8
-      effect: 4.0.2
+      effect: 4.0.5
     optional: true
 
-  '@effect/sql-sqlite-node@4.0.2(effect@4.0.2)':
+  '@effect/sql-sqlite-node@4.0.2(effect@4.0.5)':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
     optional: true
 
   '@effect/tsgo-darwin-arm64@0.51.1':
@@ -4238,9 +4315,9 @@ snapshots:
       '@effect/tsgo-win32-arm64': 0.51.1
       '@effect/tsgo-win32-x64': 0.51.1
 
-  '@effect/vitest@4.0.2(effect@4.0.2)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))':
+  '@effect/vitest@4.0.5(effect@4.0.5)(vitest@5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1)))':
     dependencies:
-      effect: 4.0.2
+      effect: 4.0.5
       vitest: 5.0.3(@types/node@24.19.1)(vite@8.3.3(@types/node@24.19.1)(esbuild@0.28.2)(jiti@2.6.1)(tsx@4.23.15)(yaml@2.9.1))
 
   '@electric-sql/pglite@0.5.8':
@@ -5074,6 +5151,44 @@ snapshots:
 
   '@vitest/spy@5.0.3': {}
 
+  '@yielded/auth-persistence-drizzle@0.1.0-beta.42(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(drizzle-orm@1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5))(effect@4.0.5)':
+    dependencies:
+      '@yielded/auth': 0.1.0-beta.42(effect@4.0.5)
+      '@yielded/auth-persistence': 0.1.0-beta.42(effect@4.0.5)
+      drizzle-orm: 1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5)
+      effect: 4.0.5
+    optionalDependencies:
+      '@effect/sql-pg': 4.0.5(effect@4.0.5)
+      '@effect/sql-pglite': 4.0.2(effect@4.0.5)
+      '@effect/sql-sqlite-node': 4.0.2(effect@4.0.5)
+
+  '@yielded/auth-persistence@0.1.0-beta.42(effect@4.0.5)':
+    dependencies:
+      '@yielded/auth': 0.1.0-beta.42(effect@4.0.5)
+      '@yielded/crypto': 0.1.0-beta.42(effect@4.0.5)
+      effect: 4.0.5
+
+  '@yielded/auth@0.1.0-beta.42(effect@4.0.5)':
+    dependencies:
+      '@yielded/crypto': 0.1.0-beta.42(effect@4.0.5)
+      '@yielded/jose': 0.1.0-beta.42(effect@4.0.5)
+      '@yielded/oauth': 0.1.0-beta.42(effect@4.0.5)
+      effect: 4.0.5
+
+  '@yielded/crypto@0.1.0-beta.42(effect@4.0.5)':
+    dependencies:
+      effect: 4.0.5
+
+  '@yielded/jose@0.1.0-beta.42(effect@4.0.5)':
+    dependencies:
+      '@yielded/crypto': 0.1.0-beta.42(effect@4.0.5)
+      effect: 4.0.5
+
+  '@yielded/oauth@0.1.0-beta.42(effect@4.0.5)':
+    dependencies:
+      '@yielded/jose': 0.1.0-beta.42(effect@4.0.5)
+      effect: 4.0.5
+
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
@@ -5397,13 +5512,13 @@ snapshots:
       get-tsconfig: 4.14.3
       jiti: 2.6.1
 
-  drizzle-orm@1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.2(effect@4.0.2))(@effect/sql-pglite@4.0.2(effect@4.0.2))(@effect/sql-sqlite-node@4.0.2(effect@4.0.2))(@electric-sql/pglite@0.5.8)(effect@4.0.2)(zod@4.6.5):
+  drizzle-orm@1.0.0-rc.4(patch_hash=bfb194db9b8294c35cfdc54a9cf9a56eb62899acbec7771203276030d3e2ac1d)(@effect/sql-pg@4.0.5(effect@4.0.5))(@effect/sql-pglite@4.0.2(effect@4.0.5))(@effect/sql-sqlite-node@4.0.2(effect@4.0.5))(@electric-sql/pglite@0.5.8)(effect@4.0.5)(zod@4.6.5):
     optionalDependencies:
-      '@effect/sql-pg': 4.0.2(effect@4.0.2)
-      '@effect/sql-pglite': 4.0.2(effect@4.0.2)
-      '@effect/sql-sqlite-node': 4.0.2(effect@4.0.2)
+      '@effect/sql-pg': 4.0.5(effect@4.0.5)
+      '@effect/sql-pglite': 4.0.2(effect@4.0.5)
+      '@effect/sql-sqlite-node': 4.0.2(effect@4.0.5)
       '@electric-sql/pglite': 0.5.8
-      effect: 4.0.2
+      effect: 4.0.5
       zod: 4.6.5
 
   dunder-proto@1.0.1:
@@ -5414,7 +5529,7 @@ snapshots:
 
   eastasianwidth@0.2.0: {}
 
-  effect@4.0.2: {}
+  effect@4.0.5: {}
 
   electron-to-chromium@1.5.456: {}
 

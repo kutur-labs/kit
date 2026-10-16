@@ -2,7 +2,7 @@
 
 Permissions for Effect, defined as services. Each permission declares what it decides about, and its policy is a Layer. Checks are typed and traced, can be restricted per caller (for example to an agent token's scopes) and can be audited. A permission can also describe the targets it allows as a condition for list queries.
 
-Tested with Effect 4.0.2.
+Tested with Effect 4.0.5.
 
 ```sh
 pnpm add @kutur-kit/access effect

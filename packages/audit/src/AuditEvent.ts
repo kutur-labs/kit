@@ -105,7 +105,7 @@ export const make = <const A extends string, const D extends Definition>(
 
     yield* auditLog.record(
       new Audit.Entry({
-        id: yield* Effect.orDie(crypto.randomUUIDv7),
+        id: yield* Effect.orDie(crypto.randomUUIDv7()),
         action,
         outcome: input.outcome ?? "success",
         ...(input.reason !== undefined && { reason: input.reason }),
