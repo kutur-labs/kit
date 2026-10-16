@@ -8,14 +8,16 @@
       "paths": [
         "packages/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}",
         "apps/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}",
-        "tooling/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}"
+        "tooling/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}",
+        "integration-tests/**/{name:matches(^(?![a-z0-9]+(?:-[a-z0-9]+)*$).+)}"
       ],
       "excludeFiles": [
         "**/node_modules/**",
         "**/dist/**",
         "**/.*/**",
         "**/scratchpad/**",
-        "**/vendor/**"
+        "**/vendor/**",
+        "**/test/migrations/**"
       ],
       "mustNot": {
         "haveType": "directory"

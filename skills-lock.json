@@ -1,10 +1,15 @@
 {
   "version": 1,
   "skills": {
+    "test-quality": {
+      "source": "./.agents/skills/test-quality",
+      "sourceType": "local",
+      "computedHash": "72927aac656fee7fa7c370bd600382a377d9c78c03a18df5df4e276cee871c92"
+    },
     "text-slop": {
       "source": "./.agents/skills/text-slop",
       "sourceType": "local",
-      "computedHash": "f875b6ea1f2a629f135d7174e2ac914137b2a2febb56657923de2b95778c80d9"
+      "computedHash": "d9a781cf8930f25fc1360a05669c1113578ac991ca3d31b81c641ec818918ffc"
     }
   }
 }

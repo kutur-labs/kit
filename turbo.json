@@ -25,7 +25,45 @@
     },
     "test": {
       "dependsOn": ["^build"],
+      "env": ["TEST_POSTGRES_URL"],
+      "passThroughEnv": [
+        "DOCKER_HOST",
+        "DOCKER_CERT_PATH",
+        "DOCKER_TLS_VERIFY",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_HOST_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE",
+        "TESTCONTAINERS_RYUK_DISABLED"
+      ],
       "outputs": []
+    },
+    "bench": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "env": ["TEST_POSTGRES_URL"],
+      "passThroughEnv": [
+        "DOCKER_HOST",
+        "DOCKER_CERT_PATH",
+        "DOCKER_TLS_VERIFY",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_HOST_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE",
+        "TESTCONTAINERS_RYUK_DISABLED"
+      ]
+    },
+    "test:mutation": {
+      "dependsOn": ["^build"],
+      "env": ["TEST_POSTGRES_URL"],
+      "passThroughEnv": [
+        "DOCKER_HOST",
+        "DOCKER_CERT_PATH",
+        "DOCKER_TLS_VERIFY",
+        "TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE",
+        "TESTCONTAINERS_HOST_OVERRIDE",
+        "TESTCONTAINERS_REUSE_ENABLE",
+        "TESTCONTAINERS_RYUK_DISABLED"
+      ],
+      "outputs": ["reports/mutation/**"]
     },
     "//#lint:repo": {
       "dependsOn": ["^build"],

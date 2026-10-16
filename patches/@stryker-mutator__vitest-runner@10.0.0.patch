@@ -1,0 +1,25 @@
+diff --git a/dist/src/vitest-test-runner.js b/dist/src/vitest-test-runner.js
+index 84f1ca026503b8e92b7adc952ec6c6a401943656..1f2ac9fb4de49a6301db7c46f8125e8e9edafc26 100644
+--- a/dist/src/vitest-test-runner.js
++++ b/dist/src/vitest-test-runner.js
+@@ -177,6 +177,20 @@ export class VitestTestRunner {
+             failure ||= testResult.status === TestStatus.Failed;
+             return testResult;
+         });
++        // A test file that fails to load has no test results, so report it as a failed test.
++        for (const file of this.ctx.state.getFiles()) {
++            if (file.result?.state === 'fail' && collectTestsFromSuite(file).every((test) => !test.result)) {
++                failure = true;
++                testResults.push({
++                    id: file.filepath,
++                    name: file.name,
++                    fileName: path.resolve(file.filepath),
++                    timeSpentMs: file.result.duration ?? 0,
++                    status: TestStatus.Failed,
++                    failureMessage: file.result.errors?.[0]?.message ?? 'Test file failed to load',
++                });
++            }
++        }
+         if (!failure && this.ctx.state.errorsSet.size > 0) {
+             const errorText = [...this.ctx.state.errorsSet]
+                 .map(errorToString)

@@ -1,0 +1,30 @@
+{
+  "name": "@kutur-kit/integration-tests",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Example apps that check how the packages work together.",
+  "type": "module",
+  "scripts": {
+    "bench": "vitest bench --run",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@effect/sql-pg": "catalog:testing",
+    "@effect/tsgo": "catalog:tooling",
+    "@effect/vitest": "catalog:testing",
+    "@kutur-kit/access": "workspace:*",
+    "@kutur-kit/audit": "workspace:*",
+    "@kutur-kit/testcontainers": "workspace:*",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@types/node": "catalog:tooling",
+    "drizzle-kit": "catalog:tooling",
+    "drizzle-orm": "catalog:runtime",
+    "effect": "catalog:runtime",
+    "typescript": "catalog:tooling",
+    "vitest": "catalog:testing"
+  },
+  "engines": {
+    "node": "^24.21.0"
+  }
+}

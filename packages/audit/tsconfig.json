@@ -1,0 +1,28 @@
+{
+  "extends": "@kutur-kit/tsconfig/effect.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostics": true,
+        "includeSuggestionsInTsc": false,
+        "overrides": [
+          {
+            "include": ["test/**/*.ts"],
+            "options": {
+              "allowedUnstableApis": [
+                "@effect/vitest#it",
+                "@effect/sql-pg/PgClient#make",
+                "@effect/sql-pg/PgClient#PgClient",
+                "effect/reactivity/Reactivity#layer"
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

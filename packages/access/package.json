@@ -1,0 +1,102 @@
+{
+  "name": "@kutur-kit/access",
+  "version": "0.0.0",
+  "description": "Effect permissions as services: typed checks, caller restrictions, list filters and audit.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/access"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./Condition": "./src/Condition.ts",
+    "./Decision": "./src/Decision.ts",
+    "./Permission": "./src/Permission.ts",
+    "./PermissionFilter": "./src/PermissionFilter.ts",
+    "./audit": "./src/audit.ts",
+    "./drizzle/postgres": "./src/drizzle/postgres.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./Condition": {
+        "types": "./dist/Condition.d.ts",
+        "default": "./dist/Condition.js"
+      },
+      "./Decision": {
+        "types": "./dist/Decision.d.ts",
+        "default": "./dist/Decision.js"
+      },
+      "./Permission": {
+        "types": "./dist/Permission.d.ts",
+        "default": "./dist/Permission.js"
+      },
+      "./PermissionFilter": {
+        "types": "./dist/PermissionFilter.d.ts",
+        "default": "./dist/PermissionFilter.js"
+      },
+      "./audit": {
+        "types": "./dist/audit.d.ts",
+        "default": "./dist/audit.js"
+      },
+      "./drizzle/postgres": {
+        "types": "./dist/drizzle/postgres.d.ts",
+        "default": "./dist/drizzle/postgres.js"
+      },
+      "./testing": {
+        "types": "./dist/testing/index.d.ts",
+        "default": "./dist/testing/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsc -p tsconfig.build.json",
+    "lint:package": "publint --pack pnpm --strict",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:mutation": "stryker run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@effect/sql-pg": "catalog:testing",
+    "@effect/tsgo": "catalog:tooling",
+    "@effect/vitest": "catalog:testing",
+    "@kutur-kit/audit": "workspace:*",
+    "@kutur-kit/testcontainers": "workspace:*",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@stryker-mutator/core": "catalog:testing",
+    "@stryker-mutator/vitest-runner": "catalog:testing",
+    "@types/node": "catalog:tooling",
+    "drizzle-kit": "catalog:tooling",
+    "drizzle-orm": "catalog:runtime",
+    "effect": "catalog:runtime",
+    "publint": "catalog:tooling",
+    "typescript": "catalog:tooling",
+    "vitest": "catalog:testing"
+  },
+  "peerDependencies": {
+    "@kutur-kit/audit": "workspace:^",
+    "drizzle-orm": "catalog:peers",
+    "effect": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@kutur-kit/audit": {
+      "optional": true
+    },
+    "drizzle-orm": {
+      "optional": true
+    }
+  }
+}

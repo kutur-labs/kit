@@ -1,9 +1,23 @@
 import type { OxlintConfig } from "oxlint";
 
+import { fileURLToPath } from "node:url";
+
+const extension = import.meta.url.endsWith(".ts") ? "ts" : "js";
+
 const base: OxlintConfig = {
+  jsPlugins: [
+    {
+      name: "kit",
+      specifier: fileURLToPath(new URL(`./plugin.${extension}`, import.meta.url)),
+    },
+    { name: "sonarjs", specifier: fileURLToPath(import.meta.resolve("eslint-plugin-sonarjs")) },
+  ],
   plugins: ["typescript", "oxc", "unicorn", "import"],
   categories: { correctness: "error" },
   rules: {
+    "kit/no-yield-in-if": "error",
+    "sonarjs/cognitive-complexity": ["error", 15],
+    "max-depth": ["error", 3],
     "typescript/no-explicit-any": "error",
     "typescript/switch-exhaustiveness-check": "error",
     "typescript/no-deprecated": "error",

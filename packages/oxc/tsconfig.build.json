@@ -8,5 +8,6 @@
     "declarationMap": true,
     "noEmitOnError": true,
     "sourceMap": true
-  }
+  },
+  "include": ["src/**/*.ts"]
 }

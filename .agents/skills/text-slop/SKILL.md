@@ -11,7 +11,7 @@ Preserve the author's meaning, facts and voice. Edit only the requested text.
 - Replace promotional claims with concrete behavior. Delete unsupported claims; do not invent measurements, guarantees or examples to make prose sound specific.
 - Prefer ordinary verbs: “use” over “leverage,” “supports” over “empowers.” Judge words in context rather than enforcing a blacklist.
 - Avoid dashes as sentence punctuation, including em dashes, and omit Oxford commas. Use periods, parentheses or rephrase instead. Preserve necessary hyphens in technical terms, identifiers and commands.
-- Avoid vague engineering buzzwords: “stamp/stamped,” “land/lands/landed,” “unlock,” “supercharge,” “seamless” and “battle-tested.” Say what actually happens: “when this merges,” “after deployment,” “approved” or “recorded,” as appropriate. Keep literal technical uses such as timestamps or a documented API identifier.
+- Avoid vague engineering buzzwords: “stamp/stamped,” “land/lands/landed,” “gate/gated/gating,” “unlock,” “supercharge,” “seamless” and “battle-tested.” Say what actually happens: “when this merges,” “after deployment,” “approved” or “recorded,” as appropriate. Keep literal technical uses such as timestamps or a documented API identifier.
 - Keep technical terms, qualifications and warnings needed for accuracy. Shorter is not better if it changes the meaning.
 - Package READMEs explain exports, usage, requirements and limitations. Omit monorepo details and the history of how the package was built.
 - Do not restate configuration as prose, such as listing enabled lint rules. Document how to use it and any constraints the code does not explain.

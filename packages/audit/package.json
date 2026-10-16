@@ -1,0 +1,87 @@
+{
+  "name": "@kutur-kit/audit",
+  "version": "0.0.0",
+  "description": "Typed audit events for Effect, with PostgreSQL storage through Drizzle.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/audit"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./Audit": "./src/Audit.ts",
+    "./AuditEvent": "./src/AuditEvent.ts",
+    "./AuditKey": "./src/AuditKey.ts",
+    "./testing": "./src/testing/index.ts",
+    "./drizzle/postgres": "./src/drizzle/postgres.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./Audit": {
+        "types": "./dist/Audit.d.ts",
+        "default": "./dist/Audit.js"
+      },
+      "./AuditEvent": {
+        "types": "./dist/AuditEvent.d.ts",
+        "default": "./dist/AuditEvent.js"
+      },
+      "./AuditKey": {
+        "types": "./dist/AuditKey.d.ts",
+        "default": "./dist/AuditKey.js"
+      },
+      "./testing": {
+        "types": "./dist/testing/index.d.ts",
+        "default": "./dist/testing/index.js"
+      },
+      "./drizzle/postgres": {
+        "types": "./dist/drizzle/postgres.d.ts",
+        "default": "./dist/drizzle/postgres.js"
+      }
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsc -p tsconfig.build.json",
+    "lint:package": "publint --pack pnpm --strict",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:mutation": "stryker run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@effect/sql-pg": "catalog:testing",
+    "@effect/tsgo": "catalog:tooling",
+    "@effect/vitest": "catalog:testing",
+    "@kutur-kit/testcontainers": "workspace:*",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@stryker-mutator/core": "catalog:testing",
+    "@stryker-mutator/vitest-runner": "catalog:testing",
+    "@types/node": "catalog:tooling",
+    "drizzle-kit": "catalog:tooling",
+    "drizzle-orm": "catalog:runtime",
+    "effect": "catalog:runtime",
+    "publint": "catalog:tooling",
+    "typescript": "catalog:tooling",
+    "vitest": "catalog:testing"
+  },
+  "peerDependencies": {
+    "drizzle-orm": "catalog:peers",
+    "effect": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "drizzle-orm": {
+      "optional": true
+    }
+  }
+}

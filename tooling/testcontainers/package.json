@@ -1,0 +1,32 @@
+{
+  "name": "@kutur-kit/testcontainers",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Effect wrappers for Testcontainers, shared by the workspace's tests.",
+  "type": "module",
+  "exports": {
+    "./PostgresContainer": "./src/PostgresContainer.ts",
+    "./vitest": "./src/vitest.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@effect/sql-pg": "catalog:testing",
+    "@testcontainers/postgresql": "catalog:testing",
+    "effect": "catalog:runtime",
+    "testcontainers": "catalog:testing",
+    "vitest": "catalog:testing"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "catalog:tooling",
+    "@effect/vitest": "catalog:testing",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@types/node": "catalog:tooling",
+    "typescript": "catalog:tooling"
+  },
+  "engines": {
+    "node": "^24.21.0"
+  }
+}

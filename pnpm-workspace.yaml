@@ -2,6 +2,7 @@ packages:
   - packages/*
   - apps/*
   - tooling/*
+  - integration-tests
 
 # Pin dependency versions in catalogs.
 savePrefix: ""
@@ -17,8 +18,13 @@ resolvePeersFromWorkspaceRoot: false
 # Catalog usage is documented in AGENTS.md.
 catalogs:
   runtime:
+    drizzle-orm: 1.0.0-rc.4
+    effect: 4.0.2
     "@oxlint/plugins": 1.87.0
+    eslint-plugin-sonarjs: 4.2.2
+    eslint: 10.12.0
   tooling:
+    drizzle-kit: 1.0.0-rc.4
     konsistent: 1.0.0-beta.12
     "@commitlint/cli": 21.2.3
     "@commitlint/config-conventional": 21.2.3
@@ -33,7 +39,26 @@ catalogs:
     publint: 0.3.25
     skills: 1.7.1
     "@types/node": 24.19.1
+  testing:
+    "@effect/sql-pg": 4.0.2
+    "@testcontainers/postgresql": 12.2.1
+    testcontainers: 12.2.1
+    "@effect/vitest": 4.0.2
+    "@stryker-mutator/core": 10.0.0
+    "@stryker-mutator/vitest-runner": 10.0.0
+    vitest: 5.0.3
   peers:
+    drizzle-orm: 1.0.0-rc.4
+    effect: ^4.0.2
     "@effect/tsgo": ~0.51.1
     oxlint: ~1.87.0
     oxfmt: ~0.72.0
+allowBuilds:
+  # Testcontainers works without these native and postinstall steps.
+  cpu-features: false
+  esbuild: true
+  protobufjs: false
+  ssh2: false
+patchedDependencies:
+  "@stryker-mutator/vitest-runner@10.0.0": patches/@stryker-mutator__vitest-runner@10.0.0.patch
+  drizzle-orm@1.0.0-rc.4: patches/drizzle-orm@1.0.0-rc.4.patch

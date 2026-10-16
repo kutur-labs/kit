@@ -1,0 +1,19 @@
+# An optional long-running server for tests, so runs skip starting a container:
+# `pnpm db:up`, then TEST_POSTGRES_URL=postgres://kit:kit@localhost:54329/kit.
+services:
+  postgres:
+    image: postgres:18.4-alpine
+    environment:
+      POSTGRES_USER: kit
+      POSTGRES_PASSWORD: kit
+      POSTGRES_DB: kit
+    ports:
+      - "54329:5432"
+    # Test data is disposable, so it lives in memory.
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kit", "-d", "kit"]
+      interval: 1s
+      timeout: 2s
+      retries: 30

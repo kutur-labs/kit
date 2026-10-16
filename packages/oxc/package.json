@@ -44,10 +44,13 @@
     "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsc -p tsconfig.build.json",
     "lint:package": "publint --pack pnpm --strict",
     "prepack": "pnpm run build",
+    "test": "node --test test/*.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@oxlint/plugins": "catalog:runtime"
+    "@oxlint/plugins": "catalog:runtime",
+    "eslint": "catalog:runtime",
+    "eslint-plugin-sonarjs": "catalog:runtime"
   },
   "devDependencies": {
     "@effect/tsgo": "catalog:tooling",
