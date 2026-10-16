@@ -6,9 +6,10 @@ import * as PostgresContainer from "@kutur-kit/testcontainers/PostgresContainer"
 import { postgres } from "@kutur-kit/testcontainers/vitest";
 import { generateDrizzleJson, generateMigration } from "drizzle-kit/api-postgres";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
-import { boolean, integer, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
-import { Context, Effect, Layer } from "effect";
-import * as Reactivity from "effect/reactivity/Reactivity";
+import { boolean, integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import { Context, Effect, Layer, Semaphore } from "effect";
+
+import { storage, users } from "./accounts.ts";
 
 export const documents = pgTable("documents", {
   id: text().primaryKey(),
@@ -53,7 +54,47 @@ export const shares = pgTable(
   (table) => [primaryKey({ columns: [table.userId, table.documentId] })],
 );
 
+/** Tokens an agent acts with for a user, limited to the stored permission ids. */
+export const agentTokens = pgTable("agent_tokens", {
+  id: text().primaryKey(),
+  userId: text("user_id").notNull(),
+  /** SHA-256 of the token, which is shown once and never stored. */
+  tokenHash: text("token_hash").notNull().unique(),
+  scopes: text().array().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+});
+
 export const auditEntries = AuditPostgres.auditEntries("audit_entries");
+
+/**
+ * Runs changes in transactions. A change decided inside its transaction also
+ * records the decision on another connection, so that it outlives a rollback:
+ * with a transaction on every connection, those writes would wait forever.
+ * Running one transaction fewer than there are connections leaves them one.
+ */
+export class Transactions extends Context.Service<
+  Transactions,
+  {
+    readonly run: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  }
+>()("workspaces/Transactions") {
+  static readonly layer = Layer.effect(
+    Transactions,
+    Effect.gen(function* () {
+      const database = yield* Database;
+      const permits = yield* Semaphore.make(poolSize - 1);
+
+      return Transactions.of({
+        run: (effect) =>
+          effect.pipe(
+            database.$client.withTransaction,
+            Effect.catchTag("SqlError", Effect.die),
+            Semaphore.withPermit(permits),
+          ),
+      });
+    }),
+  );
+}
 
 export interface Seed {
   readonly documents: ReadonlyArray<Document>;
@@ -69,16 +110,22 @@ const batches = <A>(rows: ReadonlyArray<A>) =>
 
 const connect = (seed: Seed) =>
   Effect.gen(function* () {
-    const client = yield* PgClient.make({ url: yield* PostgresContainer.database });
-
-    const database = yield* PgDrizzle.makeWithDefaults().pipe(
-      Effect.provideService(PgClient.PgClient, client),
-    );
+    const client = yield* PgClient.PgClient;
+    const database = yield* PgDrizzle.makeWithDefaults();
 
     const statements = yield* Effect.promise(async () =>
       generateMigration(
         await generateDrizzleJson({}),
-        await generateDrizzleJson({ documents, memberships, teamMembers, shares, auditEntries }),
+        await generateDrizzleJson({
+          documents,
+          memberships,
+          teamMembers,
+          shares,
+          auditEntries,
+          agentTokens,
+          users,
+          ...storage.schema,
+        }),
       ),
     );
 
@@ -100,13 +147,27 @@ const connect = (seed: Seed) =>
     return database;
   }).pipe(Effect.orDie);
 
+/** Connections in the pool. */
+export const poolSize = 10;
+
 export class Database extends Context.Service<
   Database,
   Effect.Success<ReturnType<typeof connect>>
 >()("workspaces/Database") {
-  /** A fresh database each time the Layer is built. */
+  /** A fresh database each time the Layer is built, with its `Transactions`. */
   static readonly layer = (seed: Seed) =>
-    Layer.effect(Database, connect(seed)).pipe(Layer.provide([Reactivity.layer, postgres]));
+    Transactions.layer.pipe(
+      Layer.provideMerge(Layer.effect(Database, connect(seed))),
+      // Authentication's storage shares the client, so the same database.
+      Layer.provideMerge(
+        PgClient.layerFrom(
+          Effect.flatMap(PostgresContainer.database, (url) =>
+            PgClient.make({ url, maxConnections: poolSize }),
+          ),
+        ),
+      ),
+      Layer.provide(postgres),
+    );
 
   static readonly auditLog = Layer.unwrap(
     Effect.map(Database, (database) => AuditPostgres.layer(database, auditEntries)),

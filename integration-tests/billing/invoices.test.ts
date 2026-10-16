@@ -1,7 +1,8 @@
 import { it } from "@effect/vitest";
 import { Decision } from "@kutur-kit/access";
 import { PermissionTesting } from "@kutur-kit/access/testing";
-import { Effect, Layer, Redacted, Schema } from "effect";
+import { eq } from "drizzle-orm";
+import { Deferred, Effect, Fiber, Layer, Redacted, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import { expect } from "vitest";
 
@@ -150,6 +151,53 @@ it.effect("lets accountants approve payouts up to their limit and owners above i
     expect(yield* invoices.approve(large.id).pipe(asUser(olivia))).toMatchObject({
       status: "Approved",
     });
+  }).pipe(Effect.provide(app)),
+);
+
+it.effect("decides an approval on the invoice it approves, after a concurrent change commits", () =>
+  Effect.gen(function* () {
+    const invoices = yield* Invoices;
+    const database = yield* Database;
+    const held = yield* Deferred.make<void>();
+    const commit = yield* Deferred.make<void>();
+
+    // Raised over the accountant's limit while the approval is under way.
+    const raise = yield* database
+      .update(invoicesTable)
+      .set({ amount: 50_000 })
+      .where(eq(invoicesTable.id, small.id))
+      .pipe(
+        Effect.andThen(Deferred.succeed(held, undefined)),
+        Effect.andThen(Deferred.await(commit)),
+        database.$client.withTransaction,
+        Effect.orDie,
+        Effect.forkChild,
+      );
+
+    yield* Deferred.await(held);
+
+    const approval = yield* invoices
+      .approve(small.id)
+      .pipe(asUser(alex), Effect.flip, Effect.forkChild);
+
+    // Commit only once the approval waits for the invoice the raise has changed.
+    yield* database.$client
+      .unsafe<{ readonly waiting: number }>(
+        `SELECT count(*)::int AS waiting FROM pg_stat_activity
+         WHERE datname = current_database() AND wait_event_type = 'Lock'`,
+      )
+      .pipe(Effect.repeat({ until: ([row]) => (row?.waiting ?? 0) > 0 }), Effect.orDie);
+    yield* Deferred.succeed(commit, undefined);
+    yield* Fiber.join(raise);
+
+    const [row] = yield* database
+      .select()
+      .from(invoicesTable)
+      .where(eq(invoicesTable.id, small.id))
+      .pipe(Effect.orDie);
+
+    expect(yield* Fiber.join(approval)).toEqual(denied);
+    expect(row?.status).toBe("Open");
   }).pipe(Effect.provide(app)),
 );
 

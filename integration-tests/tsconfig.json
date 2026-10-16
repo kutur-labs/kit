@@ -14,8 +14,12 @@
             "options": {
               "allowedUnstableApis": [
                 "@effect/vitest#it",
+                "@effect/sql-pg/PgClient#layerFrom",
                 "@effect/sql-pg/PgClient#make",
                 "@effect/sql-pg/PgClient#PgClient",
+                "effect/Crypto#Crypto",
+                "effect/http",
+                "effect/http-api",
                 "effect/reactivity/Reactivity#layer"
               ]
             }

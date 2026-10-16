@@ -2,7 +2,7 @@ import { it } from "@effect/vitest";
 import { Condition, Decision } from "@kutur-kit/access";
 import { PermissionTesting } from "@kutur-kit/access/testing";
 import { eq } from "drizzle-orm";
-import { Effect, Exit, Predicate, Schema } from "effect";
+import { Deferred, Effect, Exit, Fiber, Option, Predicate, Ref, Schema } from "effect";
 import { expect } from "vitest";
 
 import { collector, outsider } from "./data.ts";
@@ -10,10 +10,11 @@ import {
   auditEntries,
   Database,
   documents as documentsTable,
+  poolSize,
   shares as sharesTable,
 } from "./database.ts";
-import { DocumentNotFound, Documents } from "./documents.ts";
-import { DirectoryUnavailable, type Document } from "./domain.ts";
+import { Documents } from "./documents.ts";
+import { DirectoryUnavailable, type Document, DocumentNotFound } from "./domain.ts";
 import { app, asUser, documents, everyone, memberships, sample, shares } from "./fixture.ts";
 import {
   AgentScopes,
@@ -160,6 +161,106 @@ it.effect(
       );
     }).pipe(Effect.provide(app)),
   120_000,
+);
+
+it.live("decides an edit on the row it writes, after a concurrent change to it commits", () =>
+  Effect.gen(function* () {
+    const store = yield* Documents;
+    const database = yield* Database;
+
+    const owned = documents.find(
+      ({ ownerId, status, legalHold }) => ownerId === "u01" && status !== "archived" && !legalHold,
+    );
+
+    if (owned === undefined) return expect.unreachable("The seed gives u01 an editable document");
+
+    const held = yield* Deferred.make<void>();
+    const commit = yield* Deferred.make<void>();
+
+    const hold = yield* database
+      .update(documentsTable)
+      .set({ legalHold: true })
+      .where(eq(documentsTable.id, owned.id))
+      .pipe(
+        Effect.andThen(Deferred.succeed(held, undefined)),
+        Effect.andThen(Deferred.await(commit)),
+        database.$client.withTransaction,
+        Effect.orDie,
+        Effect.forkChild,
+      );
+
+    yield* Deferred.await(held);
+
+    const edit = yield* store
+      .edit(owned.id, "Under hold")
+      .pipe(asUser("u01"), Effect.flip, Effect.forkChild);
+
+    // Commit only once the edit waits for the row the hold has changed.
+    yield* database.$client
+      .unsafe<{ readonly waiting: number }>(
+        `SELECT count(*)::int AS waiting FROM pg_stat_activity
+         WHERE datname = current_database() AND wait_event_type = 'Lock'`,
+      )
+      .pipe(Effect.repeat({ until: ([row]) => (row?.waiting ?? 0) > 0 }), Effect.orDie);
+    yield* Deferred.succeed(commit, undefined);
+    yield* Fiber.join(hold);
+
+    const [row] = yield* database
+      .select()
+      .from(documentsTable)
+      .where(eq(documentsTable.id, owned.id))
+      .pipe(Effect.orDie);
+
+    expect(yield* Fiber.join(edit)).toEqual(new Decision.Denied({ permission: "documents.edit" }));
+    expect(row?.title).toBe(owned.title);
+  }).pipe(Effect.provide(app)),
+);
+
+it.live("deadlocks once every connection holds a transaction deciding an audited permission", () =>
+  Effect.gen(function* () {
+    const store = yield* Documents;
+    const database = yield* Database;
+    const editable = new Set(yield* store.editable(everything).pipe(asUser("u01")));
+    const owned = documents.filter(({ id }) => editable.has(id));
+
+    // Transactions open together, each locking its own document, then decide.
+    // The decision's audit entry is written on another connection.
+    const decideTogether = (count: number) =>
+      Effect.gen(function* () {
+        const opened = yield* Ref.make(0);
+        const allOpen = yield* Deferred.make<void>();
+
+        yield* Effect.forEach(
+          owned.slice(0, count),
+          (document) =>
+            database
+              .select()
+              .from(documentsTable)
+              .where(eq(documentsTable.id, document.id))
+              .for("update")
+              .pipe(
+                Effect.andThen(Ref.updateAndGet(opened, (open) => open + 1)),
+                Effect.flatMap((open) =>
+                  open === count ? Deferred.succeed(allOpen, undefined) : Effect.void,
+                ),
+                Effect.andThen(Deferred.await(allOpen)),
+                Effect.andThen(EditDocument.require(document)),
+                database.$client.withTransaction,
+                Effect.orDie,
+              ),
+          { concurrency: "unbounded", discard: true },
+        );
+      }).pipe(asUser("u01"));
+
+    expect(owned.length).toBeGreaterThanOrEqual(poolSize);
+    // `Transactions` therefore runs one fewer than there are connections.
+    expect(yield* decideTogether(poolSize - 1).pipe(Effect.timeoutOption("10 seconds"))).toEqual(
+      Option.some(undefined),
+    );
+    expect(yield* decideTogether(poolSize).pipe(Effect.timeoutOption("2 seconds"))).toEqual(
+      Option.none(),
+    );
+  }).pipe(Effect.provide(app)),
 );
 
 it.effect("keeps decisions audited when the request's transaction rolls back", () =>

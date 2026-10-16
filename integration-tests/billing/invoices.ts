@@ -5,7 +5,7 @@ import * as Audit from "@kutur-kit/audit/Audit";
 import { eq } from "drizzle-orm";
 import { Context, Effect, Layer, Redacted, Schema } from "effect";
 
-import { Database, invoices } from "./database.ts";
+import { Database, invoices, Transactions } from "./database.ts";
 import {
   type CurrentUser,
   Invoice,
@@ -53,6 +53,7 @@ export class Invoices extends Context.Service<
     Invoices,
     Effect.gen(function* () {
       const database = yield* Database;
+      const transactions = yield* Transactions;
       const viewInvoiceFilter = yield* ViewInvoiceFilter;
       const approvePayout = yield* ApprovePayout;
       const auditLog = yield* Audit.AuditLog;
@@ -71,42 +72,47 @@ export class Invoices extends Context.Service<
         return rows.map(toInvoice);
       });
 
-      const approve = Effect.fn("Invoices.approve")(function* (id: Invoice["id"]) {
-        const invoice = yield* database
-          .select()
-          .from(invoices)
-          .where(eq(invoices.id, id))
-          .pipe(
-            Effect.orDie,
-            Effect.flatMap(([row]) =>
-              row === undefined
-                ? Effect.fail(new InvoiceNotFound())
-                : Effect.succeed(toInvoice(row)),
-            ),
-          );
+      // The invoice stays locked from the decision until the approval commits,
+      // so a concurrent change to it, such as its amount, cannot slip between.
+      // The approval and its audit event commit together, or not at all.
+      const approve = Effect.fn("Invoices.approve")(
+        function* (id: Invoice["id"]) {
+          const invoice = yield* database
+            .select()
+            .from(invoices)
+            .where(eq(invoices.id, id))
+            .for("update")
+            .pipe(
+              Effect.orDie,
+              Effect.flatMap(([row]) =>
+                row === undefined
+                  ? Effect.fail(new InvoiceNotFound())
+                  : Effect.succeed(toInvoice(row)),
+              ),
+            );
 
-        yield* approvePayout
-          .require(invoice)
-          .pipe(
-            Effect.catchIf(Schema.is(ViewInvoice.Denied), () => Effect.fail(new InvoiceNotFound())),
-          );
+          yield* approvePayout
+            .require(invoice)
+            .pipe(
+              Effect.catchIf(Schema.is(ViewInvoice.Denied), () =>
+                Effect.fail(new InvoiceNotFound()),
+              ),
+            );
 
-        const approved = Invoice.make({ ...invoice, status: "Approved" });
+          const approved = Invoice.make({ ...invoice, status: "Approved" });
 
-        // The approval and its audit event commit together, or not at all.
-        yield* database
-          .update(invoices)
-          .set({ status: "Approved" })
-          .where(eq(invoices.id, id))
-          .pipe(
-            Effect.andThen(InvoiceApproved.log({ target: approved })),
-            Effect.provideService(Audit.AuditLog, auditLog),
-            database.$client.withTransaction,
-            Effect.orDie,
-          );
+          yield* database
+            .update(invoices)
+            .set({ status: "Approved" })
+            .where(eq(invoices.id, id))
+            .pipe(Effect.orDie);
+          yield* InvoiceApproved.log({ target: approved });
 
-        return approved;
-      });
+          return approved;
+        },
+        Effect.provideService(Audit.AuditLog, auditLog),
+        transactions.run,
+      );
 
       return Invoices.of({ list, approve });
     }),

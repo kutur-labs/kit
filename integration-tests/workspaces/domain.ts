@@ -44,3 +44,9 @@ export class DirectoryUnavailable extends Schema.TaggedError<DirectoryUnavailabl
   {},
   { httpApiStatus: 503 },
 ) {}
+
+export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
+  "DocumentNotFound",
+  {},
+  { httpApiStatus: 404 },
+) {}

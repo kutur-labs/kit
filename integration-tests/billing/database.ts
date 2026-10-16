@@ -7,7 +7,7 @@ import { postgres } from "@kutur-kit/testcontainers/vitest";
 import { generateDrizzleJson, generateMigration } from "drizzle-kit/api-postgres";
 import * as PgDrizzle from "drizzle-orm/effect-postgres";
 import { integer, pgTable, primaryKey, text } from "drizzle-orm/pg-core";
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, Layer, Semaphore } from "effect";
 import * as Reactivity from "effect/reactivity/Reactivity";
 
 export const invoices = pgTable("invoices", {
@@ -32,9 +32,14 @@ export const memberships = pgTable(
 
 export const auditEntries = AuditPostgres.auditEntries("audit_entries");
 
+const poolSize = 10;
+
 const connect = (members: ReadonlyArray<Membership>) =>
   Effect.gen(function* () {
-    const client = yield* PgClient.make({ url: yield* PostgresContainer.database });
+    const client = yield* PgClient.make({
+      url: yield* PostgresContainer.database,
+      maxConnections: poolSize,
+    });
 
     const database = yield* PgDrizzle.makeWithDefaults().pipe(
       Effect.provideService(PgClient.PgClient, client),
@@ -57,11 +62,44 @@ export class Database extends Context.Service<
   Database,
   Effect.Success<ReturnType<typeof connect>>
 >()("billing/Database") {
-  /** A fresh database each time the Layer is built. */
+  /** A fresh database each time the Layer is built, with its `Transactions`. */
   static readonly layer = (members: ReadonlyArray<Membership>) =>
-    Layer.effect(Database, connect(members)).pipe(Layer.provide([Reactivity.layer, postgres]));
+    Transactions.layer.pipe(
+      Layer.provideMerge(Layer.effect(Database, connect(members))),
+      Layer.provide([Reactivity.layer, postgres]),
+    );
 
   static readonly auditLog = Layer.unwrap(
     Effect.map(Database, (database) => AuditPostgres.layer(database, auditEntries)),
+  );
+}
+
+/**
+ * Runs changes in transactions. A change decided inside its transaction also
+ * records the decision on another connection, so that it outlives a rollback:
+ * with a transaction on every connection, those writes would wait forever.
+ * Running one transaction fewer than there are connections leaves them one.
+ */
+export class Transactions extends Context.Service<
+  Transactions,
+  {
+    readonly run: <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  }
+>()("billing/Transactions") {
+  static readonly layer = Layer.effect(
+    Transactions,
+    Effect.gen(function* () {
+      const database = yield* Database;
+      const permits = yield* Semaphore.make(poolSize - 1);
+
+      return Transactions.of({
+        run: (effect) =>
+          effect.pipe(
+            database.$client.withTransaction,
+            Effect.catchTag("SqlError", Effect.die),
+            Semaphore.withPermit(permits),
+          ),
+      });
+    }),
   );
 }
