@@ -17,7 +17,6 @@ interface QueryEffect extends QueryEffectHKTBase {
 
 /** A Drizzle Effect database for PostgreSQL, such as `drizzle-orm/effect-postgres`. */
 export type Database = PgEffectDatabase<QueryEffect, PgQueryResultHKT, AnyRelations> & {
-  // @effect-diagnostics-next-line unstableApiUsage:off
   readonly $client: SqlClient.SqlClient;
 };
 

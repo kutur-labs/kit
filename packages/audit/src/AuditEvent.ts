@@ -48,7 +48,6 @@ export interface AuditEvent<A extends string, D extends Definition> {
 
 // Web Crypto exists on every runtime Effect supports; apps that provide Crypto
 // (as platform services do) replace it.
-// @effect-diagnostics-next-line unstableApiUsage:off
 const webCrypto = Crypto.make({
   randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
   digest: (algorithm, data) =>
@@ -94,11 +93,7 @@ export const make = <const A extends string, const D extends Definition>(
         ? yield* encodeDetails(input.details)
         : undefined;
 
-    const crypto = Option.getOrElse(
-      // @effect-diagnostics-next-line unstableApiUsage:off
-      yield* Effect.serviceOption(Crypto.Crypto),
-      () => webCrypto,
-    );
+    const crypto = Option.getOrElse(yield* Effect.serviceOption(Crypto.Crypto), () => webCrypto);
 
     const span = Option.getOrUndefined(yield* Effect.option(Effect.currentSpan));
     const actor = yield* Audit.CurrentActor;

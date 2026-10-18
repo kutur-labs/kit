@@ -87,7 +87,6 @@ it.effect("records no details when an event's optional details are undefined", (
 
 it.effect("gives entries distinct UUIDv7 ids, from the app's Crypto when it provides one", () =>
   Effect.gen(function* () {
-    // @effect-diagnostics-next-line unstableApiUsage:off
     const zeros = Crypto.make({
       randomBytes: (size) => new Uint8Array(size),
       digest: (_, data) => Effect.succeed(data),
@@ -95,7 +94,6 @@ it.effect("gives entries distinct UUIDv7 ids, from the app's Crypto when it prov
 
     yield* ViewItem.log({ target: item });
     yield* ViewItem.log({ target: item });
-    // @effect-diagnostics-next-line unstableApiUsage:off
     yield* ViewItem.log({ target: item }).pipe(Effect.provideService(Crypto.Crypto, zeros));
 
     const [first, second, provided] = yield* TestAuditLog.entries;
@@ -182,7 +180,7 @@ it.effect("never records Redacted fields, even when marked", () =>
 
 it.effect("derives views through classes, optional fields, arrays and unions", () =>
   Effect.gen(function* () {
-    class Member extends Schema.Class<Member>("test/Member")({
+    class Member extends Schema.Class<Member, { readonly brand: unique symbol }>("test/Member")({
       id: Schema.String.pipe(AuditKey.key),
       email: Schema.String,
     }) {}
@@ -274,7 +272,10 @@ it.effect("dies when the target fails its view, recording nothing", () =>
 test("rejects views and details containing Redacted fields anywhere", () => {
   const secret = Schema.Redacted(Schema.String);
 
-  class Token extends Schema.Class<Token>("test/Token")({ id: Schema.String, secret }) {}
+  class Token extends Schema.Class<Token, { readonly brand: unique symbol }>("test/Token")({
+    id: Schema.String,
+    secret,
+  }) {}
 
   const schemas = [
     Schema.Struct({ id: Schema.String, secret }),
@@ -294,7 +295,9 @@ test("rejects views and details containing Redacted fields anywhere", () => {
 });
 
 test("accepts explicit views with classes and other declarations", () => {
-  class Member extends Schema.Class<Member>("test/Member")({ id: Schema.String }) {}
+  class Member extends Schema.Class<Member, { readonly brand: unique symbol }>("test/Member")({
+    id: Schema.String,
+  }) {}
 
   const view = Schema.Struct({ member: Member, at: Schema.DateTimeUtc });
 
