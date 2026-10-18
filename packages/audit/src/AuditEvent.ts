@@ -51,7 +51,7 @@ export interface AuditEvent<A extends string, D extends Definition> {
 const webCrypto = Crypto.make({
   randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
   digest: (algorithm, data) =>
-    Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, data)).pipe(
+    Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))).pipe(
       Effect.map((digest) => new Uint8Array(digest)),
     ),
 });
