@@ -19,11 +19,16 @@ peerDependencyRules:
   # which no workspace imports; they import the modules they use directly.
   ignoreMissing:
     - redis
+  allowedVersions:
+    # capnp-es, from alchemy's Cloudflare runtime, uses TypeScript only in
+    # its schema compiler, which no workspace runs.
+    capnp-es>typescript: "7"
 
 # Catalog usage is documented in AGENTS.md.
 catalogs:
   runtime:
     "@distilled.cloud/aws": 1.0.0-rc.15
+    alchemy: 2.0.0-beta.83
     drizzle-orm: 1.0.0-rc.4
     effect: 4.0.5
     "@oxlint/plugins": 1.88.0
@@ -60,6 +65,7 @@ catalogs:
     vitest: 5.0.5
   peers:
     "@distilled.cloud/aws": 1.0.0-rc.15
+    alchemy: 2.0.0-beta.83
     drizzle-orm: 1.0.0-rc.4
     effect: ^4.0.5
     "@effect/tsgo": ~0.53.3
@@ -71,6 +77,8 @@ allowBuilds:
   esbuild: true
   protobufjs: false
   ssh2: false
+  # Miniflare runs workerd from its platform package; the script only checks it.
+  workerd: false
 patchedDependencies:
   "@stryker-mutator/vitest-runner@10.0.0": patches/@stryker-mutator__vitest-runner@10.0.0.patch
   drizzle-orm@1.0.0-rc.4: patches/drizzle-orm@1.0.0-rc.4.patch

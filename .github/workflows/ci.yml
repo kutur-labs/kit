@@ -71,3 +71,35 @@ jobs:
         run: pnpm exec commitlint --strict --from "$BASE" --to "$HEAD"
       - run: pnpm build
       - run: pnpm check
+
+  r2:
+    # Deploys a Worker and R2 bucket with alchemy, runs the asset contracts on
+    # real R2 and destroys both. The token can create Workers and API tokens,
+    # so it lives in the `cloudflare-r2` environment, which only `main` may
+    # use; pull requests run the same contracts locally in `check`.
+    if: github.event_name != 'pull_request'
+    environment: cloudflare-r2
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    # One deployment at a time: runs share the stack's stage and its names.
+    concurrency:
+      group: r2
+      cancel-in-progress: false
+    env:
+      TEST_R2_LIVE: "1"
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Require Cloudflare credentials
+        run: |
+          for name in CLOUDFLARE_ACCOUNT_ID CLOUDFLARE_API_TOKEN; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Set the $name secret"
+              exit 1
+            fi
+          done
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @kutur-kit/assets exec vitest run test/alchemy-r2.test.ts

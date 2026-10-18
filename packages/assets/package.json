@@ -21,6 +21,7 @@
     "./AssetBucket": "./src/AssetBucket.ts",
     "./AssetDelivery": "./src/AssetDelivery.ts",
     "./AssetSigning": "./src/AssetSigning.ts",
+    "./alchemy/r2": "./src/alchemy/r2.ts",
     "./delivery/local": "./src/delivery/local.ts",
     "./filesystem": "./src/filesystem.ts",
     "./memory": "./src/memory.ts",
@@ -49,6 +50,10 @@
       "./AssetSigning": {
         "types": "./dist/AssetSigning.d.ts",
         "default": "./dist/AssetSigning.js"
+      },
+      "./alchemy/r2": {
+        "types": "./dist/alchemy/r2.d.ts",
+        "default": "./dist/alchemy/r2.js"
       },
       "./delivery/local": {
         "types": "./dist/delivery/local.d.ts",
@@ -95,6 +100,7 @@
     "@stryker-mutator/core": "catalog:testing",
     "@stryker-mutator/vitest-runner": "catalog:testing",
     "@types/node": "catalog:tooling",
+    "alchemy": "catalog:runtime",
     "effect": "catalog:runtime",
     "publint": "catalog:tooling",
     "typescript": "catalog:tooling",
@@ -102,10 +108,14 @@
   },
   "peerDependencies": {
     "@distilled.cloud/aws": "catalog:peers",
+    "alchemy": "catalog:peers",
     "effect": "catalog:peers"
   },
   "peerDependenciesMeta": {
     "@distilled.cloud/aws": {
+      "optional": true
+    },
+    "alchemy": {
       "optional": true
     }
   }

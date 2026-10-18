@@ -1,16 +1,14 @@
 import type * as AssetSigning from "./AssetSigning.ts";
+import type * as Credentials from "@distilled.cloud/aws/Credentials";
 import type * as HttpClient from "effect/http/HttpClient";
 
-import * as Credentials from "@distilled.cloud/aws/Credentials";
-import * as Presign from "@distilled.cloud/aws/Presign";
-import * as Region from "@distilled.cloud/aws/Region";
 import * as S3 from "@distilled.cloud/aws/s3";
-import { ByteSize, Clock, DateTime, Duration, Effect, Layer, Option, Stream } from "effect";
+import { ByteSize, Effect, Layer, Option, Stream } from "effect";
 
 import * as AssetBucket from "./AssetBucket.ts";
 import * as AssetSigningModule from "./AssetSigning.ts";
 import { concat } from "./internal/bytes.ts";
-import { encodeKey } from "./internal/url.ts";
+import * as SigV4 from "./internal/sigv4.ts";
 
 export interface Options {
   /** The bucket's name in the storage. */
@@ -120,9 +118,6 @@ export const layer = <Self, Id extends string>(
     }),
   );
 
-// The longest S3 allows for a presigned URL.
-const maxExpiry = Duration.days(7);
-
 /**
  * Signs URLs for a bucket with SigV4, for clients to upload to and download
  * from the storage directly. Uploads are signed with their content type and
@@ -133,58 +128,11 @@ export const signing = <Self, Id extends string>(
   bucket: AssetBucket.Tag<Self, Id>,
   options: SigningOptions,
 ): Layer.Layer<AssetSigning.SigningOf<Self>, never, Credentials.Credentials> =>
-  Layer.effect(
-    AssetSigningModule.of(bucket),
-    Effect.gen(function* () {
-      const context = yield* Effect.context<Credentials.Credentials>();
-      const base = `${options.endpoint.replace(/\/+$/u, "")}/${options.bucket}`;
+  Layer.effect(AssetSigningModule.of(bucket), SigV4.make(bucket.id, Effect.succeed(options)));
 
-      const sign = (
-        method: "PUT" | "GET",
-        key: string,
-        expiresIn: Duration.Duration,
-        signed: Readonly<Record<string, string>>,
-      ) =>
-        Effect.gen(function* () {
-          const credentials = yield* yield* Credentials.Credentials;
-          const now = yield* Clock.currentTimeMillis;
-          const seconds = Math.ceil(Duration.toMillis(Duration.min(expiresIn, maxExpiry)) / 1000);
-
-          const url = yield* Presign.presignUrl({
-            method,
-            url: `${base}/${encodeKey(key)}`,
-            service: "s3",
-            region: credentials.region,
-            expiresIn: seconds,
-            headers: signed,
-            // The signing time comes from Effect's clock, as the expiry does.
-            datetime: new Date(now).toISOString().replace(/[-:]|\.\d{3}/gu, ""),
-          }).pipe(Effect.provideService(Region.Region, Effect.succeed(credentials.region)));
-
-          return {
-            method,
-            url,
-            // Browsers set Content-Length from the body; the rest is sent as given.
-            headers: Object.fromEntries(
-              Object.entries(signed).filter(([name]) => name !== "content-length"),
-            ),
-            expiresAt: DateTime.makeUnsafe(now + seconds * 1000),
-          };
-        }).pipe(Effect.provideContext(context), Effect.mapError(failure(bucket.id, "sign", key)));
-
-      return {
-        // Content-Length is signed: without it, the storage accepts any size.
-        // `If-None-Match: *` makes the URL write-once: replayed after its
-        // upload, even with other bytes of the same length, it is refused.
-        signPut: ({ key, contentType, contentLength, cacheControl, expiresIn }) =>
-          sign("PUT", key, expiresIn, {
-            "content-type": contentType,
-            "content-length": String(contentLength),
-            "if-none-match": "*",
-            // Signed, or browsers' `no-cache` for conditional requests is stored.
-            "cache-control": cacheControl,
-          }),
-        signGet: ({ key, expiresIn }) => sign("GET", key, expiresIn, {}),
-      };
-    }),
-  );
+/**
+ * R2's S3 endpoint for an account, for `signing` and an S3 `Endpoint`.
+ * Requests to it are signed for the region `auto`.
+ */
+export const r2Endpoint = (accountId: string, jurisdiction?: "eu" | "fedramp") =>
+  `https://${accountId}.${jurisdiction === undefined ? "" : `${jurisdiction}.`}r2.cloudflarestorage.com`;
