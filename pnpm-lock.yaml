@@ -353,6 +353,9 @@ importers:
 
   integration-tests:
     devDependencies:
+      '@distilled.cloud/aws':
+        specifier: catalog:runtime
+        version: 1.0.0-rc.15(effect@4.0.5)
       '@effect/sql-pg':
         specifier: catalog:testing
         version: 4.0.5(effect@4.0.5)
@@ -365,6 +368,9 @@ importers:
       '@kutur-kit/access':
         specifier: workspace:*
         version: link:../packages/access
+      '@kutur-kit/assets':
+        specifier: workspace:*
+        version: link:../packages/assets
       '@kutur-kit/audit':
         specifier: workspace:*
         version: link:../packages/audit

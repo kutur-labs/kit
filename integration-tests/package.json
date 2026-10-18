@@ -10,10 +10,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@distilled.cloud/aws": "catalog:runtime",
     "@effect/sql-pg": "catalog:testing",
     "@effect/tsgo": "catalog:tooling",
     "@effect/vitest": "catalog:testing",
     "@kutur-kit/access": "workspace:*",
+    "@kutur-kit/assets": "workspace:*",
     "@kutur-kit/audit": "workspace:*",
     "@kutur-kit/testcontainers": "workspace:*",
     "@kutur-kit/tsconfig": "workspace:*",
