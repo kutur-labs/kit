@@ -29,6 +29,13 @@ Declare dependencies in the package that imports them. Put build and test tools 
 - Tests that need PostgreSQL use `@kutur-kit/testcontainers`: one reused container shared by all runs (Docker must be running), with a fresh database per test. Set `TEST_POSTGRES_URL` to use another server, or `TESTCONTAINERS_REUSE_ENABLE=false` for a container per run.
 - For test work, read and follow [test-quality](.agents/skills/test-quality/SKILL.md), including files in `test/`, `tests/`, `__tests__/` or `typetest/` and files named `*.test.*`, `*.spec.*` or `*.tst.*`.
 
+## Releases
+
+- Versions and changelogs come from [Changesets](https://changesets.dev). Add a changeset with `pnpm changeset` in the change's pull request, for each public package it affects.
+- Packages are in alpha: `0.1.0-alpha.N`, published under the `alpha` npm tag (`.changeset/pre.json`). Move to beta with `pnpm changeset pre exit` and `pnpm changeset pre enter beta`; exit pre mode for a normal release.
+- `@kutur-kit/access` and `@kutur-kit/audit` always release together with the same version. `@kutur-kit/oxc` and `@kutur-kit/tsconfig` are versioned on their own. Private workspaces are never versioned.
+- To release, run `pnpm release:version`, review and commit the versions and changelogs, then run `pnpm release`. It builds, checks and publishes with pnpm. A package's first publish also becomes its `latest` tag.
+
 ## File names
 
 - Use PascalCase for public Effect modules, such as `ApprovalRequest.ts`, and match their exported module names.

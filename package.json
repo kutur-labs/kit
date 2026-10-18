@@ -5,6 +5,7 @@
   "scripts": {
     "bench": "turbo run bench",
     "build": "turbo run build",
+    "changeset": "changeset",
     "check": "pnpm format:check && turbo run lint lint:repo lint:package lint:structure typecheck typecheck:repo test",
     "commitlint": "commitlint --strict",
     "db:down": "docker compose down",
@@ -18,12 +19,15 @@
     "lint:repo": "oxlint .",
     "lint:structure": "konsistent check --error-on-warnings",
     "prepare": "effect-tsgo patch --oxlint && husky",
+    "release": "pnpm build && pnpm check && changeset publish",
+    "release:version": "changeset version",
     "test": "turbo run test",
     "test:mutation": "turbo run test:mutation",
     "typecheck": "turbo run typecheck typecheck:repo",
     "typecheck:repo": "tsc --noEmit"
   },
   "devDependencies": {
+    "@changesets/cli": "catalog:tooling",
     "@commitlint/cli": "catalog:tooling",
     "@commitlint/config-conventional": "catalog:tooling",
     "@commitlint/types": "catalog:tooling",
