@@ -95,7 +95,7 @@
       "outputs": ["reports/mutation/**"]
     },
     "//#lint:repo": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "@kutur-kit/docs#build"],
       "outputs": []
     },
     "//#typecheck:repo": {

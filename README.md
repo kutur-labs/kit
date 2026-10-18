@@ -1,6 +1,6 @@
 # Kutur Kit
 
-TypeScript libraries and tooling built around Effect.
+Open-source libraries and tools from Kutur Labs.
 
 ## Development
 

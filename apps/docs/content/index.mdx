@@ -1,0 +1,45 @@
+---
+title: Getting started
+description: Open-source Effect libraries and tools from Kutur Labs.
+---
+
+Kutur Kit is a set of open-source [Effect](https://effect.website) libraries and development tools from Kutur Labs. Packages are published separately, so install only the ones you use.
+
+## Start with a running example
+
+You can try both guides in your browser without credentials, Docker or a database. Each includes the full runnable TypeScript source.
+
+<Cards>
+  <Card title="Enforce a permission" href="/docs/guides/permissions">
+    Switch callers and token scopes, attempt an edit and inspect the audit entry.
+  </Card>
+  <Card title="Store a file in memory" href="/docs/guides/storage">
+    Write, read and delete a file. See what happens when an overwrite exceeds its size limit.
+  </Card>
+</Cards>
+
+[How the packages fit together](/docs/architecture) covers what each package is responsible for and what the memory implementations do not test.
+
+## Install a package
+
+Packages are currently published under the `alpha` tag. Install the packages you need:
+
+```sh
+pnpm add @kutur-kit/access@alpha effect
+```
+
+Each package page lists the Effect version it is tested with, along with storage adapters and other peer dependencies. APIs may change between alpha releases.
+
+## Libraries
+
+<!-- packages:libraries -->
+
+## Development tools
+
+<!-- packages:tools -->
+
+## Before deploying
+
+The examples use local memory to make the behavior visible. In an application, derive identity from verified authentication, choose persistent storage and test transaction or signed URL behavior against the deployed adapters. The guides explain which parts to replace.
+
+If you are new to Effect, start with the [Effect documentation](https://effect.website/docs/).

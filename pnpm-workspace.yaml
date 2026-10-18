@@ -27,6 +27,16 @@ peerDependencyRules:
 # Catalog usage is documented in AGENTS.md.
 catalogs:
   runtime:
+    "@tanstack/react-router": 1.170.41
+    "@tanstack/react-start": 1.168.60
+    "@tanstack/start-static-server-functions": 1.167.39
+    fumadocs-core: 16.17.5
+    fumadocs-mdx: 15.4.7
+    fumadocs-ui: npm:@fumadocs/base-ui@16.17.5
+    lucide-react: 1.50.0
+    react: 19.3.0
+    react-dom: 19.3.0
+    zod: 4.6.7
     "@distilled.cloud/aws": 1.0.0-rc.15
     alchemy: 2.0.0-beta.83
     drizzle-orm: 1.0.0-rc.4
@@ -35,6 +45,14 @@ catalogs:
     eslint-plugin-sonarjs: 4.2.2
     eslint: 10.13.0
   tooling:
+    "@tailwindcss/vite": 4.3.3
+    "@vitejs/plugin-react": 6.1.1
+    nitro: 3.0.260903-beta
+    vite: 8.3.2
+    "@types/mdx": 2.0.14
+    "@types/react": 19.3.0
+    "@types/react-dom": 19.3.0
+    tailwindcss: 4.3.3
     "@changesets/cli": 3.0.3
     drizzle-kit: 1.0.0-rc.4
     konsistent: 1.0.0-beta.12

@@ -1,0 +1,46 @@
+---
+title: How the packages fit together
+description: What runs in memory, what needs infrastructure and which guarantees to test in production.
+---
+
+Access, Assets and Audit each separate a definition from its implementation. This page explains that split and lists what to change before production. The package references describe the full API and adapter requirements.
+
+## Define first, implement later
+
+Define the permissions, assets and events your application uses without choosing every implementation up front. A permission declares its target and requirements; a policy Layer implements its decision. An asset declares its file rules; a bucket Layer supplies storage. An audit event declares its recorded fields; an `AuditLog` service stores the entries.
+
+Provide these implementations at the application boundary. Tests can use memory buckets and the test audit log. Applications can provide a filesystem or cloud bucket and PostgreSQL audit storage. The definitions and calling code stay the same when you swap compatible storage Layers. Adapter configuration, signing and transaction guarantees still need their own setup.
+
+## Access decides whether an operation is allowed
+
+A permission is a service; its policy is a Layer. Access has no separate database to initialize. A policy can be pure or depend on services such as the current user and an application's membership store.
+
+Use `check` to ask a question and `require` to enforce the decision before an operation. Caller restrictions narrow permissions further. For database listings, use a permission filter before pagination rather than loading a page and hiding disallowed rows afterward.
+
+[Try an audited owner policy](/docs/guides/permissions).
+
+## Assets separates file rules from storage
+
+An asset defines keys, accepted content types and size limits. Its bucket Layer provides storage. Memory is useful for tests and local experiments. Filesystem, S3 and R2 adapters provide other storage options with their own requirements.
+
+Signing and delivery are separate capabilities. Swapping a memory bucket for S3 does not configure public URLs, signed upload endpoints or browser CORS by itself.
+
+[Try an in-memory file lifecycle](/docs/guides/storage).
+
+## Audit records events through a log service
+
+Events declare what to record through schemas. `AuditLog` stores entries. Use `TestAuditLog.layer` to inspect entries in a test or demonstration; it keeps entries only in memory.
+
+For durable logs, the included PostgreSQL adapter integrates with Drizzle transactions. Ordinary entries join the caller's transaction. Isolated entries use another connection so they can survive rollback. Test those guarantees against PostgreSQL; the in-memory log cannot simulate them.
+
+Audit failure is not best-effort telemetry: failure to store an entry prevents the audited operation from completing normally. Decide your transaction boundary so the business write and its audit event have the required commit behavior.
+
+## Move from a demo to an application
+
+- Derive identity and token scopes from trusted authentication, then provide them to policies.
+- Keep authorization and data mutation consistent under concurrent updates.
+- Choose durable storage and keep credentials on the server.
+- Select the audit target fields explicitly, using `AuditKey` or a view schema.
+- Test cloud delivery and database transactions against the actual adapters.
+
+The browser playgrounds execute real library code, but their editable identity controls are not authentication and their memory stores are not production persistence.
