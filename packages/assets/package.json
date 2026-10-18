@@ -1,7 +1,6 @@
 {
   "name": "@kutur-kit/assets",
   "version": "0.0.0",
-  "private": true,
   "description": "Typed asset definitions and swappable object storage for Effect.",
   "license": "MIT",
   "repository": {
