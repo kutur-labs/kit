@@ -1,5 +1,7 @@
-# An optional long-running server for tests, so runs skip starting a container:
-# `pnpm db:up`, then TEST_POSTGRES_URL=postgres://kit:kit@localhost:54329/kit.
+# Optional long-running servers for tests, so runs skip starting containers:
+# `pnpm db:up`, then TEST_POSTGRES_URL=postgres://kit:kit@localhost:54329/kit,
+# and TEST_S3_ENDPOINT=http://localhost:9009 with TEST_S3_ACCESS_KEY_ID=kit
+# and TEST_S3_SECRET_ACCESS_KEY=kit-secret.
 services:
   postgres:
     image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
@@ -17,3 +19,10 @@ services:
       interval: 1s
       timeout: 2s
       retries: 30
+  rustfs:
+    image: rustfs/rustfs:1.0.3@sha256:9ca9559533b537d10482fe923288b676ad08f92a7069d9a17327fbae3cab688b
+    environment:
+      RUSTFS_ACCESS_KEY: kit
+      RUSTFS_SECRET_KEY: kit-secret
+    ports:
+      - "9009:9000"

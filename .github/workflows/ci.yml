@@ -20,8 +20,9 @@ jobs:
   check:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
-    # The image compose.yaml and @kutur-kit/testcontainers use, as a service:
-    # tests reach it through TEST_POSTGRES_URL instead of starting a container.
+    # The images compose.yaml and @kutur-kit/testcontainers use, as services:
+    # tests reach them through TEST_POSTGRES_URL and TEST_S3_* instead of
+    # starting containers.
     services:
       postgres:
         image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
@@ -37,8 +38,21 @@ jobs:
           --health-interval 1s
           --health-timeout 2s
           --health-retries 30
+      # The image has no shell tools for a health check; it starts in about a
+      # second, well before the build finishes. It runs as a user that cannot
+      # write to a tmpfs, so its data stays in the disposable container.
+      rustfs:
+        image: rustfs/rustfs:1.0.3@sha256:9ca9559533b537d10482fe923288b676ad08f92a7069d9a17327fbae3cab688b
+        env:
+          RUSTFS_ACCESS_KEY: kit
+          RUSTFS_SECRET_KEY: kit-secret
+        ports:
+          - 9000:9000
     env:
       TEST_POSTGRES_URL: postgres://kit:kit@localhost:5432/kit
+      TEST_S3_ENDPOINT: http://localhost:9000
+      TEST_S3_ACCESS_KEY_ID: kit
+      TEST_S3_SECRET_ACCESS_KEY: kit-secret
       # Pull requests reuse Turbo's cache and run only what their changes
       # affect. Every other run executes all tasks, refreshing that cache.
       TURBO_FORCE: ${{ github.event_name != 'pull_request' }}

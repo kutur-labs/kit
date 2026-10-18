@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./PostgresContainer": "./src/PostgresContainer.ts",
+    "./RustfsContainer": "./src/RustfsContainer.ts",
     "./vitest": "./src/vitest.ts"
   },
   "scripts": {
@@ -13,6 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@distilled.cloud/aws": "catalog:runtime",
     "@effect/sql-pg": "catalog:testing",
     "@testcontainers/postgresql": "catalog:testing",
     "effect": "catalog:runtime",

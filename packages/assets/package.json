@@ -1,0 +1,112 @@
+{
+  "name": "@kutur-kit/assets",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Typed asset definitions and swappable object storage for Effect.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/assets"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./Asset": "./src/Asset.ts",
+    "./AssetBucket": "./src/AssetBucket.ts",
+    "./AssetDelivery": "./src/AssetDelivery.ts",
+    "./AssetSigning": "./src/AssetSigning.ts",
+    "./delivery/local": "./src/delivery/local.ts",
+    "./filesystem": "./src/filesystem.ts",
+    "./memory": "./src/memory.ts",
+    "./s3": "./src/s3.ts",
+    "./signing/local": "./src/signing/local.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./Asset": {
+        "types": "./dist/Asset.d.ts",
+        "default": "./dist/Asset.js"
+      },
+      "./AssetBucket": {
+        "types": "./dist/AssetBucket.d.ts",
+        "default": "./dist/AssetBucket.js"
+      },
+      "./AssetDelivery": {
+        "types": "./dist/AssetDelivery.d.ts",
+        "default": "./dist/AssetDelivery.js"
+      },
+      "./AssetSigning": {
+        "types": "./dist/AssetSigning.d.ts",
+        "default": "./dist/AssetSigning.js"
+      },
+      "./delivery/local": {
+        "types": "./dist/delivery/local.d.ts",
+        "default": "./dist/delivery/local.js"
+      },
+      "./filesystem": {
+        "types": "./dist/filesystem.d.ts",
+        "default": "./dist/filesystem.js"
+      },
+      "./memory": {
+        "types": "./dist/memory.d.ts",
+        "default": "./dist/memory.js"
+      },
+      "./s3": {
+        "types": "./dist/s3.d.ts",
+        "default": "./dist/s3.js"
+      },
+      "./signing/local": {
+        "types": "./dist/signing/local.d.ts",
+        "default": "./dist/signing/local.js"
+      },
+      "./testing": {
+        "types": "./dist/testing/index.d.ts",
+        "default": "./dist/testing/index.js"
+      }
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsc -p tsconfig.build.json",
+    "lint:package": "publint --pack pnpm --strict",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:mutation": "stryker run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@distilled.cloud/aws": "catalog:runtime",
+    "@effect/platform-node": "catalog:testing",
+    "@effect/tsgo": "catalog:tooling",
+    "@effect/vitest": "catalog:testing",
+    "@kutur-kit/testcontainers": "workspace:*",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@stryker-mutator/core": "catalog:testing",
+    "@stryker-mutator/vitest-runner": "catalog:testing",
+    "@types/node": "catalog:tooling",
+    "effect": "catalog:runtime",
+    "publint": "catalog:tooling",
+    "typescript": "catalog:tooling",
+    "vitest": "catalog:testing"
+  },
+  "peerDependencies": {
+    "@distilled.cloud/aws": "catalog:peers",
+    "effect": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@distilled.cloud/aws": {
+      "optional": true
+    }
+  }
+}

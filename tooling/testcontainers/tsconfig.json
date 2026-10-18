@@ -7,7 +7,12 @@
         "name": "@effect/language-service",
         "diagnostics": true,
         "includeSuggestionsInTsc": false,
-        "allowedUnstableApis": ["@effect/sql-pg", "@effect/vitest", "effect/reactivity"]
+        "allowedUnstableApis": [
+          "@effect/sql-pg",
+          "@effect/vitest",
+          "effect/http",
+          "effect/reactivity"
+        ]
       }
     ],
     "types": ["node"]

@@ -1,0 +1,25 @@
+{
+  "extends": "@kutur-kit/tsconfig/effect.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostics": true,
+        "includeSuggestionsInTsc": false,
+        "allowedUnstableApis": [
+          "@effect/platform-node",
+          "@effect/vitest",
+          "effect/ByteSize",
+          "effect/FileSystem",
+          "effect/http",
+          "effect/Path",
+          "effect/PlatformError",
+          "effect/Schema#ByteSize"
+        ]
+      }
+    ],
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

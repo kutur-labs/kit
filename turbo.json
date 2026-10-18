@@ -30,7 +30,13 @@
         "$TURBO_ROOT$/compose.yaml",
         "$TURBO_ROOT$/.github/workflows/ci.yml"
       ],
-      "env": ["TEST_POSTGRES_URL"],
+      "env": [
+        "TEST_POSTGRES_URL",
+        "TEST_S3_ENDPOINT",
+        "TEST_S3_ACCESS_KEY_ID",
+        "TEST_S3_SECRET_ACCESS_KEY",
+        "TEST_S3_REGION"
+      ],
       "passThroughEnv": [
         "DOCKER_HOST",
         "DOCKER_CERT_PATH",
@@ -45,7 +51,13 @@
     "bench": {
       "dependsOn": ["^build"],
       "cache": false,
-      "env": ["TEST_POSTGRES_URL"],
+      "env": [
+        "TEST_POSTGRES_URL",
+        "TEST_S3_ENDPOINT",
+        "TEST_S3_ACCESS_KEY_ID",
+        "TEST_S3_SECRET_ACCESS_KEY",
+        "TEST_S3_REGION"
+      ],
       "passThroughEnv": [
         "DOCKER_HOST",
         "DOCKER_CERT_PATH",
@@ -63,7 +75,13 @@
         "$TURBO_ROOT$/compose.yaml",
         "$TURBO_ROOT$/.github/workflows/ci.yml"
       ],
-      "env": ["TEST_POSTGRES_URL"],
+      "env": [
+        "TEST_POSTGRES_URL",
+        "TEST_S3_ENDPOINT",
+        "TEST_S3_ACCESS_KEY_ID",
+        "TEST_S3_SECRET_ACCESS_KEY",
+        "TEST_S3_REGION"
+      ],
       "passThroughEnv": [
         "DOCKER_HOST",
         "DOCKER_CERT_PATH",

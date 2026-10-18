@@ -14,10 +14,16 @@ engineStrict: true
 autoInstallPeers: false
 strictPeerDependencies: true
 resolvePeersFromWorkspaceRoot: false
+peerDependencyRules:
+  # @effect/platform-node requires redis for its NodeRedis module alone,
+  # which no workspace imports; they import the modules they use directly.
+  ignoreMissing:
+    - redis
 
 # Catalog usage is documented in AGENTS.md.
 catalogs:
   runtime:
+    "@distilled.cloud/aws": 1.0.0-rc.15
     drizzle-orm: 1.0.0-rc.4
     effect: 4.0.5
     "@oxlint/plugins": 1.88.0
@@ -41,6 +47,7 @@ catalogs:
     skills: 1.7.2
     "@types/node": 24.19.2
   testing:
+    "@effect/platform-node": 4.0.5
     "@effect/sql-pg": 4.0.5
     "@testcontainers/postgresql": 12.2.1
     testcontainers: 12.2.1
@@ -52,6 +59,7 @@ catalogs:
     "@stryker-mutator/vitest-runner": 10.0.0
     vitest: 5.0.5
   peers:
+    "@distilled.cloud/aws": 1.0.0-rc.15
     drizzle-orm: 1.0.0-rc.4
     effect: ^4.0.5
     "@effect/tsgo": ~0.53.3
