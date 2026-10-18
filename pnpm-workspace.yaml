@@ -20,9 +20,9 @@ catalogs:
   runtime:
     drizzle-orm: 1.0.0-rc.4
     effect: 4.0.5
-    "@oxlint/plugins": 1.87.0
+    "@oxlint/plugins": 1.88.0
     eslint-plugin-sonarjs: 4.2.2
-    eslint: 10.12.0
+    eslint: 10.13.0
   tooling:
     drizzle-kit: 1.0.0-rc.4
     konsistent: 1.0.0-beta.12
@@ -30,15 +30,15 @@ catalogs:
     "@commitlint/config-conventional": 21.2.3
     "@commitlint/types": 21.2.3
     husky: 9.1.7
-    turbo: 2.11.7
+    turbo: 2.11.9
     typescript: 7.0.2
-    "@effect/tsgo": 0.51.1
-    oxlint: 1.87.0
-    oxlint-tsgolint: 7.0.2003
-    oxfmt: 0.72.0
+    "@effect/tsgo": 0.53.3
+    oxlint: 1.88.0
+    oxlint-tsgolint: 7.0.2004
+    oxfmt: 0.73.0
     publint: 0.3.25
-    skills: 1.7.1
-    "@types/node": 24.19.1
+    skills: 1.7.2
+    "@types/node": 24.19.2
   testing:
     "@effect/sql-pg": 4.0.5
     "@testcontainers/postgresql": 12.2.1
@@ -49,13 +49,13 @@ catalogs:
     "@yielded/crypto": 0.1.0-beta.42
     "@stryker-mutator/core": 10.0.0
     "@stryker-mutator/vitest-runner": 10.0.0
-    vitest: 5.0.3
+    vitest: 5.0.5
   peers:
     drizzle-orm: 1.0.0-rc.4
-    effect: ^4.0.2
-    "@effect/tsgo": ~0.51.1
-    oxlint: ~1.87.0
-    oxfmt: ~0.72.0
+    effect: ^4.0.5
+    "@effect/tsgo": ~0.53.3
+    oxlint: ~1.88.0
+    oxfmt: ~0.73.0
 allowBuilds:
   # Testcontainers works without these native and postinstall steps.
   cpu-features: false
@@ -72,3 +72,19 @@ minimumReleaseAgeExclude:
   - "@yielded/crypto@0.1.0-beta.42"
   - "@yielded/jose@0.1.0-beta.42"
   - "@yielded/oauth@0.1.0-beta.42"
+  - "@effect/tsgo-darwin-arm64@0.53.3"
+  - "@effect/tsgo-darwin-x64@0.53.3"
+  - "@effect/tsgo-linux-arm64@0.53.3"
+  - "@effect/tsgo-linux-arm@0.53.3"
+  - "@effect/tsgo-linux-x64@0.53.3"
+  - "@effect/tsgo-win32-arm64@0.53.3"
+  - "@effect/tsgo-win32-x64@0.53.3"
+  - "@effect/tsgo@0.53.3"
+  - "@turbo/darwin-64@2.11.9"
+  - "@turbo/darwin-arm64@2.11.9"
+  - "@turbo/linux-64@2.11.9"
+  - "@turbo/linux-arm64@2.11.9"
+  - "@turbo/windows-64@2.11.9"
+  - "@turbo/windows-arm64@2.11.9"
+  - eslint@10.13.0
+  - turbo@2.11.9

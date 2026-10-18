@@ -30,7 +30,10 @@ it("keeps the caller required until authentication provides it", () => {
 });
 
 it("types refusals by permission, so handling one leaves the others", () => {
-  class Hidden extends Schema.TaggedError<Hidden>()("Hidden", {}) {}
+  class Hidden extends Schema.TaggedError<Hidden, { readonly brand: unique symbol }>()(
+    "Hidden",
+    {},
+  ) {}
 
   const edit = EditNote.require(note).pipe(
     Effect.catchIf(Schema.is(ViewNote.Denied), () => Effect.fail(new Hidden())),
@@ -82,7 +85,10 @@ it("types stored ids as the ids of the set's permissions", () => {
 });
 
 it("rejects policies failing with errors the permission does not declare", () => {
-  class LookupFailed extends Schema.TaggedError<LookupFailed>()("LookupFailed", {}) {}
+  class LookupFailed extends Schema.TaggedError<LookupFailed, { readonly brand: unique symbol }>()(
+    "LookupFailed",
+    {},
+  ) {}
 
   // @ts-expect-error
   ViewNote.toLayer(() => Effect.fail(new LookupFailed()));

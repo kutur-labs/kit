@@ -27,24 +27,21 @@ export const SessionHttp = SessionContract.makeSessionHttpContract(
   { cookieName: "workspaces-session" },
 );
 
-export class Unauthenticated extends Schema.TaggedError<Unauthenticated>()(
-  "Unauthenticated",
-  {},
-  { httpApiStatus: 401 },
-) {}
+export class Unauthenticated extends Schema.TaggedError<
+  Unauthenticated,
+  { readonly brand: unique symbol }
+>()("Unauthenticated", {}, { httpApiStatus: 401 }) {}
 
 /** The request failed the Origin or CSRF checks a cookie-authenticated change needs. */
-export class CrossSiteRequest extends Schema.TaggedError<CrossSiteRequest>()(
-  "CrossSiteRequest",
-  {},
-  { httpApiStatus: 403 },
-) {}
+export class CrossSiteRequest extends Schema.TaggedError<
+  CrossSiteRequest,
+  { readonly brand: unique symbol }
+>()("CrossSiteRequest", {}, { httpApiStatus: 403 }) {}
 
-export class AuthenticationUnavailable extends Schema.TaggedError<AuthenticationUnavailable>()(
-  "AuthenticationUnavailable",
-  {},
-  { httpApiStatus: 503 },
-) {}
+export class AuthenticationUnavailable extends Schema.TaggedError<
+  AuthenticationUnavailable,
+  { readonly brand: unique symbol }
+>()("AuthenticationUnavailable", {}, { httpApiStatus: 503 }) {}
 
 const authenticationErrors = [
   Unauthenticated,
@@ -126,11 +123,10 @@ export const IssuedToken = Schema.Struct({
   scopes: Schema.Array(Schema.String),
 });
 
-export class TokenNotFound extends Schema.TaggedError<TokenNotFound>()(
-  "TokenNotFound",
-  {},
-  { httpApiStatus: 404 },
-) {}
+export class TokenNotFound extends Schema.TaggedError<
+  TokenNotFound,
+  { readonly brand: unique symbol }
+>()("TokenNotFound", {}, { httpApiStatus: 404 }) {}
 
 export const Tokens = HttpApiGroup.make("tokens")
   .add(

@@ -15,7 +15,9 @@ export class CurrentActor extends Context.Reference<Actor | undefined>(
 
 export const withActor = (actor: Actor) => Effect.provideService(CurrentActor, actor);
 
-export class Entry extends Schema.Class<Entry>("@kutur-kit/audit/Audit/Entry")({
+export class Entry extends Schema.Class<Entry, { readonly brand: unique symbol }>(
+  "@kutur-kit/audit/Audit/Entry",
+)({
   /** A UUIDv7, so ids sort by time and a retried write carries the same id. */
   id: Schema.String,
   action: Schema.String,

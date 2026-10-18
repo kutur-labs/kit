@@ -30,7 +30,7 @@ export const restricted = (): Deny => constructors.Deny({ by: "restriction" });
 export const unmet = (requirement: string): Deny =>
   constructors.Deny({ by: "requirement", requirement });
 
-export class Denied extends Schema.TaggedError<Denied>()(
+export class Denied extends Schema.TaggedError<Denied, { readonly brand: unique symbol }>()(
   "AccessDenied",
   { permission: Schema.String },
   { httpApiStatus: 403 },

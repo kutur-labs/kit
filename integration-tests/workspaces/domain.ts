@@ -39,14 +39,12 @@ export class CurrentUser extends Context.Service<CurrentUser, { readonly id: str
   "workspaces/CurrentUser",
 ) {}
 
-export class DirectoryUnavailable extends Schema.TaggedError<DirectoryUnavailable>()(
-  "DirectoryUnavailable",
-  {},
-  { httpApiStatus: 503 },
-) {}
+export class DirectoryUnavailable extends Schema.TaggedError<
+  DirectoryUnavailable,
+  { readonly brand: unique symbol }
+>()("DirectoryUnavailable", {}, { httpApiStatus: 503 }) {}
 
-export class DocumentNotFound extends Schema.TaggedError<DocumentNotFound>()(
-  "DocumentNotFound",
-  {},
-  { httpApiStatus: 404 },
-) {}
+export class DocumentNotFound extends Schema.TaggedError<
+  DocumentNotFound,
+  { readonly brand: unique symbol }
+>()("DocumentNotFound", {}, { httpApiStatus: 404 }) {}

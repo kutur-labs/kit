@@ -29,14 +29,12 @@ export const Invoice = Schema.Struct({
 
 export type Invoice = typeof Invoice.Type;
 
-export class MembershipUnavailable extends Schema.TaggedError<MembershipUnavailable>()(
-  "MembershipUnavailable",
-  {},
-  { httpApiStatus: 503 },
-) {}
+export class MembershipUnavailable extends Schema.TaggedError<
+  MembershipUnavailable,
+  { readonly brand: unique symbol }
+>()("MembershipUnavailable", {}, { httpApiStatus: 503 }) {}
 
-export class InvoiceNotFound extends Schema.TaggedError<InvoiceNotFound>()(
-  "InvoiceNotFound",
-  {},
-  { httpApiStatus: 404 },
-) {}
+export class InvoiceNotFound extends Schema.TaggedError<
+  InvoiceNotFound,
+  { readonly brand: unique symbol }
+>()("InvoiceNotFound", {}, { httpApiStatus: 404 }) {}
