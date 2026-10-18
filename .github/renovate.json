@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests", "docker:pinDigests"],
+  "rangeStrategy": "pin",
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "description": "Effect's packages release together.",
+      "matchPackageNames": ["effect", "@effect/**"],
+      "groupName": "effect"
+    },
+    {
+      "description": "TypeScript, Oxlint, oxlint-tsgolint and @effect/tsgo are upgraded as a compatible set.",
+      "matchPackageNames": [
+        "typescript",
+        "oxlint",
+        "oxlint-tsgolint",
+        "@oxlint/plugins",
+        "@effect/tsgo"
+      ],
+      "groupName": "typescript and oxlint"
+    }
+  ]
+}
