@@ -25,6 +25,11 @@
     },
     "test": {
       "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/compose.yaml",
+        "$TURBO_ROOT$/.github/workflows/ci.yml"
+      ],
       "env": ["TEST_POSTGRES_URL"],
       "passThroughEnv": [
         "DOCKER_HOST",
@@ -53,6 +58,11 @@
     },
     "test:mutation": {
       "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/compose.yaml",
+        "$TURBO_ROOT$/.github/workflows/ci.yml"
+      ],
       "env": ["TEST_POSTGRES_URL"],
       "passThroughEnv": [
         "DOCKER_HOST",

@@ -25,7 +25,7 @@ Declare dependencies in the package that imports them. Put build and test tools 
 - Put disposable scripts, experiments and archives in ignored `scratchpad/`. Keep them out of the workspace. Use a package-local scratchpad when it needs that package's dependencies.
 - Package scripts run tools; root scripts use Turbo for tasks across packages. Use `build`, `dev`, `lint`, `typecheck` and `test`; `test` must exit without watching.
 - Declare generated files in Turbo `outputs`. Use `^build` for tasks that consume built dependencies. Keep `$TURBO_DEFAULT$` when adding inputs and include config files and environment variables that affect the task. Disable caching for tasks that publish, deploy or otherwise change external state.
-- Run `pnpm build` and `pnpm check` for code/config changes. Use `pnpm format` to format.
+- Run `pnpm build` and `pnpm check` for code/config changes. Use `pnpm format` to format. CI runs both with the Node, pnpm and PostgreSQL versions pinned here; pin GitHub Actions and container images by digest, with the version in a comment or tag. Workflows set up Node, pnpm and dependencies with the shared `.github/actions/setup` action.
 - Tests that need PostgreSQL use `@kutur-kit/testcontainers`: one reused container shared by all runs (Docker must be running), with a fresh database per test. Set `TEST_POSTGRES_URL` to use another server, or `TESTCONTAINERS_REUSE_ENABLE=false` for a container per run.
 - For test work, read and follow [test-quality](.agents/skills/test-quality/SKILL.md), including files in `test/`, `tests/`, `__tests__/` or `typetest/` and files named `*.test.*`, `*.spec.*` or `*.tst.*`.
 

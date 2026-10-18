@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # Catches changes outside the repository, such as the runner image.
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    # The image compose.yaml and @kutur-kit/testcontainers use, as a service:
+    # tests reach it through TEST_POSTGRES_URL instead of starting a container.
+    services:
+      postgres:
+        image: postgres:18.6-alpine3.24@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+        env:
+          POSTGRES_USER: kit
+          POSTGRES_PASSWORD: kit
+          POSTGRES_DB: kit
+        ports:
+          - 5432:5432
+        options: >-
+          --tmpfs /var/lib/postgresql
+          --health-cmd "pg_isready -U kit -d kit"
+          --health-interval 1s
+          --health-timeout 2s
+          --health-retries 30
+    env:
+      TEST_POSTGRES_URL: postgres://kit:kit@localhost:5432/kit
+      # Pull requests reuse Turbo's cache and run only what their changes
+      # affect. Every other run executes all tasks, refreshing that cache.
+      TURBO_FORCE: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Commit messages are checked from the pull request's base.
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Check commit messages
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --strict --from "$BASE" --to "$HEAD"
+      - run: pnpm build
+      - run: pnpm check
