@@ -1,0 +1,5 @@
+.source/
+src/route-tree.gen.ts
+content/docs/packages/
+content/docs/guides/
+content/docs/index.mdx

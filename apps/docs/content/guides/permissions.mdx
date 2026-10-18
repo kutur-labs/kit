@@ -1,0 +1,51 @@
+---
+title: Enforce a permission and record the decision
+description: Check an owner policy, enforce token scopes and inspect the resulting audit entries.
+---
+
+import { PermissionPlayground } from "@/components/playgrounds";
+
+A disabled edit button is useful feedback, but the save operation must enforce the permission too. This guide defines an owner-only policy and shows what changes when you call `check` or `require`.
+
+The example runs the real Access and Audit packages in your browser. Audit entries use `TestAuditLog.layer`, an in-memory implementation intended for tests and demonstrations.
+
+## Try the outcomes
+
+<PermissionPlayground />
+
+1. Run as **Ada** with **require**. The note changes and an `Allow` entry is recorded.
+2. Switch to **Bo**. The operation returns `AccessDenied`, leaves the note unchanged and records `Deny` with `deniedBy: "policy"`.
+3. Switch back to **Ada** and enable **Token has no edit scope**. Even the owner is refused. The audit details say `deniedBy: "restriction"`.
+4. Switch to **check**. It returns `Allow` or `Deny` without saving or recording an audit entry.
+
+The playground catches `AccessDenied` to display it. In an application, handle that error at the request boundary; do not catch it and continue with the protected write.
+
+## Run the same code locally
+
+Use Node.js 24 and install the packages:
+
+```sh
+pnpm add @kutur-kit/access@alpha @kutur-kit/audit@alpha effect
+```
+
+Save this as `permission-demo.ts`, then run `node permission-demo.ts`. This is the implementation used by the playground, followed by a sample invocation.
+
+<!-- demo:permission -->
+
+## How the pieces fit
+
+`CurrentUser` describes the identity the policy needs. `requires: CurrentUser` keeps that requirement on permission calls. The policy reads it when deciding whether the caller owns the note.
+
+`EditNote.toLayer` provides the policy implementation. `PermissionAudit.record(EditNote)` wraps it so enforced decisions become audit events. `Layer.provideMerge(TestAuditLog.layer)` supplies the log and keeps its reader available to the program.
+
+`Permission.restrictTo` limits which permissions the caller may use. It does not grant access: the owner policy must still allow the edit. Restrictions compose by narrowing access.
+
+Only the note's `id` has `AuditKey.key`, so the default audit view records `{ id: "note-1" }`. The body and owner ID are omitted. `Audit.withActor` records who acted separately from the target.
+
+## Use it in a server
+
+Obtain the caller from a verified session or token, then provide `CurrentUser` at the request boundary. Never trust the caller ID selected by a browser: these controls only demonstrate policy behavior.
+
+Keep `require` immediately before the protected operation. If ownership can change concurrently, enforce the condition in the same transaction as the write or use a conditional write. A separate permission check does not make a later database update atomic.
+
+Replace the test log with [PostgreSQL audit storage](/docs/packages/audit#postgresql-with-drizzle). The memory log does not demonstrate transaction rollback, durable storage or isolated writes. For list endpoints, use a [permission filter](/docs/packages/access#lists) so denied records are excluded before pagination.

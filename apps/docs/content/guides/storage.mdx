@@ -1,0 +1,50 @@
+---
+title: Store and validate a file in memory
+description: Write, read and delete a typed asset without a bucket account or credentials.
+---
+
+import { StoragePlayground } from "@/components/playgrounds";
+
+An asset declares the content types and size your application accepts. A bucket Layer supplies the storage implementation. Start with memory to exercise the same asset operations you will use with persistent storage.
+
+## Try a write and an oversized overwrite
+
+<StoragePlayground />
+
+A successful run writes your text, reads it back and deletes the object. The final `existsAfterDelete` is `false`.
+
+Choose **Try 66 bytes**, then run again. `AssetTooLarge` is returned and the read still contains `Original note`. A failed overwrite does not replace the existing object. The limit counts bytes: `é` occupies two bytes in UTF-8, so 33 characters exceed the 64-byte limit.
+
+Each run creates a new memory bucket. The demo seeds an object first so you can see what happens to an existing value when a write is refused.
+
+## Run the same code locally
+
+Use Node.js 24 and install the package:
+
+```sh
+pnpm add @kutur-kit/assets@alpha effect
+```
+
+Save this as `storage-demo.ts`, then run `node storage-demo.ts`. Change the invocation to `storageDemo("é".repeat(33))` to exercise the size limit.
+
+<!-- demo:storage -->
+
+## Define the contract once
+
+`AssetBucket.Service` names a storage service. `Asset.make` defines the asset's ID, bucket, content types and maximum size. The stored key is prefixed with the asset ID, so `welcome.txt` becomes `note/welcome.txt`.
+
+`put` consumes a stream of bytes. `get` returns an `Option`: a missing object is `None`, not an exception. The example decodes the returned stream into text because this asset accepts `text/plain`.
+
+This example uses a known key and content type. For request input, decode keys with `NoteFile.Key` and content types with `NoteFile.ContentType`. These schemas reject invalid values before you use them. Declaring a content type does not inspect the contents of a file.
+
+## Keep the Layer alive for the right scope
+
+`Memory.layer(Notes)` owns its map for the lifetime of the Layer. Provide it around the whole program when several operations should share objects. Creating and providing a fresh memory Layer for every request does not preserve data across requests.
+
+For tests, a fresh Layer per case keeps the stores isolated. For an application, use [filesystem, S3 or R2 storage](/docs/packages/assets#storage) when objects must survive a process restart.
+
+## What memory does not prove
+
+This demo covers streamed writes, asset validation, reads and deletes. It does not exercise network failures, cloud credentials, CORS or signed URL delivery. A memory bucket alone does not expose an HTTP upload or download endpoint.
+
+Before using direct uploads, follow the [signed upload and download guidance](/docs/packages/assets#signed-uploads-and-downloads) and test the chosen signing and delivery adapters with the storage service you will deploy.

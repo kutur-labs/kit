@@ -1,0 +1,46 @@
+{
+  "name": "@kutur-kit/docs",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/sync-package-docs.ts && vite build && node scripts/check-links.ts",
+    "deploy": "alchemy deploy --stage prod",
+    "dev": "node scripts/sync-package-docs.ts && vite dev",
+    "lint": "oxlint .",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kutur-kit/access": "workspace:*",
+    "@kutur-kit/assets": "workspace:*",
+    "@kutur-kit/audit": "workspace:*",
+    "@tanstack/react-router": "catalog:runtime",
+    "@tanstack/react-start": "catalog:runtime",
+    "@tanstack/start-static-server-functions": "catalog:runtime",
+    "effect": "catalog:runtime",
+    "fumadocs-core": "catalog:runtime",
+    "fumadocs-mdx": "catalog:runtime",
+    "fumadocs-ui": "catalog:runtime",
+    "lucide-react": "catalog:runtime",
+    "react": "catalog:runtime",
+    "react-dom": "catalog:runtime",
+    "zod": "catalog:runtime"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:testing",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@tailwindcss/vite": "catalog:tooling",
+    "@types/mdx": "catalog:tooling",
+    "@types/node": "catalog:tooling",
+    "@types/react": "catalog:tooling",
+    "@types/react-dom": "catalog:tooling",
+    "@vitejs/plugin-react": "catalog:tooling",
+    "alchemy": "catalog:runtime",
+    "nitro": "catalog:tooling",
+    "oxlint": "catalog:tooling",
+    "tailwindcss": "catalog:tooling",
+    "typescript": "catalog:tooling",
+    "vite": "catalog:tooling",
+    "vitest": "catalog:testing"
+  }
+}

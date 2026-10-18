@@ -1,0 +1,34 @@
+{
+  "extends": "@kutur-kit/tsconfig/effect.json",
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "types": ["vite/client", "node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service",
+        "diagnostics": true,
+        "allowedUnstableApis": ["@effect/vitest"]
+      }
+    ]
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "vite.config.ts",
+    "alchemy.run.ts",
+    "worker.ts",
+    "scripts/**/*.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["node_modules", ".output", "dist"]
+}
