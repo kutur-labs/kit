@@ -5,7 +5,7 @@ Permissions for Effect, defined as services. Each permission declares what it de
 Tested with Effect 4.0.5.
 
 ```sh
-pnpm add @kutur-kit/access effect
+pnpm add @kutur-kit/access@alpha effect
 ```
 
 ## Permissions
@@ -56,7 +56,7 @@ Both are also available on the service itself (`const view = yield* ViewInvoice`
 `Decision.Denied` carries the refusing permission's `id` and encodes with HTTP status 403. Each permission's `Denied` schema matches only its own refusals, so a caller can treat one refusal differently:
 
 ```ts
-yield *
+const approve = (invoice: Invoice) =>
   approvePayout
     .require(invoice)
     .pipe(Effect.catchIf(Schema.is(ViewInvoice.Denied), () => Effect.fail(new InvoiceNotFound())));
@@ -114,8 +114,11 @@ To store scopes, define the set of permissions a token may hold. Its schema deco
 ```ts
 export const AgentScopes = Permission.set([ViewInvoice, ApprovePayout]);
 
-const scopes = yield * Schema.decodeEffect(AgentScopes.schema)(token.scopes);
-yield * program.pipe(AgentScopes.restrictTo(scopes));
+const asAgent = Effect.gen(function* () {
+  const scopes = yield* Schema.decodeEffect(AgentScopes.schema)(token.scopes);
+
+  return yield* program.pipe(AgentScopes.restrictTo(scopes));
+});
 ```
 
 Ids name permissions outside the code, so `Permission.set` rejects duplicates. Restrictions hold service keys, so two permissions that share an id still restrict separately.
@@ -153,18 +156,17 @@ The filter takes its target, errors and requirements from the permission, which 
 ```ts
 import * as Drizzle from "@kutur-kit/access/drizzle/postgres";
 
-const viewInvoiceFilter = yield * ViewInvoiceFilter;
+const page = Effect.gen(function* () {
+  const viewInvoiceFilter = yield* ViewInvoiceFilter;
+  const condition = yield* viewInvoiceFilter.condition;
 
-const page =
-  yield *
-  database
+  return yield* database
     .select()
     .from(invoices)
-    .where(
-      and(Drizzle.where(invoices, yield * viewInvoiceFilter.condition), gt(invoices.id, cursor)),
-    )
+    .where(and(Drizzle.where(invoices, condition), gt(invoices.id, cursor)))
     .orderBy(invoices.id)
     .limit(100);
+});
 ```
 
 The query selects exactly the rows `Condition.matches` accepts, including rows with `NULL` values. To keep that true, only columns whose SQL equality matches JavaScript's are accepted: `text`, `varchar`, enums, `uuid`, `smallint`, `integer`, `bigint`, `boolean`, `real` and `double precision`. `numeric`, `char`, `citext` and other custom types are rejected, and `uuid` values must be lowercase and canonical. `oneOf` sends its values as one array parameter, however many there are.
@@ -176,7 +178,9 @@ Pagination is the query's own: the condition combines with a cursor as above, or
 A filter and its policy state the same rule twice. `PermissionTesting.assertFilterAgrees` from `@kutur-kit/access/testing` dies on the first target where they disagree:
 
 ```ts
-yield * PermissionTesting.assertFilterAgrees(ViewInvoice, ViewInvoiceFilter, invoices);
+it.effect("the invoice filter agrees with its policy", () =>
+  PermissionTesting.assertFilterAgrees(ViewInvoice, ViewInvoiceFilter, invoices),
+);
 ```
 
 Run it in tests for each kind of user over representative targets.

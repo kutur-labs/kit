@@ -5,7 +5,7 @@ Typed audit events for Effect. Each kind of event is defined once with schemas f
 Tested with Effect 4.0.5.
 
 ```sh
-pnpm add @kutur-kit/audit effect
+pnpm add @kutur-kit/audit@alpha effect
 ```
 
 ## Events
@@ -27,7 +27,11 @@ export const InvoiceApproved = AuditEvent.make("invoice.approved", {
 Log it where the action happens. `log` requires an `AuditLog`:
 
 ```ts
-yield * InvoiceApproved.log({ target: invoice });
+const approve = (invoice: Invoice) =>
+  Effect.gen(function* () {
+    // ...
+    yield* InvoiceApproved.log({ target: invoice });
+  });
 ```
 
 | Option     | Meaning                                                                                       |

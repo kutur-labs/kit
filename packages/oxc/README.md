@@ -11,9 +11,10 @@ Oxlint and Oxfmt presets for TypeScript, with optional Effect rules.
 
 ## Linting
 
+`oxlint.config.ts`:
+
 ```ts
 import antiSlop from "@kutur-kit/oxc/anti-slop";
-// oxlint.config.ts
 import effect from "@kutur-kit/oxc/effect";
 import { defineConfig } from "oxlint";
 
@@ -29,8 +30,9 @@ Install the required tools in `devDependencies` and include linted files in your
 
 ## Formatting
 
+`oxfmt.config.ts`:
+
 ```ts
-// oxfmt.config.ts
 import format from "@kutur-kit/oxc/format";
 import { defineConfig } from "oxfmt";
 
