@@ -205,7 +205,7 @@ Every `require` records an audit event named by the permission's id, with outcom
 
 ## Tracing
 
-Checks run in spans named `<key>.check` and `<key>.require`, and conditions in `<key>/Filter.condition`. Spans carry `access.permission`, `access.decision`, `access.denied_by`, `access.reason` and `access.requirement`.
+Checks run in spans named `<key>.check` and `<key>.require`, and conditions in `<key>/Filter.condition`. Check spans carry `access.permission`, `access.decision`, `access.denied_by`, `access.reason` and `access.requirement`. Condition spans carry `access.permission`, the condition's kind as `access.condition`, and `access.denied_by` set to `restriction` when the caller's restriction refused the permission.
 
 `Permission.tap(f)` returns a permission service that also runs `f` after each decision, for other kinds of recording.
 

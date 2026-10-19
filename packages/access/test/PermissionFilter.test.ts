@@ -20,27 +20,44 @@ it.effect("gives the permission's condition, and none outside the caller's restr
   }).pipe(Effect.provide(live)),
 );
 
-it.effect("records the permission and the condition's kind on its span", () =>
-  Effect.gen(function* () {
-    const spans: Array<Tracer.NativeSpan> = [];
+it.effect(
+  "records the permission, the condition's kind and a restriction's refusal on its span",
+  () =>
+    Effect.gen(function* () {
+      const spans: Array<Tracer.NativeSpan> = [];
 
-    const tracer = Tracer.make({
-      span: (options) => {
-        const span = new Tracer.NativeSpan(options);
-        spans.push(span);
+      const tracer = Tracer.make({
+        span: (options) => {
+          const span = new Tracer.NativeSpan(options);
+          spans.push(span);
 
-        return span;
-      },
-    });
+          return span;
+        },
+      });
 
-    yield* ViewNoteFilter.condition.pipe(Effect.withTracer(tracer));
+      const matchesNothing = ViewNoteFilter.toLayer((where) => where.none());
 
-    const [span] = spans;
+      yield* ViewNoteFilter.condition.pipe(Effect.withTracer(tracer));
+      yield* ViewNoteFilter.condition.pipe(
+        Permission.restrictTo([EditNote]),
+        Effect.withTracer(tracer),
+      );
+      yield* ViewNoteFilter.condition.pipe(
+        Effect.withTracer(tracer),
+        Effect.provide(matchesNothing),
+      );
 
-    expect(span?.name).toBe("test/ViewNote/Filter.condition");
-    expect(Object.fromEntries(span?.attributes ?? [])).toMatchObject({
-      "access.permission": "notes.view",
-      "access.condition": "Eq",
-    });
-  }).pipe(Effect.provide(live)),
+      const [allowed, restricted, none] = spans.map((span) => Object.fromEntries(span.attributes));
+
+      expect(spans.map((span) => span.name)).toEqual(
+        Array(3).fill("test/ViewNote/Filter.condition"),
+      );
+      expect(allowed).toEqual({ "access.permission": "notes.view", "access.condition": "Eq" });
+      expect(restricted).toEqual({
+        "access.permission": "notes.view",
+        "access.condition": "None",
+        "access.denied_by": "restriction",
+      });
+      expect(none).toEqual({ "access.permission": "notes.view", "access.condition": "None" });
+    }).pipe(Effect.provide(live)),
 );

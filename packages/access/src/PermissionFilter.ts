@@ -67,20 +67,21 @@ export const Service =
           const condition = Effect.gen(function* () {
             const refused = yield* Permission.isRestricted(permission);
 
-            if (refused) return Condition.make<Permission.TargetOf<D>>().none();
+            const result = refused
+              ? Condition.make<Permission.TargetOf<D>>().none()
+              : resolved(Condition.make());
 
-            const result = resolved(Condition.make());
+            const allowed = Effect.isEffect(result) ? yield* result : result;
 
-            return Effect.isEffect(result) ? yield* result : result;
-          }).pipe(
-            Effect.tap((result) =>
-              Effect.annotateCurrentSpan({
-                "access.permission": permission.id,
-                "access.condition": result._tag,
-              }),
-            ),
-            Effect.withSpan(`${key}.condition`),
-          );
+            // A restricted condition is None, as a policy's may be; denied_by tells them apart.
+            yield* Effect.annotateCurrentSpan({
+              "access.permission": permission.id,
+              "access.condition": allowed._tag,
+              ...(refused && { "access.denied_by": "restriction" }),
+            });
+
+            return allowed;
+          }).pipe(Effect.withSpan(`${key}.condition`));
 
           return Tag.of({ condition });
         }),
