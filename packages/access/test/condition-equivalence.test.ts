@@ -1,5 +1,5 @@
 import * as PgClient from "@effect/sql-pg/PgClient";
-import { it } from "@effect/vitest";
+import { layer } from "@effect/vitest";
 import * as PostgresContainer from "@kutur-kit/testcontainers/PostgresContainer";
 import { postgres } from "@kutur-kit/testcontainers/vitest";
 import { generateDrizzleJson, generateMigration } from "drizzle-kit/api-postgres";
@@ -13,7 +13,7 @@ import {
   text,
   uuid,
 } from "drizzle-orm/pg-core";
-import { Effect, Exit } from "effect";
+import { Arbitrary, Context, Effect, Exit, Layer, Schema, SchemaGetter } from "effect";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import { expect } from "vitest";
 
@@ -138,133 +138,138 @@ const policies: ReadonlyArray<readonly [string, Condition.Condition<Document>]> 
   ["negated empty or", where.not(where.or())],
 ];
 
-// A small seeded generator, so failures reproduce.
-const random = (seed: number) => {
-  let state = seed;
-
-  return (bound: number) => {
-    state = (state * 1_103_515_245 + 12_345) % 2_147_483_648;
-
-    return state % bound;
-  };
-};
-
 // SAFETY: values has exactly these keys.
 const fields = Object.keys(values) as ReadonlyArray<keyof typeof values>;
 
-const generate = (
-  next: (bound: number) => number,
-  depth: number,
-): Condition.Condition<Document> => {
-  const kind = next(depth === 0 ? 2 : 6);
+/**
+ * One of a pool's values. A declaration rather than literals, which cannot
+ * hold NaN; generation picks an index into the pool.
+ */
+const among = <A extends Condition.Value>(pool: ReadonlyArray<A>) => {
+  const is = (value: unknown): value is A => pool.some((each) => Object.is(each, value));
 
-  if (kind < 2) {
-    const field = cycle(fields, next(fields.length));
-    const pool: ReadonlyArray<unknown> = values[field];
-    const pick = () => pool[next(pool.length)];
-
-    // SAFETY: values pairs each field with values of that field's type.
-    return kind === 0
-      ? where.eq(field, pick() as never)
-      : where.oneOf(field, Array.from({ length: next(4) }, pick) as never);
-  }
-
-  const children = () => Array.from({ length: next(4) }, () => generate(next, depth - 1));
-
-  if (kind === 2) return where.and(...children());
-
-  if (kind === 3) return where.or(...children());
-
-  if (kind === 4) return where.not(generate(next, depth - 1));
-
-  return next(2) === 0 ? where.all() : where.none();
+  return Schema.declare(is, {
+    toCodecArbitrary: () =>
+      Schema.link<A>()(Schema.Literals(pool.map((_, index) => index)), {
+        decode: SchemaGetter.transform((index) => cycle(pool, index)),
+        encode: SchemaGetter.transform((value) => pool.findIndex((each) => Object.is(each, value))),
+      }),
+  });
 };
 
-const next = random(20_261_016);
+// Encoded conditions comparing the fields with values from the rows' pools,
+// so comparisons hit as often as they miss.
+const Generated: Schema.Codec<Condition.Encoded> = Schema.Union([
+  Schema.TaggedStruct("All", {}),
+  Schema.TaggedStruct("None", {}),
+  ...fields.flatMap((name) => {
+    const field = Schema.Literal(name);
+    const value = among<Condition.Value>(values[name]);
 
-const generated = Array.from(
-  { length: 400 },
-  (_, index) => [`generated #${index}`, generate(next, 4)] as const,
-);
+    return [
+      Schema.TaggedStruct("Eq", { field, value }),
+      Schema.TaggedStruct("OneOf", { field, values: Schema.Array(value) }),
+    ];
+  }),
+  Schema.TaggedStruct("And", { conditions: Schema.Array(Schema.suspend(() => Generated)) }),
+  Schema.TaggedStruct("Or", { conditions: Schema.Array(Schema.suspend(() => Generated)) }),
+  Schema.TaggedStruct("Not", { condition: Schema.suspend(() => Generated) }),
+]);
 
-const seeded = Effect.gen(function* () {
-  const client = yield* PgClient.make({ url: yield* PostgresContainer.database });
+const conditions: Arbitrary.Arbitrary<Condition.Condition<Document>> = Arbitrary.schema(
+  Generated,
+).pipe(Arbitrary.map(Schema.decodeSync(Condition.Node)));
 
-  const database = yield* PgDrizzle.makeWithDefaults().pipe(
-    Effect.provideService(PgClient.PgClient, client),
+/** The rows in a fresh database, seeded once for the tests below. */
+class Documents extends Context.Service<Documents>()("test/Documents", {
+  make: Effect.gen(function* () {
+    const client = yield* PgClient.make({ url: yield* PostgresContainer.database });
+
+    const database = yield* PgDrizzle.makeWithDefaults().pipe(
+      Effect.provideService(PgClient.PgClient, client),
+    );
+
+    const statements = yield* Effect.promise(async () =>
+      generateMigration(await generateDrizzleJson({}), await generateDrizzleJson({ documents })),
+    );
+
+    yield* Effect.forEach(statements, (statement) => client.unsafe(statement), { discard: true });
+    yield* database.insert(documents).values([...rows]);
+
+    return {
+      select: (condition: Condition.Condition<Document>) =>
+        database
+          .select({ id: documents.id })
+          .from(documents)
+          .where(Drizzle.where(documents, condition))
+          .orderBy(documents.id)
+          .pipe(Effect.map((selected) => selected.map(({ id }) => id))),
+    };
+  }),
+}) {
+  static readonly layer = Layer.effect(this, this.make).pipe(
+    Layer.provide([Reactivity.layer, postgres]),
   );
+}
 
-  const statements = yield* Effect.promise(async () =>
-    generateMigration(await generateDrizzleJson({}), await generateDrizzleJson({ documents })),
-  );
-
-  yield* Effect.forEach(statements, (statement) => client.unsafe(statement), { discard: true });
-  yield* database.insert(documents).values([...rows]);
-
-  return (condition: Condition.Condition<Document>) =>
-    database
-      .select({ id: documents.id })
-      .from(documents)
-      .where(Drizzle.where(documents, condition))
-      .orderBy(documents.id)
-      .pipe(Effect.map((selected) => selected.map(({ id }) => id)));
-}).pipe(Effect.provide(Reactivity.layer));
+const select = (condition: Condition.Condition<Document>) =>
+  Documents.use((documents) => documents.select(condition));
 
 const matching = (condition: Condition.Condition<Document>) =>
   rows.flatMap((row) => (Condition.matches(condition, row) ? [row.id] : []));
 
-it.effect(
-  "selects in PostgreSQL exactly the rows each condition matches in memory",
-  () =>
+layer(Documents.layer, { timeout: 60_000 })((it) => {
+  it.effect("selects in PostgreSQL exactly the rows each policy matches in memory", () =>
+    Effect.forEach(policies, ([name, condition]) =>
+      Effect.map(select(condition), (selected) =>
+        expect(selected, name).toEqual(matching(condition)),
+      ),
+    ),
+  );
+
+  it.effect.prop(
+    "selects in PostgreSQL exactly the rows any condition matches in memory",
+    [conditions],
+    ([condition]) =>
+      Effect.map(select(condition), (selected) => expect(selected).toEqual(matching(condition))),
+    { timeout: 60_000, arbitrary: { runs: 400 } },
+  );
+
+  it.effect("handles membership lists longer than PostgreSQL's parameter limit", () =>
     Effect.gen(function* () {
-      const select = yield* seeded;
+      const shared = Array.from({ length: 70_000 }, (_, index) => `s${index}`).concat([
+        "d001",
+        "d050",
+      ]);
 
-      for (const [name, condition] of [...policies, ...generated])
-        expect(yield* select(condition), name).toEqual(matching(condition));
-    }).pipe(Effect.scoped, Effect.provide(postgres)),
-  60_000,
-);
+      expect(yield* select(where.oneOf("id", shared))).toEqual(["d001", "d050"]);
+    }),
+  );
 
-it.effect("handles membership lists longer than PostgreSQL's parameter limit", () =>
-  Effect.gen(function* () {
-    const select = yield* seeded;
+  // Not supported yet. Each test below states the behaviour we want and fails
+  // today; `fails` passes while it does, and fails once the behaviour exists.
 
-    const shared = Array.from({ length: 70_000 }, (_, index) => `s${index}`).concat([
-      "d001",
-      "d050",
-    ]);
+  // Each comparison is a parameter, and @effect/sql-pg sends at most 65535.
+  it.effect.fails("selects with more separate comparisons than the parameter limit", () =>
+    Effect.gen(function* () {
+      const shared = Array.from({ length: 70_000 }, (_, index) => where.eq("id", `s${index}`));
 
-    expect(yield* select(where.oneOf("id", shared))).toEqual(["d001", "d050"]);
-  }).pipe(Effect.scoped, Effect.provide(postgres)),
-);
+      // Only the outcome, as the failed query would print all of its parameters.
+      const exit = yield* select(where.or(...shared, where.eq("id", "d001"))).pipe(Effect.exit);
 
-// Not supported yet. Each test below states the behaviour we want and fails
-// today; `fails` passes while it does, and fails once the behaviour exists.
+      expect(Exit.isSuccess(exit) ? exit.value : "failed").toEqual(["d001"]);
+    }),
+  );
 
-// Each comparison is a parameter, and @effect/sql-pg sends at most 65535.
-it.effect.fails("selects with more separate comparisons than the parameter limit", () =>
-  Effect.gen(function* () {
-    const select = yield* seeded;
+  // Translation recurses once per level, so thousands of levels overflow the stack.
+  it.effect.fails("selects with deeply nested conditions", () =>
+    Effect.gen(function* () {
+      const deep = Array.from({ length: 5_000 }).reduce<Condition.Condition<Document>>(
+        (condition) => where.not(where.not(condition)),
+        where.eq("id", "d001"),
+      );
 
-    const shared = Array.from({ length: 70_000 }, (_, index) => where.eq("id", `s${index}`));
-
-    // Only the outcome, as the failed query would print all of its parameters.
-    const exit = yield* select(where.or(...shared, where.eq("id", "d001"))).pipe(Effect.exit);
-
-    expect(Exit.isSuccess(exit) ? exit.value : "failed").toEqual(["d001"]);
-  }).pipe(Effect.scoped, Effect.provide(postgres)),
-);
-
-// Translation recurses once per level, so thousands of levels overflow the stack.
-it.effect.fails("selects with deeply nested conditions", () =>
-  Effect.gen(function* () {
-    const select = yield* seeded;
-
-    const deep = Array.from({ length: 5_000 }).reduce<Condition.Condition<Document>>(
-      (condition) => where.not(where.not(condition)),
-      where.eq("id", "d001"),
-    );
-
-    expect(yield* select(deep)).toEqual(["d001"]);
-  }).pipe(Effect.scoped, Effect.provide(postgres)),
-);
+      expect(yield* select(deep)).toEqual(["d001"]);
+    }),
+  );
+});
