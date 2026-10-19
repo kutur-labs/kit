@@ -2,13 +2,14 @@ import * as Audit from "@kutur-kit/audit/Audit";
 import * as AuditEvent from "@kutur-kit/audit/AuditEvent";
 import { Effect, Layer, Predicate, Schema } from "effect";
 
+import * as Decision from "./Decision.ts";
 import * as Permission from "./Permission.ts";
 
 /** What refused a denied decision. Allowed decisions have no details. */
 export const Details = Schema.UndefinedOr(
   Schema.Struct({
-    deniedBy: Schema.Literals(["restriction", "policy", "requirement"]),
-    requirement: Schema.optionalKey(Schema.String),
+    deniedBy: Decision.Deny.fields.by,
+    requirement: Decision.Deny.fields.requirement,
   }),
 );
 

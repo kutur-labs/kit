@@ -71,7 +71,7 @@ const approve = (invoice: Invoice) =>
 | `Decision.restricted()`      | Refused by the caller's restriction, before the policy ran. |
 | `Decision.unmet(permission)` | Refused because a permission the policy required refused.   |
 
-`Deny.by` tells these apart: `"policy"`, `"restriction"` or `"requirement"`.
+`Deny.by` tells these apart: `"policy"`, `"restriction"` or `"requirement"`. Decisions are `Schema.TaggedClass`es, and `Decision.Decision` is their schema, for sending or storing them.
 
 ### Permissions that require others
 
@@ -147,7 +147,7 @@ export const ViewInvoiceFilterLayer = ViewInvoiceFilter.toLayer(
 
 The filter takes its target, errors and requirements from the permission, which must have a target. Name it after the permission: its key is the permission's key with `/Filter`. Outside the caller's restriction its condition matches nothing.
 
-`where` builds conditions over the target's fields: `eq`, `oneOf`, `and`, `or`, `not`, `all` and `none`. Fields and values are checked against the target's type. `Condition.matches(condition, target)` evaluates a condition in memory.
+`where` builds conditions over the target's fields: `eq`, `oneOf`, `and`, `or`, `not`, `all` and `none`. Fields and values are checked against the target's type. `Condition.matches(condition, target)` evaluates a condition in memory. Conditions are `Schema.TaggedClass`es too; `Condition.Node` decodes and encodes any of them.
 
 ### PostgreSQL with Drizzle
 

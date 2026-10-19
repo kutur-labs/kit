@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Equal, Schema } from "effect";
 import { expect, it } from "vitest";
 
 import { Decision } from "../src/index.ts";
@@ -23,4 +23,20 @@ it("marks policy denials apart from restrictions and unmet requirements", () => 
     by: "requirement",
     requirement: "notes.view",
   });
+});
+
+it("survives a JSON round trip with what refused and why", () => {
+  const codec = Schema.fromJsonString(Schema.toCodecJson(Decision.Decision));
+
+  const decisions = [Decision.allow(), Decision.deny("Hidden"), Decision.unmet("notes.view")];
+
+  const decoded = decisions.map((decision) =>
+    Schema.decodeSync(codec)(Schema.encodeSync(codec)(decision)),
+  );
+
+  expect(decoded.map((decision, index) => Equal.equals(decision, decisions[index]))).toEqual([
+    true,
+    true,
+    true,
+  ]);
 });

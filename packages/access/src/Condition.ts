@@ -1,34 +1,66 @@
-import { Data, Match, Predicate } from "effect";
+import { Match, Predicate, Schema } from "effect";
 
 /** The values conditions compare. */
-export type Value = string | number | boolean | bigint | null;
+export const Value = Schema.Union([
+  Schema.String,
+  // Float columns hold NaN and infinities, which conditions compare as SQL does.
+  // oxlint-disable-next-line effecttsgo/schema-number
+  Schema.Number,
+  Schema.Boolean,
+  Schema.BigInt,
+  Schema.Null,
+]);
+
+export type Value = typeof Value.Type;
 
 /** The fields of `T` a condition can compare: those holding primitive values. */
 export type Field<T> = {
   readonly [K in keyof T & string]: T[K] extends Value ? K : never;
 }[keyof T & string];
 
-export class All extends Data.TaggedClass("All")<{}> {}
+/** A condition as its schema encodes it. */
+export type Encoded =
+  | { readonly _tag: "All" }
+  | { readonly _tag: "None" }
+  | { readonly _tag: "Eq"; readonly field: string; readonly value: Value }
+  | { readonly _tag: "OneOf"; readonly field: string; readonly values: ReadonlyArray<Value> }
+  | { readonly _tag: "And" | "Or"; readonly conditions: ReadonlyArray<Encoded> }
+  | { readonly _tag: "Not"; readonly condition: Encoded };
 
-export class None extends Data.TaggedClass("None")<{}> {}
+const child = Schema.suspend((): Schema.Codec<Node, Encoded> => Node);
 
-export class Eq extends Data.TaggedClass("Eq")<{
-  readonly field: string;
-  readonly value: Value;
-}> {}
+export class All extends Schema.TaggedClass<All, { readonly brand: unique symbol }>()("All", {}) {}
 
-export class OneOf extends Data.TaggedClass("OneOf")<{
-  readonly field: string;
-  readonly values: ReadonlyArray<Value>;
-}> {}
+export class None extends Schema.TaggedClass<None, { readonly brand: unique symbol }>()(
+  "None",
+  {},
+) {}
 
-export class And extends Data.TaggedClass("And")<{ readonly conditions: ReadonlyArray<Node> }> {}
+export class Eq extends Schema.TaggedClass<Eq, { readonly brand: unique symbol }>()("Eq", {
+  field: Schema.String,
+  value: Value,
+}) {}
 
-export class Or extends Data.TaggedClass("Or")<{ readonly conditions: ReadonlyArray<Node> }> {}
+export class OneOf extends Schema.TaggedClass<OneOf, { readonly brand: unique symbol }>()("OneOf", {
+  field: Schema.String,
+  values: Schema.Array(Value),
+}) {}
 
-export class Not extends Data.TaggedClass("Not")<{ readonly condition: Node }> {}
+export class And extends Schema.TaggedClass<And, { readonly brand: unique symbol }>()("And", {
+  conditions: Schema.Array(child),
+}) {}
+
+export class Or extends Schema.TaggedClass<Or, { readonly brand: unique symbol }>()("Or", {
+  conditions: Schema.Array(child),
+}) {}
+
+export class Not extends Schema.TaggedClass<Not, { readonly brand: unique symbol }>()("Not", {
+  condition: child,
+}) {}
 
 export type Node = All | None | Eq | OneOf | And | Or | Not;
+
+export const Node: Schema.Codec<Node, Encoded> = Schema.Union([All, None, Eq, OneOf, And, Or, Not]);
 
 /**
  * A condition over targets of type `T`. The phantom member keeps conditions
