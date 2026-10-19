@@ -1,6 +1,6 @@
 import type * as Decision from "../Decision.ts";
 
-import { Effect, Predicate } from "effect";
+import { Effect, Formatter, Predicate } from "effect";
 
 import * as Condition from "../Condition.ts";
 
@@ -41,7 +41,7 @@ export const assertFilterAgrees = Effect.fnUntraced(function* <
     ? Effect.void
     : Effect.die(
         new Error(
-          `The filter of permission ${permission.id} ${mismatch.allowed ? "excludes" : "matches"} a target the permission ${mismatch.allowed ? "allows" : "refuses"}: ${JSON.stringify(mismatch.target)}`,
+          `The filter of permission ${permission.id} ${mismatch.allowed ? "excludes" : "matches"} a target the permission ${mismatch.allowed ? "allows" : "refuses"}: ${Formatter.format(mismatch.target)}`,
         ),
       );
 });
