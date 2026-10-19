@@ -15,6 +15,7 @@ for (const preset of ["base", "effect"]) {
       const modulePath = fileURLToPath(new URL(`../src/${preset}.ts`, import.meta.url));
       writeFileSync(
         config,
+        // oxlint-disable-next-line kit/no-json-stringify -- a JavaScript string literal; this package does not depend on Effect.
         `import preset from ${JSON.stringify(modulePath)};\nexport default preset;\n`,
       );
       const good = join(directory, "good.ts");

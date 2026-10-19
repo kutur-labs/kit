@@ -24,6 +24,7 @@ const sorted = (_: string, value: Schema.Json) =>
 const expectEntries = (expected: ReadonlyArray<Audit.Entry>) =>
   Effect.flatMap(TestAuditLog.entries, (actual) => {
     const [want, got] = [encode(expected), encode(actual)].map((entries) =>
+      // oxlint-disable-next-line kit/no-json-stringify -- encoded entries are JSON, and sorting keys needs a replacer.
       JSON.stringify(entries, sorted),
     );
 

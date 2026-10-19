@@ -90,6 +90,7 @@ for (const preset of ["base", "effect"]) {
 
     writeFileSync(
       config,
+      // oxlint-disable-next-line kit/no-json-stringify -- a JavaScript string literal; this package does not depend on Effect.
       `import preset from ${JSON.stringify(modulePath)};\nexport default preset;\n`,
     );
 

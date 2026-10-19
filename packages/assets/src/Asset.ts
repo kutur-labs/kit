@@ -1,6 +1,6 @@
 import type * as AssetBucket from "./AssetBucket.ts";
 
-import { ByteSize, Effect, Option, Schema, SchemaGetter, Stream } from "effect";
+import { ByteSize, Effect, Formatter, Option, Schema, SchemaGetter, Stream } from "effect";
 
 /**
  * A media type without parameters, such as `image/png`. Only the top-level
@@ -290,7 +290,7 @@ export const make = <const Id extends string, const D extends Definition<MediaTy
   const id = checkedId as Id;
 
   if (!isSegment(id))
-    throw new Error(`Asset id must be a single key segment: ${JSON.stringify(id)}`);
+    throw new Error(`Asset id must be a single key segment: ${Formatter.format(id)}`);
 
   const maxSize = Option.getOrThrowWith(
     ByteSize.fromInput(definition.maxSize),
@@ -300,7 +300,7 @@ export const make = <const Id extends string, const D extends Definition<MediaTy
   for (const contentType of definition.contentTypes)
     if (essence(contentType) !== contentType)
       throw new Error(
-        `Asset ${id} content types must be lowercase without parameters: ${JSON.stringify(contentType)}`,
+        `Asset ${id} content types must be lowercase without parameters: ${Formatter.format(contentType)}`,
       );
 
   const cacheControl = definition.cacheControl ?? "no-cache";

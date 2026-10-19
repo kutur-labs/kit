@@ -1,5 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 
+import { Formatter } from "effect";
 import { z } from "zod";
 
 // Descriptions come from each package's `package.json`, so the docs, the home
@@ -43,13 +44,13 @@ for (const { name, title, description } of pages) {
   await writeFile(
     new URL(`${name}.md`, packageOutput),
     // JSON strings are valid YAML scalars, so titles such as `@kutur-kit/access` need no escaping.
-    `---\ntitle: ${JSON.stringify(title)}\ndescription: ${JSON.stringify(description)}\n---\n${readme.replace(/^# [^\n]+\n/, "")}`,
+    `---\ntitle: ${Formatter.formatJson(title)}\ndescription: ${Formatter.formatJson(description)}\n---\n${readme.replace(/^# [^\n]+\n/, "")}`,
   );
 }
 
 await writeFile(
   new URL("meta.json", packageOutput),
-  JSON.stringify({ title: "Package reference", pages: pages.map(({ name }) => name) }),
+  Formatter.formatJson({ title: "Package reference", pages: pages.map(({ name }) => name) }),
 );
 
 const cards = (group: string) =>
@@ -99,5 +100,5 @@ for (const [slug, demo, invocation] of [
 
 await writeFile(
   new URL("meta.json", guideOutput),
-  JSON.stringify({ title: "Hands-on guides", pages: ["permissions", "storage"] }),
+  Formatter.formatJson({ title: "Hands-on guides", pages: ["permissions", "storage"] }),
 );

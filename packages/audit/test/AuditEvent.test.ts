@@ -1,5 +1,5 @@
 import { it } from "@effect/vitest";
-import { Cause, DateTime, Effect, Exit, Layer, Option, Redacted, Schema } from "effect";
+import { Cause, DateTime, Effect, Exit, Formatter, Layer, Option, Redacted, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 import { expect, it as test } from "vitest";
 
@@ -350,7 +350,7 @@ it.effect("dies rather than record Redacted values the definition check cannot s
       true,
       true,
     ]);
-    expect(JSON.stringify(yield* TestAuditLog.entries)).not.toContain("hunter2");
+    expect(Formatter.format(yield* TestAuditLog.entries)).not.toContain("hunter2");
   }).pipe(Effect.provide(TestAuditLog.layer)),
 );
 

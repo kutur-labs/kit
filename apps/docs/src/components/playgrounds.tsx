@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { Cause, Effect, Exit } from "effect";
+import { Cause, Effect, Exit, Formatter } from "effect";
 import { useState } from "react";
 
 import { permissionDemo } from "@/demos/permission";
@@ -14,7 +14,9 @@ function useRun() {
     setPending(true);
     void Effect.runPromiseExit(program).then((exit) => {
       setOutput(
-        Exit.isSuccess(exit) ? JSON.stringify(exit.value, null, 2) : Cause.pretty(exit.cause),
+        Exit.isSuccess(exit)
+          ? Formatter.format(exit.value, { space: 2 })
+          : Cause.pretty(exit.cause),
       );
       setPending(false);
     });

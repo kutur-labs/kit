@@ -14,7 +14,7 @@ import {
   text,
   uuid,
 } from "drizzle-orm/pg-core";
-import { Effect } from "effect";
+import { Effect, Formatter } from "effect";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import { expect, it as test } from "vitest";
 
@@ -79,7 +79,7 @@ it.effect("selects exactly the rows a condition matches in memory", () =>
 
       expect(
         selected.map(({ id }) => id),
-        JSON.stringify(condition),
+        Formatter.format(condition),
       ).toEqual(data.flatMap((row) => (Condition.matches(condition, row) ? [row.id] : [])));
     }
   }).pipe(Effect.scoped, Effect.provide([Reactivity.layer, postgres])),

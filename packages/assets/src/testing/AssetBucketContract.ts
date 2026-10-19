@@ -1,4 +1,4 @@
-import { ByteSize, Effect, Option, Result, Schema, Stream } from "effect";
+import { ByteSize, Effect, Formatter, Option, Result, Schema, Stream } from "effect";
 
 import * as AssetBucket from "../AssetBucket.ts";
 
@@ -46,7 +46,7 @@ const head = (key: string) => Effect.flatMap(ContractBucket, (bucket) => bucket.
 const remove = (key: string) => Effect.flatMap(ContractBucket, (bucket) => bucket.delete(key));
 
 const expectEqual = <A>(label: string, expected: A, received: A) => {
-  const [want, got] = [expected, received].map((value) => JSON.stringify(value));
+  const [want, got] = [expected, received].map((value) => Formatter.format(value));
 
   return want === got
     ? Effect.void

@@ -35,6 +35,8 @@ Install the required tools in `devDependencies` and include linted files in your
 
 `effect-tsgo` runs Oxlint with the Effect rules without patching `node_modules`. Check [supported tool versions](https://github.com/Effect-TS/tsgo#supported-package-versions) when upgrading.
 
+`/effect` warns on `JSON.stringify`: use `Formatter.format` for messages and logs, or `Formatter.formatJson` for JSON, which do not throw on bigints or circular values.
+
 `/anti-slop` is optional and includes the generic and Effect rules from [anti-slop](https://github.com/dmmulroy/anti-slop).
 
 ## Formatting

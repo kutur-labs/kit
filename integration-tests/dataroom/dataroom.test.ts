@@ -3,7 +3,7 @@ import { Decision } from "@kutur-kit/access";
 import { Asset } from "@kutur-kit/assets";
 import * as AssetSigning from "@kutur-kit/assets/AssetSigning";
 import { eq } from "drizzle-orm";
-import { ByteSize, Effect, Exit, Layer, Option, Stream } from "effect";
+import { ByteSize, Effect, Exit, Formatter, Layer, Option, Stream } from "effect";
 import { type HttpClient, HttpClientRequest } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import { expect } from "vitest";
@@ -209,7 +209,7 @@ it.live("refuses declarations the asset would not accept, before any upload", ()
         ),
       );
 
-      expect(response.status, JSON.stringify(payload)).toBe(400);
+      expect(response.status, Formatter.format(payload)).toBe(400);
     }
 
     expect(yield* owner.api.projects.files({ params: { id: launch } })).toEqual([]);
