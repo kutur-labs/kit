@@ -10,6 +10,7 @@ import {
   doublePrecision,
   integer,
   pgTable,
+  real,
   text,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -34,6 +35,7 @@ const documents = pgTable("documents", {
   title: text().notNull(),
   priority: integer(),
   score: doublePrecision().notNull(),
+  ratio: real().notNull(),
   views: bigint({ mode: "bigint" }).notNull(),
   ref: uuid(),
 });
@@ -50,6 +52,8 @@ const values = {
   title: ["Plans", "plans", "Zo\u00eb", "Zoe\u0308", "📄 Q3 %_report", "", " Plans "],
   priority: [0, 1, -1, 5, null],
   score: [0, 0.1 + 0.2, 0.3, -2.5, 1e21, Number.NaN],
+  // Single precision: 0.5 is exact, 0.1 is not.
+  ratio: [0, 0.5, 0.1, Math.fround(0.1), -2.5],
   views: [0n, 9_007_199_254_740_993n, -5n, 42n],
   ref: ["0190a5e2-0000-7000-8000-000000000001", "ffffffff-ffff-4fff-bfff-ffffffffffff", null],
 } satisfies { readonly [K in keyof Omit<Document, "id">]: ReadonlyArray<Document[K]> };
@@ -75,6 +79,8 @@ const rows: ReadonlyArray<Document> = Array.from({ length: 120 }, (_, index) => 
   title: cycle(values.title, index * 17),
   priority: cycle(values.priority, index * 19),
   score: cycle(values.score, index * 23),
+  // A real column stores and returns the nearest single-precision value.
+  ratio: Math.fround(cycle(values.ratio, index * 37)),
   views: cycle(values.views, index * 29),
   ref: cycle(values.ref, index * 31),
 }));
@@ -126,6 +132,7 @@ const policies: ReadonlyArray<readonly [string, Condition.Condition<Document>]> 
   ["inexact floats compare exactly", where.eq("score", 0.1 + 0.2)],
   ["whole and fractional numbers in one list", where.oneOf("score", [-2.5, 0, 0.1 + 0.2])],
   ["large floats", where.eq("score", 1e21)],
+  ["reals equal only what they store exactly", where.oneOf("ratio", [0.1, 0.5])],
   ["NaN equals NaN, as in SQL", where.eq("score", Number.NaN)],
   ["anything but NaN", where.not(where.oneOf("score", [Number.NaN]))],
   ["uuids, including unknown", where.oneOf("ref", ["0190a5e2-0000-7000-8000-000000000001", null])],
