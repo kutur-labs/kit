@@ -86,11 +86,13 @@ export const where = <T>(columns: Columns<T>, condition: Condition.Condition<T>)
         const known = values.filter((each) => each !== null).map((each) => value(target, each));
 
         // One array parameter however long the list: @effect/sql-pg sends at
-        // most 32767 parameters per statement.
+        // most 32767 parameters per statement. Its elements go as text for
+        // PostgreSQL to parse as the column's type, as the driver rejects
+        // arrays mixing the types it infers, such as 0 and 2.5.
         const listed =
           known.length === 0
             ? sql`false`
-            : sql`${target} = any(${sql.param(known)}::${sql.raw(target.getSQLType())}[])`;
+            : sql`${target} = any(${sql.param(known.map(String))}::${sql.raw(target.getSQLType())}[])`;
 
         // IN and ANY never match NULL, while Condition.matches finds null in the list.
         return values.includes(null) ? (or(listed, isNull(target)) ?? listed) : listed;

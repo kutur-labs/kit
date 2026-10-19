@@ -124,6 +124,7 @@ const policies: ReadonlyArray<readonly [string, Condition.Condition<Document>]> 
   ["LIKE wildcards are literal", where.eq("title", "📄 Q3 %_report")],
   ["empty string is not unknown", where.eq("title", "")],
   ["inexact floats compare exactly", where.eq("score", 0.1 + 0.2)],
+  ["whole and fractional numbers in one list", where.oneOf("score", [-2.5, 0, 0.1 + 0.2])],
   ["large floats", where.eq("score", 1e21)],
   ["NaN equals NaN, as in SQL", where.eq("score", Number.NaN)],
   ["anything but NaN", where.not(where.oneOf("score", [Number.NaN]))],
