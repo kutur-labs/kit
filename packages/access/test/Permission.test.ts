@@ -110,6 +110,74 @@ it.effect("narrows nested restrictions and applies them to required permissions"
   }).pipe(Effect.provide(live)),
 );
 
+// Admin requires write, which requires read.
+class Read extends Permission.Service<Read>()("test/Read", { id: "read" }) {}
+
+class Write extends Permission.Service<Write>()("test/Write", {
+  id: "write",
+  error: Read.Denied,
+}) {}
+
+class Admin extends Permission.Service<Admin>()("test/Admin", {
+  id: "admin",
+  error: Schema.Union([Write.Denied, Read.Denied]),
+}) {}
+
+const ReadLayer = Read.toLayer(() => Decision.allow());
+
+const WriteLayer = Write.toLayer(
+  Effect.map(Read, (read) => () => Effect.as(read.require(), Decision.allow())),
+).pipe(Layer.provide(ReadLayer));
+
+const AdminLayer = Admin.toLayer(
+  Effect.map(Write, (write) => () => Effect.as(write.require(), Decision.allow())),
+).pipe(Layer.provide(WriteLayer));
+
+const Scopes = Permission.set([Read, Write, Admin]);
+
+type Id = (typeof Scopes.schema.Type)[number];
+
+interface Answerable<R> {
+  readonly check: () => Effect.Effect<Decision.Decision, never, R>;
+  readonly require: () => Effect.Effect<void, Decision.Denied, R>;
+}
+
+it.effect.prop(
+  "refuses as the first permission along its requirements that a nested restriction excludes",
+  { restrictions: Schema.Array(Scopes.schema) },
+  ({ restrictions }) =>
+    Effect.gen(function* () {
+      const within = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+        restrictions.reduce((inner, ids) => Scopes.restrictTo(ids)(inner), effect);
+
+      const answer = <R>(permission: Answerable<R>) =>
+        Effect.all([
+          within(permission.check()),
+          within(permission.require()).pipe(
+            Effect.match({ onSuccess: () => undefined, onFailure: (denied) => denied.permission }),
+          ),
+        ]);
+
+      // The decision and the refusing permission, from the permission's id and those it requires.
+      const expected = (chain: readonly [Id, ...ReadonlyArray<Id>]) => {
+        const refusing = chain.find((id) => restrictions.some((ids) => !ids.includes(id)));
+
+        const decision =
+          refusing === undefined
+            ? Decision.allow()
+            : refusing === chain[0]
+              ? Decision.restricted()
+              : Decision.unmet(refusing);
+
+        return [decision, refusing];
+      };
+
+      expect(yield* answer(Admin)).toEqual(expected(["admin", "write", "read"]));
+      expect(yield* answer(Write)).toEqual(expected(["write", "read"]));
+      expect(yield* answer(Read)).toEqual(expected(["read"]));
+    }).pipe(Effect.provide(Layer.mergeAll(ReadLayer, WriteLayer, AdminLayer))),
+);
+
 it.effect("restricts callers to stored ids, dropping ids of removed permissions", () =>
   Effect.gen(function* () {
     const Scopes = Permission.set([ViewNote, EditNote]);
