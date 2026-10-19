@@ -19,6 +19,7 @@ import {
   File,
   FileId,
   FileNotFound,
+  MembershipUnavailable,
   ProjectId,
   ProjectNotFound,
   StorageUnavailable,
@@ -90,7 +91,7 @@ export const Projects = HttpApiGroup.make("projects")
     HttpApiEndpoint.get("files", "/projects/:id/files", {
       params: { id: ProjectId },
       success: Schema.Array(File),
-      error: [ProjectNotFound],
+      error: [ProjectNotFound, MembershipUnavailable],
     }),
     HttpApiEndpoint.post("upload", "/projects/:id/files", {
       params: { id: ProjectId },
@@ -99,6 +100,7 @@ export const Projects = HttpApiGroup.make("projects")
       error: [
         ProjectNotFound,
         Decision.Denied,
+        MembershipUnavailable,
         Asset.UnsupportedContentType,
         Asset.TooLarge,
         StorageUnavailable,
@@ -112,17 +114,22 @@ export const Files = HttpApiGroup.make("files")
     HttpApiEndpoint.post("complete", "/files/:id/complete", {
       params: fileParams,
       success: File,
-      error: [FileNotFound, AssetSigning.UploadNotConfirmed, StorageUnavailable],
+      error: [
+        FileNotFound,
+        AssetSigning.UploadNotConfirmed,
+        StorageUnavailable,
+        MembershipUnavailable,
+      ],
     }),
     HttpApiEndpoint.post("download", "/files/:id/download", {
       params: fileParams,
       success: AssetSigning.SignedRequest,
-      error: [FileNotFound, StorageUnavailable],
+      error: [FileNotFound, StorageUnavailable, MembershipUnavailable],
     }),
     HttpApiEndpoint.delete("remove", "/files/:id", {
       params: fileParams,
       success: HttpApiSchema.NoContent,
-      error: [FileNotFound, Decision.Denied, StorageUnavailable],
+      error: [FileNotFound, Decision.Denied, StorageUnavailable, MembershipUnavailable],
     }),
   )
   .middleware(Authentication);

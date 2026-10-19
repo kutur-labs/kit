@@ -15,6 +15,7 @@ import {
   File,
   FileId,
   FileNotFound,
+  type MembershipUnavailable,
   Project,
   type ProjectId,
   ProjectNotFound,
@@ -51,7 +52,7 @@ export class ProjectFiles extends Context.Service<
     /** A project's completed files, oldest first. */
     readonly list: (
       projectId: ProjectId,
-    ) => Effect.Effect<ReadonlyArray<File>, ProjectNotFound, CurrentUser>;
+    ) => Effect.Effect<ReadonlyArray<File>, ProjectNotFound | MembershipUnavailable, CurrentUser>;
     /** Records a pending file and signs the URL its bytes go to. */
     readonly start: (
       projectId: ProjectId,
@@ -60,6 +61,7 @@ export class ProjectFiles extends Context.Service<
       { readonly file: File; readonly upload: AssetSigning.SignedRequest },
       | ProjectNotFound
       | Decision.DeniedBy<"files.upload">
+      | MembershipUnavailable
       | Asset.UnsupportedContentType
       | Asset.TooLarge
       | StorageUnavailable,
@@ -70,16 +72,24 @@ export class ProjectFiles extends Context.Service<
       id: FileId,
     ) => Effect.Effect<
       File,
-      FileNotFound | AssetSigning.UploadNotConfirmed | StorageUnavailable,
+      FileNotFound | AssetSigning.UploadNotConfirmed | StorageUnavailable | MembershipUnavailable,
       CurrentUser
     >;
     /** Signs a short-lived URL to download a ready file from storage. */
     readonly download: (
       id: FileId,
-    ) => Effect.Effect<AssetSigning.SignedRequest, FileNotFound | StorageUnavailable, CurrentUser>;
+    ) => Effect.Effect<
+      AssetSigning.SignedRequest,
+      FileNotFound | StorageUnavailable | MembershipUnavailable,
+      CurrentUser
+    >;
     readonly remove: (
       id: FileId,
-    ) => Effect.Effect<void, FileNotFound | Decision.DeniedBy<"files.delete">, CurrentUser>;
+    ) => Effect.Effect<
+      void,
+      FileNotFound | Decision.DeniedBy<"files.delete"> | MembershipUnavailable,
+      CurrentUser
+    >;
   }
 >()("dataroom/ProjectFiles") {
   static readonly layer = Layer.effect(

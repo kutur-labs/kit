@@ -14,6 +14,7 @@ import { auditEntries, Database, memberships } from "./database.ts";
 import {
   FileNotFound,
   type FileId,
+  MembershipUnavailable,
   ProjectNotFound,
   StorageUnavailable,
   type UserId,
@@ -472,6 +473,29 @@ it.live("answers 503 without details when storage refuses the app", () =>
     Effect.scoped,
     Effect.provide(server.pipe(Layer.provideMerge(app(storage({ refused: true }))))),
   ),
+);
+
+it.live("answers 503, not 404 or 403, and decides nothing while memberships are unavailable", () =>
+  Effect.gen(function* () {
+    const owner = yield* signedIn(ada);
+    const database = yield* Database;
+    const file = yield* shared(owner);
+    const params = { params: { id: file.id } };
+    const before = yield* recorded;
+
+    yield* database.$client.unsafe("DROP TABLE memberships");
+
+    const unavailable = new MembershipUnavailable();
+
+    expect(yield* owner.api.projects.files({ params: { id: launch } }).pipe(Effect.flip)).toEqual(
+      unavailable,
+    );
+    expect(yield* start(owner).pipe(Effect.flip)).toEqual(unavailable);
+    expect(yield* owner.api.files.download(params).pipe(Effect.flip)).toEqual(unavailable);
+    expect(yield* owner.api.files.remove(params).pipe(Effect.flip)).toEqual(unavailable);
+    // An outage is no refusal, so no decision is recorded.
+    expect(yield* recorded).toEqual(before);
+  }).pipe(Effect.scoped, Effect.provide(api)),
 );
 
 // Edge cases and limits of the flow above.

@@ -70,6 +70,12 @@ export class FileNotFound extends Schema.TaggedError<
   { readonly brand: unique symbol }
 >()("FileNotFound", {}, { httpApiStatus: 404 }) {}
 
+/** Memberships could not be read; the request may succeed when retried. */
+export class MembershipUnavailable extends Schema.TaggedError<
+  MembershipUnavailable,
+  { readonly brand: unique symbol }
+>()("MembershipUnavailable", {}, { httpApiStatus: 503 }) {}
+
 /** Storage could not be reached; the request may succeed when retried. */
 export class StorageUnavailable extends Schema.TaggedError<
   StorageUnavailable,
