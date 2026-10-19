@@ -30,7 +30,6 @@ export class Directory extends Context.Service<
     Directory,
     Effect.gen(function* () {
       const database = yield* Database;
-      const unavailable = Effect.mapError(() => new DirectoryUnavailable());
 
       const withTeams = Effect.fnUntraced(function* (
         found: ReadonlyArray<typeof memberships.$inferSelect>,
@@ -43,7 +42,10 @@ export class Directory extends Context.Service<
           .select()
           .from(teamMembers)
           .where(eq(teamMembers.userId, first.userId))
-          .pipe(unavailable);
+          .pipe(
+            Effect.tapError((error) => Effect.logError("Directory lookup failed", error)),
+            Effect.mapError(() => new DirectoryUnavailable()),
+          );
 
         return found.map((member): Membership => ({
           ...member,
@@ -58,7 +60,8 @@ export class Directory extends Context.Service<
             .from(memberships)
             .where(and(eq(memberships.userId, userId), eq(memberships.orgId, orgId)))
             .pipe(
-              unavailable,
+              Effect.tapError((error) => Effect.logError("Directory lookup failed", error)),
+              Effect.mapError(() => new DirectoryUnavailable()),
               Effect.flatMap(withTeams),
               Effect.map((found) => Option.fromNullishOr(found[0])),
             ),
@@ -67,14 +70,19 @@ export class Directory extends Context.Service<
             .select()
             .from(memberships)
             .where(eq(memberships.userId, userId))
-            .pipe(unavailable, Effect.flatMap(withTeams)),
+            .pipe(
+              Effect.tapError((error) => Effect.logError("Directory lookup failed", error)),
+              Effect.mapError(() => new DirectoryUnavailable()),
+              Effect.flatMap(withTeams),
+            ),
         share: (userId, documentId) =>
           database
             .select({ access: shares.access })
             .from(shares)
             .where(and(eq(shares.userId, userId), eq(shares.documentId, documentId)))
             .pipe(
-              unavailable,
+              Effect.tapError((error) => Effect.logError("Directory lookup failed", error)),
+              Effect.mapError(() => new DirectoryUnavailable()),
               Effect.map((found) => Option.fromNullishOr(found[0]?.access)),
             ),
         shared: (userId, access) =>
@@ -87,7 +95,8 @@ export class Directory extends Context.Service<
                 : and(eq(shares.userId, userId), eq(shares.access, "edit")),
             )
             .pipe(
-              unavailable,
+              Effect.tapError((error) => Effect.logError("Directory lookup failed", error)),
+              Effect.mapError(() => new DirectoryUnavailable()),
               Effect.map((found) => found.map(({ documentId }) => documentId)),
             ),
       });
