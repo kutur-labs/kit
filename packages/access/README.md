@@ -213,7 +213,7 @@ Checks run in spans named `<key>.check` and `<key>.require`, and conditions in `
 
 - `effect` 4.0.5 or later 4.x.
 - `@kutur-kit/access/audit` needs `@kutur-kit/audit`.
-- `@kutur-kit/access/drizzle/postgres` needs `drizzle-orm` 1.0.0-rc.4 with the Effect 4 patch described in the [`@kutur-kit/audit` README](https://github.com/kutur-labs/kit/tree/main/packages/audit#requirements).
+- `@kutur-kit/access/drizzle/postgres` needs `drizzle-orm` 1.0.0-rc.5.
 
 ## Limitations
 

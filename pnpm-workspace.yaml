@@ -27,47 +27,47 @@ peerDependencyRules:
 # Catalog usage is documented in AGENTS.md.
 catalogs:
   runtime:
-    "@tanstack/react-router": 1.170.41
-    "@tanstack/react-start": 1.168.60
-    "@tanstack/start-static-server-functions": 1.167.39
-    fumadocs-core: 16.17.5
-    fumadocs-mdx: 15.4.7
-    fumadocs-ui: npm:@fumadocs/base-ui@16.17.5
-    lucide-react: 1.50.0
+    "@tanstack/react-router": 1.170.45
+    "@tanstack/react-start": 1.169.3
+    "@tanstack/start-static-server-functions": 1.167.43
+    fumadocs-core: 16.17.7
+    fumadocs-mdx: 15.4.9
+    fumadocs-ui: npm:@fumadocs/base-ui@16.17.7
+    lucide-react: 1.61.0
     react: 19.3.0
     react-dom: 19.3.0
     zod: 4.6.7
     "@distilled.cloud/aws": 1.0.0-rc.15
     alchemy: 2.0.0-beta.83
-    drizzle-orm: 1.0.0-rc.4
+    drizzle-orm: 1.0.0-rc.5
     effect: 4.0.5
-    "@oxlint/plugins": 1.88.0
+    "@oxlint/plugins": 1.89.0
     eslint-plugin-sonarjs: 4.2.2
     eslint: 10.13.0
   tooling:
     "@tailwindcss/vite": 4.3.3
-    "@vitejs/plugin-react": 6.1.1
+    "@vitejs/plugin-react": 6.1.2
     nitro: 3.0.260903-beta
-    vite: 8.3.2
+    vite: 8.3.5
     "@types/mdx": 2.0.14
     "@types/react": 19.3.0
     "@types/react-dom": 19.3.0
     tailwindcss: 4.3.3
     "@changesets/cli": 3.0.3
-    drizzle-kit: 1.0.0-rc.4
+    drizzle-kit: 1.0.0-rc.5
     konsistent: 1.0.0-beta.12
-    "@commitlint/cli": 21.2.3
-    "@commitlint/config-conventional": 21.2.3
+    "@commitlint/cli": 21.2.4
+    "@commitlint/config-conventional": 21.2.4
     "@commitlint/types": 21.2.3
     husky: 9.1.7
-    turbo: 2.11.9
+    turbo: 2.11.10
     typescript: 7.0.2
-    "@effect/tsgo": 0.53.3
-    oxlint: 1.88.0
+    "@effect/tsgo": 0.56.0
+    oxlint: 1.89.0
     oxlint-tsgolint: 7.0.2004
-    oxfmt: 0.73.0
+    oxfmt: 0.74.0
     publint: 0.3.25
-    skills: 1.7.2
+    skills: 1.7.4
     "@types/node": 24.19.2
   testing:
     "@effect/platform-node": 4.0.5
@@ -75,20 +75,20 @@ catalogs:
     "@testcontainers/postgresql": 12.2.1
     testcontainers: 12.2.1
     "@effect/vitest": 4.0.5
-    "@yielded/auth": 0.1.0-beta.42
-    "@yielded/auth-persistence-drizzle": 0.1.0-beta.42
-    "@yielded/crypto": 0.1.0-beta.42
+    "@yielded/auth": 0.1.0-beta.43
+    "@yielded/auth-persistence-drizzle": 0.1.0-beta.43
+    "@yielded/crypto": 0.1.0-beta.43
     "@stryker-mutator/core": 10.0.0
     "@stryker-mutator/vitest-runner": 10.0.0
     vitest: 5.0.5
   peers:
     "@distilled.cloud/aws": 1.0.0-rc.15
     alchemy: 2.0.0-beta.83
-    drizzle-orm: 1.0.0-rc.4
+    drizzle-orm: 1.0.0-rc.5
     effect: ^4.0.5
-    "@effect/tsgo": ~0.53.3
-    oxlint: ~1.88.0
-    oxfmt: ~0.73.0
+    "@effect/tsgo": ~0.56.0
+    oxlint: ~1.89.0
+    oxfmt: ~0.74.0
 allowBuilds:
   # Testcontainers works without these native and postinstall steps.
   cpu-features: false
@@ -99,27 +99,6 @@ allowBuilds:
   workerd: false
 patchedDependencies:
   "@stryker-mutator/vitest-runner@10.0.0": patches/@stryker-mutator__vitest-runner@10.0.0.patch
-  drizzle-orm@1.0.0-rc.4: patches/drizzle-orm@1.0.0-rc.4.patch
 minimumReleaseAgeExclude:
-  - "@yielded/auth-persistence-drizzle@0.1.0-beta.42"
-  - "@yielded/auth-persistence@0.1.0-beta.42"
-  - "@yielded/auth@0.1.0-beta.42"
-  - "@yielded/crypto@0.1.0-beta.42"
-  - "@yielded/jose@0.1.0-beta.42"
-  - "@yielded/oauth@0.1.0-beta.42"
-  - "@effect/tsgo-darwin-arm64@0.53.3"
-  - "@effect/tsgo-darwin-x64@0.53.3"
-  - "@effect/tsgo-linux-arm64@0.53.3"
-  - "@effect/tsgo-linux-arm@0.53.3"
-  - "@effect/tsgo-linux-x64@0.53.3"
-  - "@effect/tsgo-win32-arm64@0.53.3"
-  - "@effect/tsgo-win32-x64@0.53.3"
-  - "@effect/tsgo@0.53.3"
-  - "@turbo/darwin-64@2.11.9"
-  - "@turbo/darwin-arm64@2.11.9"
-  - "@turbo/linux-64@2.11.9"
-  - "@turbo/linux-arm64@2.11.9"
-  - "@turbo/windows-64@2.11.9"
-  - "@turbo/windows-arm64@2.11.9"
-  - eslint@10.13.0
-  - turbo@2.11.9
+  - drizzle-kit@1.0.0-rc.5
+  - drizzle-orm@1.0.0-rc.5

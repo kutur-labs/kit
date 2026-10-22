@@ -125,12 +125,7 @@ The isolation and failure requirements depend on the database, so test them agai
 ## Requirements
 
 - `effect` 4.0.5 or later 4.x.
-- `@kutur-kit/audit/drizzle/postgres` needs `drizzle-orm` 1.0.0-rc.4, patched for Effect 4. Copy [`drizzle-orm@1.0.0-rc.4.patch`](https://github.com/kutur-labs/kit/blob/main/patches/drizzle-orm@1.0.0-rc.4.patch) into your project and register it in `pnpm-workspace.yaml`:
-
-  ```yaml
-  patchedDependencies:
-    drizzle-orm@1.0.0-rc.4: patches/drizzle-orm@1.0.0-rc.4.patch
-  ```
+- `@kutur-kit/audit/drizzle/postgres` needs `drizzle-orm` 1.0.0-rc.5.
 
   Drizzle's own declarations do not type-check with `skipLibCheck: false`.
 
