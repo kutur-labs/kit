@@ -1,6 +1,6 @@
 {
   "name": "@kutur-kit/oxc",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0-alpha.1",
   "description": "Oxlint and Oxfmt presets for TypeScript, with optional Effect rules.",
   "license": "MIT",
   "repository": {
