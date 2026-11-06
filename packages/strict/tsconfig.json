@@ -1,0 +1,11 @@
+{
+  "extends": "@kutur-kit/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": true,
+    "types": ["node"],
+    "erasableSyntaxOnly": true
+  },
+  "include": ["pnpmfile.mjs", "test/**/*.ts"]
+}

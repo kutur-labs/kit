@@ -10,6 +10,10 @@ catalogMode: strict
 catalogPrune: true
 engineStrict: true
 
+# Fail installs on versions outside exact catalog entries.
+pnpmfile:
+  - packages/strict/pnpmfile.mjs
+
 # Require each package to install its own peers for development and tests.
 autoInstallPeers: false
 strictPeerDependencies: true

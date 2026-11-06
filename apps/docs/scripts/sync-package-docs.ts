@@ -9,6 +9,7 @@ const packages = [
   { name: "assets", group: "libraries" },
   { name: "audit", group: "libraries" },
   { name: "oxc", group: "tools" },
+  { name: "strict", group: "tools" },
   { name: "tsconfig", group: "tools" },
 ] as const;
 

@@ -3,7 +3,7 @@
 ## Dependencies
 
 - Use pnpm at the version in `packageManager`. Use `.node-version` for development and CI; keep `engines.node` in sync. Published packages declare their tested Node versions separately.
-- Keep external versions in `pnpm-workspace.yaml`; manifests use `catalog:<name>`. Use exact versions except for published peer dependency ranges.
+- Keep external versions in `pnpm-workspace.yaml`; manifests use `catalog:<name>`. Use exact versions except for published peer dependency ranges. `@kutur-kit/strict` fails `pnpm install` otherwise.
 - Use `workspace:*` for local dependencies and `workspace:^` for local peers.
 - Add catalog entries when a package needs them. Run `pnpm install` after dependency changes and use `--frozen-lockfile` in CI.
 - Use `pnpm exec` for installed tools or `pnpm dlx <tool>@<exact-version>` for one-off tools.
@@ -32,8 +32,8 @@ Declare dependencies in the package that imports them. Put build and test tools 
 ## Releases
 
 - Versions and changelogs come from [Changesets](https://changesets.dev). Add a changeset with `pnpm changeset` in the change's pull request, for each public package it affects.
-- Packages are in alpha: `0.1.0-alpha.N`, published under the `alpha` npm tag (`.changeset/pre.json`). Move to beta with `pnpm changeset pre exit` and `pnpm changeset pre enter beta`; exit pre mode for a normal release.
-- `@kutur-kit/access` and `@kutur-kit/audit` always release together with the same version. `@kutur-kit/assets`, `@kutur-kit/oxc` and `@kutur-kit/tsconfig` are versioned on their own. Private workspaces are never versioned.
+- Packages are in alpha: `0.1.0-alpha.N`, published under the `alpha` npm tag (`.changeset/pre.json`). `@kutur-kit/strict` started at `0.1.0` without a changeset; its later changesets follow pre mode too. Move to beta with `pnpm changeset pre exit` and `pnpm changeset pre enter beta`; exit pre mode for a normal release.
+- `@kutur-kit/access` and `@kutur-kit/audit` always release together with the same version. `@kutur-kit/assets`, `@kutur-kit/oxc`, `@kutur-kit/strict` and `@kutur-kit/tsconfig` are versioned on their own. Private workspaces are never versioned.
 - To release, run `pnpm release:version`, review and commit the versions and changelogs, then run `pnpm release`. It builds, checks and publishes with pnpm. A package's first publish also becomes its `latest` tag; later prereleases move only `alpha`, so READMEs install with `@alpha`.
 
 ## File names
