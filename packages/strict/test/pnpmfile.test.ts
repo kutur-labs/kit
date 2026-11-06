@@ -32,11 +32,13 @@ const install = (workspace: string, files: Readonly<Record<string, PackageJson>>
   try {
     writeFileSync(
       join(directory, "pnpm-workspace.yaml"),
+      // oxlint-disable-next-line kit/no-json-stringify -- quotes a path; this package does not depend on Effect.
       `${workspace}\npnpmfile:\n  - ${JSON.stringify(pnpmfile)}\nautoInstallPeers: false\n`,
     );
 
     for (const [path, manifest] of Object.entries(files)) {
       mkdirSync(dirname(join(directory, path)), { recursive: true });
+      // oxlint-disable-next-line kit/no-json-stringify -- plain manifests; this package does not depend on Effect.
       writeFileSync(join(directory, path), JSON.stringify(manifest));
     }
 

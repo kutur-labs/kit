@@ -42,7 +42,17 @@ const lint = (preset: string, directory: string) => {
 
   const result = spawnSync(
     "pnpm",
-    ["exec", "oxlint", "--config", config, "--format", "unix", ...files],
+    [
+      "exec",
+      "effect-tsgo",
+      "--tsrs-lint",
+      "oxlint",
+      "--config",
+      config,
+      "--format",
+      "unix",
+      ...files,
+    ],
     {
       encoding: "utf8",
     },
