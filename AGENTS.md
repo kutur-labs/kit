@@ -1,5 +1,7 @@
 # Kutur Kit
 
+Open-source Effect libraries from Kutur Labs. Public APIs use Effect patterns: services and layers for dependencies, scopes for resources, typed errors and streams. Packages that wrap Promise-based libraries expose these patterns, not the wrapped API.
+
 ## Dependencies
 
 - Use pnpm at the version in `packageManager`. Use `.node-version` for development and CI; keep `engines.node` in sync. Published packages declare their tested Node versions separately.

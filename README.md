@@ -1,6 +1,6 @@
 # Kutur Kit
 
-Open-source libraries and tools from Kutur Labs.
+Open-source [Effect](https://effect.website) libraries and tools from Kutur Labs.
 
 ## Development
 
