@@ -1,5 +1,11 @@
 # @kutur-kit/audit
 
+## 0.1.0-alpha.3
+
+### Minor Changes
+
+- 829c058: Requires Effect 4.1. Audit entry ids come from Effect's `SecureRandom` service when the app provides one, else Web Crypto; Effect 4.1 replaced the `Crypto` service.
+
 ## 0.1.0-alpha.2
 
 ### Minor Changes
