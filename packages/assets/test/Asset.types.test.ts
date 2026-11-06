@@ -1,4 +1,3 @@
-// @effect-diagnostics missingEffectContext:off
 import { Effect, type Layer, type Option, Schema, Stream } from "effect";
 import { expectTypeOf, it } from "vitest";
 
@@ -50,9 +49,9 @@ it("accepts only the declared content types and returns them from reads", () => 
   ] as const;
 
   expectTypeOf(Avatar.put).toBeCallableWith(k, body, jpeg);
-  // @ts-expect-error
+  // @ts-expect-error -- `text/html` is not one of the asset's content types
   expectTypeOf(Avatar.put).toBeCallableWith(k, body, html);
-  // @ts-expect-error
+  // @ts-expect-error -- `image/png; q=1` is not one of the asset's content types
   expectTypeOf(Avatar.put).toBeCallableWith(k, body, parameters);
 
   expectTypeOf(Avatar.head(k)).toEqualTypeOf<
@@ -77,9 +76,9 @@ it("takes keys of the key schema's type", () => {
   expectTypeOf(Avatar.Key).toEqualTypeOf<Asset.KeySchema<Asset.Key>>();
   expectTypeOf(Profile.Key).toEqualTypeOf<Asset.KeySchema<typeof UserId.Type>>();
   expectTypeOf(Profile.delete).toBeCallableWith(UserId.make("ada"));
-  // @ts-expect-error
+  // @ts-expect-error -- the key schema expects a branded UserId
   expectTypeOf(Profile.delete).toBeCallableWith("ada");
-  // @ts-expect-error
+  // @ts-expect-error -- keys are branded, so a plain string is refused
   expectTypeOf(Avatar.delete).toBeCallableWith("a.png");
 });
 
@@ -115,11 +114,11 @@ it("rejects ids that are not one key segment", () => {
 
   expectTypeOf(() => {
     Asset.make("avatar", definition);
-    // @ts-expect-error
+    // @ts-expect-error -- ids cannot contain `/`
     Asset.make("a/b", definition);
-    // @ts-expect-error
+    // @ts-expect-error -- ids cannot be `..`
     Asset.make("..", definition);
-    // @ts-expect-error
+    // @ts-expect-error -- ids cannot be empty
     Asset.make("", definition);
   }).toBeFunction();
 });
@@ -129,18 +128,18 @@ it("rejects content types that are not lowercase or have parameters", () => {
 
   expectTypeOf(() => {
     Asset.make("a", { ...definition, contentTypes: ["image/svg+xml", "application/vnd.api+json"] });
-    // @ts-expect-error
+    // @ts-expect-error -- content types must be lowercase
     Asset.make("a", { ...definition, contentTypes: ["image/PNG"] });
-    // @ts-expect-error
+    // @ts-expect-error -- content types cannot have parameters
     Asset.make("a", { ...definition, contentTypes: ["image/png", "text/plain; charset=utf-8"] });
   }).toBeFunction();
 });
 
 it("requires at least one media type", () => {
-  // @ts-expect-error
+  // @ts-expect-error -- an asset needs at least one content type
   Asset.make("a", { bucket: Public, contentTypes: [], maxSize: 1 });
-  // @ts-expect-error
+  // @ts-expect-error -- `png` has no top-level type
   Asset.make("a", { bucket: Public, contentTypes: ["png"], maxSize: 1 });
-  // @ts-expect-error
+  // @ts-expect-error -- `imag` is not a top-level media type
   Asset.make("a", { bucket: Public, contentTypes: ["imag/png"], maxSize: 1 });
 });

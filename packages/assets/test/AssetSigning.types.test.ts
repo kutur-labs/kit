@@ -1,4 +1,3 @@
-// @effect-diagnostics missingEffectContext:off
 import { ByteSize, type Effect } from "effect";
 import { expectTypeOf, it } from "vitest";
 
@@ -40,7 +39,7 @@ it("signs only the asset's content types", () => {
   expectTypeOf(presign).toBeCallableWith(
     Avatar,
     key,
-    // @ts-expect-error
+    // @ts-expect-error -- `text/html` is not one of the asset's content types
     html,
   );
 });
