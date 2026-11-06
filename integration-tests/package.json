@@ -7,7 +7,7 @@
   "scripts": {
     "bench": "vitest bench --run",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@distilled.cloud/aws": "catalog:runtime",
@@ -22,14 +22,13 @@
     "@types/node": "catalog:tooling",
     "@yielded/auth": "catalog:testing",
     "@yielded/auth-persistence-drizzle": "catalog:testing",
-    "@yielded/crypto": "catalog:testing",
     "drizzle-kit": "catalog:tooling",
     "drizzle-orm": "catalog:runtime",
     "effect": "catalog:runtime",
-    "typescript": "catalog:tooling",
+    "tsrs": "catalog:tooling",
     "vitest": "catalog:testing"
   },
   "engines": {
-    "node": "^24.22.0"
+    "node": "^26.13.0"
   }
 }

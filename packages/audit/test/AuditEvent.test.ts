@@ -1,5 +1,6 @@
 import { it } from "@effect/vitest";
-import { Cause, Crypto, DateTime, Effect, Exit, Layer, Option, Redacted, Schema } from "effect";
+import { Cause, DateTime, Effect, Exit, Layer, Option, Redacted, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 import { expect, it as test } from "vitest";
 
 import * as Audit from "../src/Audit.ts";
@@ -85,16 +86,15 @@ it.effect("records no details when an event's optional details are undefined", (
   }).pipe(Effect.provide(TestAuditLog.layer)),
 );
 
-it.effect("gives entries distinct UUIDv7 ids, from the app's Crypto when it provides one", () =>
+it.effect("gives entries distinct UUIDv7 ids, from the app's SecureRandom if provided", () =>
   Effect.gen(function* () {
-    const zeros = Crypto.make({
-      randomBytes: (size) => new Uint8Array(size),
-      digest: (_, data) => Effect.succeed(data),
-    });
+    const zeros = SecureRandom.make((size) => new Uint8Array(size));
 
     yield* ViewItem.log({ target: item });
     yield* ViewItem.log({ target: item });
-    yield* ViewItem.log({ target: item }).pipe(Effect.provideService(Crypto.Crypto, zeros));
+    yield* ViewItem.log({ target: item }).pipe(
+      Effect.provideService(SecureRandom.SecureRandom, zeros),
+    );
 
     const [first, second, provided] = yield* TestAuditLog.entries;
 

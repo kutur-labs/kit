@@ -4,7 +4,8 @@ import * as AssetDelivery from "@kutur-kit/assets/AssetDelivery";
 import * as Audit from "@kutur-kit/audit/Audit";
 import * as AuditEvent from "@kutur-kit/audit/AuditEvent";
 import { eq } from "drizzle-orm";
-import { type ByteSize, Context, Crypto, Effect, Layer, Option, Schema, type Stream } from "effect";
+import { type ByteSize, Context, Effect, Layer, Option, Schema, type Stream } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 import { users } from "./accounts.ts";
 import { Avatar, type Avatars } from "./assets.ts";
@@ -46,7 +47,7 @@ export class Profiles extends Context.Service<
       const database = yield* Database;
       const transactions = yield* Transactions;
       const auditLog = yield* Audit.AuditLog;
-      const crypto = yield* Crypto.Crypto;
+      const random = yield* SecureRandom.SecureRandom;
 
       // Storage, captured so operations need only the caller.
       const storage = yield* Effect.context<Avatars | AssetDelivery.DeliveryOf<Avatars>>();
@@ -70,7 +71,7 @@ export class Profiles extends Context.Service<
       return Profiles.of({
         replaceAvatar: Effect.fn("Profiles.replaceAvatar")(function* (body, options) {
           const user = yield* CurrentUser;
-          const id = AvatarId.make(yield* Effect.orDie(crypto.randomUUIDv7()));
+          const id = AvatarId.make(yield* random.uuidV7());
 
           // Stored first, under a key no one reads yet. An upload that fails
           // here, or a transaction that does not commit, leaves an object no

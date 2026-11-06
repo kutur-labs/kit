@@ -27,68 +27,69 @@ peerDependencyRules:
 # Catalog usage is documented in AGENTS.md.
 catalogs:
   runtime:
-    "@tanstack/react-router": 1.170.45
-    "@tanstack/react-start": 1.169.3
-    "@tanstack/start-static-server-functions": 1.167.43
-    fumadocs-core: 16.17.7
-    fumadocs-mdx: 15.4.9
-    fumadocs-ui: npm:@fumadocs/base-ui@16.17.7
-    lucide-react: 1.61.0
-    react: 19.3.0
-    react-dom: 19.3.0
+    "@tanstack/react-router": 1.170.46
+    "@tanstack/react-start": 1.169.4
+    "@tanstack/start-static-server-functions": 1.167.44
+    fumadocs-core: 16.18.1
+    fumadocs-mdx: 15.5.0
+    fumadocs-ui: npm:@fumadocs/base-ui@16.18.1
+    lucide-react: 1.70.0
+    react: 19.3.1
+    react-dom: 19.3.1
     zod: 4.6.7
-    "@distilled.cloud/aws": 1.0.0-rc.15
-    alchemy: 2.0.0-beta.83
+    "@distilled.cloud/aws": 1.0.0-rc.18
+    alchemy: 2.0.0-beta.85
+    "@alchemy.run/cloudflare": 2.0.0-beta.85
     drizzle-orm: 1.0.0-rc.5
-    effect: 4.0.5
-    "@oxlint/plugins": 1.89.0
+    effect: 4.1.2
+    "@oxlint/plugins": 1.91.0
     eslint-plugin-sonarjs: 4.2.2
-    eslint: 10.13.0
+    eslint: 10.14.0
   tooling:
-    "@tailwindcss/vite": 4.3.3
-    "@vitejs/plugin-react": 6.1.2
-    nitro: 3.0.260903-beta
-    vite: 8.3.5
+    "@tailwindcss/vite": 4.3.5
+    "@vitejs/plugin-react": 6.2.1
+    nitro: 3.0.261103-rc
+    vite: 8.3.6
     "@types/mdx": 2.0.14
     "@types/react": 19.3.0
     "@types/react-dom": 19.3.0
-    tailwindcss: 4.3.3
+    tailwindcss: 4.3.5
     "@changesets/cli": 3.0.3
     drizzle-kit: 1.0.0-rc.5
-    konsistent: 1.0.0-beta.12
+    konsistent: 1.0.0-beta.13
     "@commitlint/cli": 21.2.4
     "@commitlint/config-conventional": 21.2.4
     "@commitlint/types": 21.2.3
     husky: 9.1.7
     turbo: 2.11.10
-    typescript: 7.0.2
-    "@effect/tsgo": 0.56.0
-    oxlint: 1.89.0
-    oxlint-tsgolint: 7.0.2004
-    oxfmt: 0.74.0
+    tsrs: 0.22.0-ts7.1.0-beta
+    "@effect/tsgo": 0.67.4
+    oxlint: 1.91.0
+    oxfmt: 0.77.0
     publint: 0.3.25
-    skills: 1.7.4
-    "@types/node": 24.19.2
+    skills: 1.7.6
+    "@types/node": 26.6.6
   testing:
-    "@effect/platform-node": 4.0.5
-    "@effect/sql-pg": 4.0.5
+    "@effect/platform-node": 4.1.2
+    "@effect/sql-pg": 4.1.2
     "@testcontainers/postgresql": 12.2.1
     testcontainers: 12.2.1
-    "@effect/vitest": 4.0.5
-    "@yielded/auth": 0.1.0-beta.43
-    "@yielded/auth-persistence-drizzle": 0.1.0-beta.43
-    "@yielded/crypto": 0.1.0-beta.43
-    "@stryker-mutator/core": 10.0.0
-    "@stryker-mutator/vitest-runner": 10.0.0
-    vitest: 5.0.5
+    "@effect/vitest": 4.1.2
+    "@yielded/auth": 0.1.0-beta.47
+    "@yielded/auth-persistence-drizzle": 0.1.0-beta.47
+    "@stryker-mutator/core": 10.1.1
+    "@stryker-mutator/vitest-runner": 10.1.1
+    vitest: 5.1.0
+    "@alchemy.run/test": 2.0.0-beta.85
   peers:
-    "@distilled.cloud/aws": 1.0.0-rc.15
-    alchemy: 2.0.0-beta.83
+    "@distilled.cloud/aws": 1.0.0-rc.18
+    alchemy: 2.0.0-beta.85
+    "@alchemy.run/cloudflare": 2.0.0-beta.85
     drizzle-orm: 1.0.0-rc.5
-    effect: ^4.0.5
-    "@effect/tsgo": ~0.56.0
-    oxlint: ~1.89.0
-    oxfmt: ~0.74.0
+    effect: ^4.1.2
+    "@effect/tsgo": ~0.67.4
+    oxlint: ~1.91.0
+    oxfmt: ~0.77.0
 allowBuilds:
   # Testcontainers works without these native and postinstall steps.
   cpu-features: false
@@ -97,8 +98,53 @@ allowBuilds:
   ssh2: false
   # Miniflare runs workerd from its platform package; the script only checks it.
   workerd: false
-patchedDependencies:
-  "@stryker-mutator/vitest-runner@10.0.0": patches/@stryker-mutator__vitest-runner@10.0.0.patch
 minimumReleaseAgeExclude:
   - drizzle-kit@1.0.0-rc.5
   - drizzle-orm@1.0.0-rc.5
+  - "@effect/tsgo-darwin-arm64@0.67.4"
+  - "@effect/tsgo-darwin-x64@0.67.4"
+  - "@effect/tsgo-linux-arm64@0.67.4"
+  - "@effect/tsgo-linux-arm@0.67.4"
+  - "@effect/tsgo-linux-x64@0.67.4"
+  - "@effect/tsgo-win32-arm64@0.67.4"
+  - "@effect/tsgo-win32-x64@0.67.4"
+  - "@effect/tsgo@0.67.4"
+  - "@fumadocs/base-ui@16.18.1"
+  - "@oxfmt/binding-android-arm-eabi@0.77.0"
+  - "@oxfmt/binding-android-arm64@0.77.0"
+  - "@oxfmt/binding-darwin-arm64@0.77.0"
+  - "@oxfmt/binding-darwin-x64@0.77.0"
+  - "@oxfmt/binding-freebsd-x64@0.77.0"
+  - "@oxfmt/binding-linux-arm-gnueabihf@0.77.0"
+  - "@oxfmt/binding-linux-arm-musleabihf@0.77.0"
+  - "@oxfmt/binding-linux-arm64-gnu@0.77.0"
+  - "@oxfmt/binding-linux-arm64-musl@0.77.0"
+  - "@oxfmt/binding-linux-ppc64-gnu@0.77.0"
+  - "@oxfmt/binding-linux-riscv64-gnu@0.77.0"
+  - "@oxfmt/binding-linux-riscv64-musl@0.77.0"
+  - "@oxfmt/binding-linux-s390x-gnu@0.77.0"
+  - "@oxfmt/binding-linux-x64-gnu@0.77.0"
+  - "@oxfmt/binding-linux-x64-musl@0.77.0"
+  - "@oxfmt/binding-openharmony-arm64@0.77.0"
+  - "@oxfmt/binding-win32-arm64-msvc@0.77.0"
+  - "@oxfmt/binding-win32-ia32-msvc@0.77.0"
+  - "@oxfmt/binding-win32-x64-msvc@0.77.0"
+  - "@tailwindcss/node@4.3.5"
+  - "@tailwindcss/oxide-android-arm64@4.3.5"
+  - "@tailwindcss/oxide-darwin-arm64@4.3.5"
+  - "@tailwindcss/oxide-darwin-x64@4.3.5"
+  - "@tailwindcss/oxide-freebsd-x64@4.3.5"
+  - "@tailwindcss/oxide-linux-arm-gnueabihf@4.3.5"
+  - "@tailwindcss/oxide-linux-arm64-gnu@4.3.5"
+  - "@tailwindcss/oxide-linux-arm64-musl@4.3.5"
+  - "@tailwindcss/oxide-linux-x64-gnu@4.3.5"
+  - "@tailwindcss/oxide-linux-x64-musl@4.3.5"
+  - "@tailwindcss/oxide-wasm32-wasi@4.3.5"
+  - "@tailwindcss/oxide-win32-arm64-msvc@4.3.5"
+  - "@tailwindcss/oxide-win32-x64-msvc@4.3.5"
+  - "@tailwindcss/oxide@4.3.5"
+  - "@tailwindcss/vite@4.3.5"
+  - fumadocs-core@16.18.1
+  - lucide-react@1.70.0
+  - oxfmt@0.77.0
+  - tailwindcss@4.3.5

@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@distilled.cloud/aws": "catalog:runtime",
@@ -26,9 +26,9 @@
     "@effect/vitest": "catalog:testing",
     "@kutur-kit/tsconfig": "workspace:*",
     "@types/node": "catalog:tooling",
-    "typescript": "catalog:tooling"
+    "tsrs": "catalog:tooling"
   },
   "engines": {
-    "node": "^24.22.0"
+    "node": "^26.13.0"
   }
 }

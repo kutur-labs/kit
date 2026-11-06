@@ -1,8 +1,8 @@
 import * as Audit from "@kutur-kit/audit/Audit";
 import { Auth, EmailDelivery, Http, Operations, Password, WebCrypto } from "@yielded/auth";
-import * as KdfAdmission from "@yielded/crypto/KdfAdmission";
-import * as NodeCrypto from "@yielded/crypto/platform-node";
-import { Crypto, Effect, Layer, Option, Predicate, Redacted } from "effect";
+import * as PasswordScrypt from "@yielded/auth/PasswordScrypt";
+import { Effect, Layer, Option, Predicate, Redacted } from "effect";
+import { Kdf, SecureRandom } from "effect/crypto";
 import { HttpServerRequest, type HttpServerResponse } from "effect/http";
 import { HttpApiBuilder } from "effect/http-api";
 
@@ -32,18 +32,17 @@ export const http = Http.make(AppAuth, {
 const ProvisioningLive = Layer.effect(
   Persistence.Provisioning,
   Effect.gen(function* () {
-    const crypto = yield* Crypto.Crypto;
+    const random = yield* SecureRandom.SecureRandom;
 
     return {
       password: {
         values: ({ registration }) =>
-          crypto.randomUUIDv4().pipe(
+          random.uuidV4().pipe(
             Effect.map((securityRevision) => ({
               id: registration.userId,
               active: true,
               securityRevision,
             })),
-            Effect.mapError(() => Password.PasswordUnavailable.make({})),
           ),
       },
     };
@@ -52,7 +51,8 @@ const ProvisioningLive = Layer.effect(
 
 const PasswordLive = Layer.mergeAll(
   Password.PasswordHashing.layer(Password.defaultScryptPasswordHashingConfig).pipe(
-    Layer.provide(Layer.provideMerge(NodeCrypto.layer(), KdfAdmission.layer())),
+    // New hashes use native scrypt; Kdf only verifies other formats.
+    Layer.provide([PasswordScrypt.layer, Kdf.layerWebCrypto, Password.KdfAdmission.layer()]),
   ),
   Layer.succeed(AppAuth.strategies.password.SessionClaims, { resolve: () => Effect.succeed({}) }),
   // No breach screening: passwords are only set by provisioning.
@@ -73,7 +73,7 @@ export const AuthLive = http.layer.pipe(
   Layer.provide(PasswordLive),
   Layer.provide(Persistence.layer.pipe(Layer.provide(ProvisioningLive))),
   Layer.provide(Persistence.Config.layer(storage)),
-  Layer.provideMerge(WebCrypto.layerWebCrypto),
+  Layer.provideMerge(WebCrypto.layer),
   // PostgreSQL keeps its own clock, which may lag ours a little. Auth and its
   // storage compare the two, and by default tolerate no difference at all.
   Layer.provideMerge(Operations.AuthenticationClock.layer({ futureToleranceMillis: 1_000 })),
@@ -93,7 +93,7 @@ const authenticateSession = Effect.gen(function* () {
       Effect.orDie,
     );
 
-    const session = yield* auth.requireSession().pipe(
+    const session = yield* auth.requireSession.pipe(
       Effect.mapError((error) =>
         Predicate.isTagged(error, "SessionUnavailable")
           ? new AuthenticationUnavailable()

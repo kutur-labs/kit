@@ -1,5 +1,5 @@
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Alchemy from "alchemy";
-import * as Cloudflare from "alchemy/Cloudflare";
 import { Effect } from "effect";
 
 // Every page is prerendered, so the site deploys as static assets. Search uses

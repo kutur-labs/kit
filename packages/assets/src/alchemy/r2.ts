@@ -1,12 +1,10 @@
 import type * as AssetSigning from "../AssetSigning.ts";
-import type { Bucket, BucketCorsRule } from "alchemy/Cloudflare/R2/Bucket";
-import type { PutOptions, R2Object } from "alchemy/Cloudflare/R2/BucketTypes";
-import type { WorkerEnvironment } from "alchemy/Cloudflare/Workers/Worker";
+import type { Bucket, BucketCorsRule, PutOptions, R2Object } from "@alchemy.run/cloudflare/R2";
+import type { WorkerEnvironment } from "@alchemy.run/cloudflare/Workers";
 
+import { ReadWriteBucket, S3Credentials } from "@alchemy.run/cloudflare/R2";
 import * as Credentials from "@distilled.cloud/aws/Credentials";
-import { ReadWriteBucket } from "alchemy/Cloudflare/R2/ReadWriteBucket";
-import { S3Credentials } from "alchemy/Cloudflare/R2/S3Credentials";
-import { RuntimeContext } from "alchemy/RuntimeContext";
+import { RuntimeContext } from "alchemy";
 import { ByteSize, Effect, Layer, Option, Stream } from "effect";
 
 import * as AssetBucket from "../AssetBucket.ts";

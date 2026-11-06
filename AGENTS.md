@@ -51,9 +51,9 @@ Declare dependencies in the package that imports them. Put build and test tools 
 
 - Check Effect APIs against installed types or source for the version in use.
 - Extend `@kutur-kit/tsconfig/effect.json`; set output options and paths in each package. Use `@kutur-kit/oxc/effect` and `@kutur-kit/oxc/format`. Keep the base and format presets usable without Effect tooling.
-- TypeScript 7 uses `@effect/tsgo`; the plugin key remains `@effect/language-service`. Root `prepare` patches TypeScript and Oxlint. Upgrade TypeScript, Oxlint, oxlint-tsgolint and @effect/tsgo as a compatible set.
+- tsrs compiles, type-checks and runs Oxlint's type-aware rules. `effect-tsgo tsrs` and `effect-tsgo --tsrs-lint oxlint` add Effect diagnostics without patching `node_modules`; the plugin key remains `@effect/language-service`. Upgrade tsrs, Oxlint, `@oxlint/plugins` and `@effect/tsgo` as a compatible set.
 - Vendored anti-slop rules are in `packages/oxc/src/vendor/anti-slop`; see its `UPSTREAM.md` before updating. Pin `@oxlint/plugins` to the same version as Oxlint.
-- Use the workspace native TypeScript server. Keep compiler Effect diagnostics enabled; editor overrides may disable duplicates when Oxlint supplies them. See package READMEs for setup.
+- Use the workspace tsrs language server. Keep compiler Effect diagnostics enabled; editor overrides may disable duplicates when Oxlint supplies them. See package READMEs for setup.
 - If using the local Effect checkout at `~/.local/share/effect-solutions/effect`, check out the tag matching the dependency version. Builds must not depend on this checkout.
 
 <!-- BEGIN:turborepo-agent-rules -->

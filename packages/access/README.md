@@ -2,7 +2,7 @@
 
 Permissions for Effect, defined as services. Each permission declares what it decides about, and its policy is a Layer. Checks are typed and traced, can be restricted per caller (for example to an agent token's scopes) and can be audited. A permission can also describe the targets it allows as a condition for list queries.
 
-Tested with Effect 4.0.5.
+Tested with Effect 4.1.2.
 
 ```sh
 pnpm add @kutur-kit/access@alpha effect
@@ -211,7 +211,7 @@ Checks run in spans named `<key>.check` and `<key>.require`, and conditions in `
 
 ## Requirements
 
-- `effect` 4.0.5 or later 4.x.
+- `effect` 4.1.2 or later 4.x.
 - `@kutur-kit/access/audit` needs `@kutur-kit/audit`.
 - `@kutur-kit/access/drizzle/postgres` needs `drizzle-orm` 1.0.0-rc.5.
 

@@ -6,7 +6,7 @@ import { rustfs } from "@kutur-kit/testcontainers/vitest";
 import { Auth, Client, Operations, WebCrypto } from "@yielded/auth";
 import { Effect, Layer, Redacted, Ref, type Scope } from "effect";
 import {
-  Cookies,
+  type Cookies,
   FetchHttpClient,
   HttpClient,
   HttpClientRequest,
@@ -109,7 +109,7 @@ export const app = <A, E, R>(buckets: Layer.Layer<A, E, R>) =>
     Layer.provideMerge(Database.auditLog),
     Layer.provideMerge(buckets),
     Layer.provideMerge(Database.layer(seed)),
-    Layer.provide(WebCrypto.layerWebCrypto),
+    Layer.provide(WebCrypto.layer),
   );
 
 /**
@@ -178,7 +178,7 @@ const provision = (user: string) =>
  * the app's own code would, the CSRF header.
  */
 export const browser = Effect.gen(function* () {
-  const cookies = yield* Ref.make(Cookies.empty);
+  const cookies = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([]);
   const fetchClient = yield* HttpClient.HttpClient;
 
   // Cookies and the app's headers go to the app alone, as a browser sends them.

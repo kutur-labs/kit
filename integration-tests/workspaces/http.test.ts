@@ -2,7 +2,7 @@ import { it } from "@effect/vitest";
 import { Decision } from "@kutur-kit/access";
 import { OperationHttp } from "@yielded/auth";
 import { eq } from "drizzle-orm";
-import { Effect, Layer, Option, Redacted, Ref } from "effect";
+import { Clock, Effect, Layer, Option, Redacted, Ref } from "effect";
 import { Cookies, HttpClient, HttpClientRequest } from "effect/http";
 import { HttpApiClient } from "effect/http-api";
 import { expect } from "vitest";
@@ -35,6 +35,19 @@ const api = server.pipe(Layer.provideMerge(app));
 const everything = { limit: 10_000, offset: 0 };
 
 const member = withRole("member");
+
+/** Stores the session cookie as if the app had set it. */
+const setSessionCookie = (cookies: Ref.Ref<ReadonlyArray<Cookies.Cookie>>, value: string) =>
+  Effect.flatMap(Clock.currentTimeMillis, (now) =>
+    Ref.update(
+      cookies,
+      Cookies.mergeIntoArray(
+        origin,
+        Cookies.setUnsafe(Cookies.empty, SessionHttp.cookieName, value),
+        now,
+      ),
+    ),
+  );
 
 /** What the user can do with each document, decided without HTTP. */
 const access = (user: string) =>
@@ -114,19 +127,19 @@ it.live("refuses callers without a valid session or token, and wrong passwords",
 
     expect(wrong._tag).toBe("PasswordRejected");
     expect(unknown._tag).toBe("PasswordRejected");
-    expect(Cookies.isEmpty(yield* Ref.get(anonymous.cookies))).toBe(true);
+    expect(yield* Ref.get(anonymous.cookies)).toEqual([]);
     expect(yield* anonymous.api.documents.list({ query: {} }).pipe(Effect.flip)).toEqual(
       new Unauthenticated(),
     );
 
-    yield* Ref.update(anonymous.cookies, Cookies.setUnsafe(SessionHttp.cookieName, "forged"));
+    yield* setSessionCookie(anonymous.cookies, "forged");
 
     expect(yield* anonymous.api.documents.list({ query: {} }).pipe(Effect.flip)).toEqual(
       new Unauthenticated(),
     );
 
     // Malformed credentials are refused before authentication runs.
-    yield* Ref.update(anonymous.cookies, Cookies.setUnsafe(SessionHttp.cookieName, ""));
+    yield* setSessionCookie(anonymous.cookies, "");
 
     expect(yield* anonymous.api.documents.list({ query: {} }).pipe(Effect.flip)).toEqual(
       OperationHttp.OperationHttpError.make({ reason: "credentials" }),
@@ -332,9 +345,10 @@ it.live("revokes a session on sign-out, so a copy of its cookie stops working", 
     yield* session.auth.auth.signOut();
 
     expect(
-      Cookies.getValue(yield* Ref.get(session.cookies), SessionHttp.cookieName).pipe(
-        Option.filter((value) => value !== ""),
-      ),
+      Cookies.getValue(
+        Cookies.fromIterable(yield* Ref.get(session.cookies)),
+        SessionHttp.cookieName,
+      ).pipe(Option.filter((value) => value !== "")),
     ).toEqual(Option.none());
     expect(yield* replay.api.documents.list({ query: {} }).pipe(Effect.flip)).toEqual(
       new Unauthenticated(),

@@ -1,4 +1,5 @@
-import { Crypto, DateTime, Effect, Option, Schema } from "effect";
+import { DateTime, Effect, Option, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 import * as Audit from "./Audit.ts";
 import { type Codec, projectOrDie, rejectRedacted, viewOf } from "./internal/view.ts";
@@ -46,15 +47,9 @@ export interface AuditEvent<A extends string, D extends Definition> {
   ) => Effect.Effect<void, never, Audit.AuditLog>;
 }
 
-// Web Crypto exists on every runtime Effect supports; apps that provide Crypto
-// (as platform services do) replace it.
-const webCrypto = Crypto.make({
-  randomBytes: (size) => globalThis.crypto.getRandomValues(new Uint8Array(size)),
-  digest: (algorithm, data) =>
-    Effect.promise(() => globalThis.crypto.subtle.digest(algorithm, new Uint8Array(data))).pipe(
-      Effect.map((digest) => new Uint8Array(digest)),
-    ),
-});
+// Web Crypto exists on every runtime Effect supports; apps that provide
+// SecureRandom replace it.
+const webRandom = SecureRandom.make(SecureRandom.randomBytesUnsafe);
 
 interface AnyInput {
   readonly target?: unknown;
@@ -93,14 +88,17 @@ export const make = <const A extends string, const D extends Definition>(
         ? yield* encodeDetails(input.details)
         : undefined;
 
-    const crypto = Option.getOrElse(yield* Effect.serviceOption(Crypto.Crypto), () => webCrypto);
+    const random = Option.getOrElse(
+      yield* Effect.serviceOption(SecureRandom.SecureRandom),
+      () => webRandom,
+    );
 
     const span = Option.getOrUndefined(yield* Effect.option(Effect.currentSpan));
     const actor = yield* Audit.CurrentActor;
 
     yield* auditLog.record(
       new Audit.Entry({
-        id: yield* Effect.orDie(crypto.randomUUIDv7()),
+        id: yield* random.uuidV7(),
         action,
         outcome: input.outcome ?? "success",
         ...(input.reason !== undefined && { reason: input.reason }),

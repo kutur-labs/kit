@@ -3,7 +3,7 @@
   "plugins": ["@stryker-mutator/vitest-runner"],
   "testRunner": "vitest",
   "vitest": { "configFile": "vitest.mutation.config.ts" },
-  "tsconfigFile_comment": "TypeScript 7 has no JS API for Stryker's tsconfig rewrite, and vitest does not read tsconfig",
+  "tsconfigFile_comment": "The native compiler has no JS API for Stryker's tsconfig rewrite, and vitest does not read tsconfig",
   "tsconfigFile": "none",
   "mutate": ["src/**/*.ts", "!src/index.ts"],
   "reporters": ["clear-text", "progress", "html"],

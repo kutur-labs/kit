@@ -1,7 +1,6 @@
+import * as Cloudflare from "@alchemy.run/cloudflare";
+import * as Test from "@alchemy.run/test/Vitest";
 import * as Alchemy from "alchemy";
-import * as Cloudflare from "alchemy/Cloudflare";
-import * as State from "alchemy/State";
-import * as Test from "alchemy/Test/Vitest";
 import { Data, Effect, Schedule, Schema } from "effect";
 import { HttpClient, HttpClientRequest, type HttpClientResponse } from "effect/http";
 import { expect } from "vitest";
@@ -20,15 +19,12 @@ const live = process.env["TEST_R2_LIVE"] === "1";
 const { test, beforeAll, afterAll, deploy, destroy } = Test.make({
   providers: Cloudflare.providers(),
   dev: !live,
-  // In-process local providers: behind the dev sidecar, `destroy` hangs
-  // under Vitest with alchemy 2.0.0-beta.83.
-  sidecar: false,
 });
 
 const Stack = Alchemy.Stack(
   "AssetsR2Test",
   // State in `.alchemy/`; each run destroys what it deployed.
-  { providers: Cloudflare.providers(), state: State.localState() },
+  { providers: Cloudflare.providers(), state: Alchemy.localState() },
   Effect.gen(function* () {
     const worker = yield* AssetsFixture;
     const bucket = yield* Assets;

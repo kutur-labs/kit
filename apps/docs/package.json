@@ -6,9 +6,9 @@
     "build": "node scripts/sync-package-docs.ts && vite build && node scripts/check-links.ts",
     "deploy": "alchemy deploy --stage prod",
     "dev": "node scripts/sync-package-docs.ts && vite dev",
-    "lint": "oxlint .",
+    "lint": "effect-tsgo --tsrs-lint oxlint .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "effect-tsgo tsrs --noEmit"
   },
   "dependencies": {
     "@kutur-kit/access": "workspace:*",
@@ -27,6 +27,8 @@
     "zod": "catalog:runtime"
   },
   "devDependencies": {
+    "@alchemy.run/cloudflare": "catalog:runtime",
+    "@effect/tsgo": "catalog:tooling",
     "@effect/vitest": "catalog:testing",
     "@kutur-kit/tsconfig": "workspace:*",
     "@tailwindcss/vite": "catalog:tooling",
@@ -39,7 +41,7 @@
     "nitro": "catalog:tooling",
     "oxlint": "catalog:tooling",
     "tailwindcss": "catalog:tooling",
-    "typescript": "catalog:tooling",
+    "tsrs": "catalog:tooling",
     "vite": "catalog:tooling",
     "vitest": "catalog:testing"
   }

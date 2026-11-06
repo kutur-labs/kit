@@ -1,0 +1,18 @@
+{
+  "languages": {
+    "TypeScript": {
+      "language_servers": ["effect-tsrs", "oxlint", "!vtsls", "!typescript-language-server", "..."]
+    },
+    "TSX": {
+      "language_servers": ["effect-tsrs", "oxlint", "!vtsls", "!typescript-language-server", "..."]
+    },
+    "JavaScript": {
+      "language_servers": ["effect-tsrs", "oxlint", "!vtsls", "!typescript-language-server", "..."]
+    }
+  },
+  "lsp": {
+    "oxlint": {
+      "binary": { "path": "scripts/editor/oxlint", "arguments": ["--lsp"] }
+    }
+  }
+}

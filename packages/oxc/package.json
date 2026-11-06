@@ -41,11 +41,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsc -p tsconfig.build.json",
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsrs -p tsconfig.build.json",
     "lint:package": "publint --pack pnpm --strict",
     "prepack": "pnpm run build",
     "test": "node --test test/*.test.ts",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@oxlint/plugins": "catalog:runtime",
@@ -58,9 +58,8 @@
     "@types/node": "catalog:tooling",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",
-    "oxlint-tsgolint": "catalog:tooling",
     "publint": "catalog:tooling",
-    "typescript": "catalog:tooling"
+    "tsrs": "catalog:tooling"
   },
   "peerDependencies": {
     "@effect/tsgo": "catalog:peers",

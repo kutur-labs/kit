@@ -11,7 +11,7 @@
           "@effect/sql-pg",
           "@effect/vitest",
           "effect/ByteSize",
-          "effect/Crypto",
+          "effect/crypto",
           "effect/http",
           "effect/http-api",
           "effect/reactivity"
