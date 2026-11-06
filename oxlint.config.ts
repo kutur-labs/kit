@@ -18,6 +18,13 @@ export default defineConfig({
       },
     ],
   },
+  overrides: [
+    {
+      // The link check and benches report by printing.
+      files: ["apps/docs/scripts/**", "integration-tests/**/*.bench.ts"],
+      rules: { "effecttsgo/global-console": "off" },
+    },
+  ],
   ignorePatterns: [
     "apps/docs/.output/**",
     "apps/docs/src/route-tree.gen.ts",

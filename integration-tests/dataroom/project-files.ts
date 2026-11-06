@@ -5,7 +5,7 @@ import * as AssetSigning from "@kutur-kit/assets/AssetSigning";
 import * as Audit from "@kutur-kit/audit/Audit";
 import * as AuditEvent from "@kutur-kit/audit/AuditEvent";
 import { and, asc, eq } from "drizzle-orm";
-import { ByteSize, Clock, Context, Effect, Layer, Schema } from "effect";
+import { ByteSize, Context, DateTime, Effect, Layer, Schema } from "effect";
 import { SecureRandom } from "effect/crypto";
 
 import { type Documents, ProjectFile } from "./assets.ts";
@@ -187,7 +187,7 @@ export class ProjectFiles extends Context.Service<
 
           yield* database
             .insert(files)
-            .values({ ...pending, createdAt: new Date(yield* Clock.currentTimeMillis) })
+            .values({ ...pending, createdAt: DateTime.toDateUtc(yield* DateTime.now) })
             .pipe(Effect.orDie);
 
           return { file: pending, upload: signed };

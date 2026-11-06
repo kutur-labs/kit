@@ -1,4 +1,5 @@
 import { Effect, FileSystem, Layer, Option, Path, Schema, Stream } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 import * as AssetBucket from "./AssetBucket.ts";
 
@@ -29,6 +30,10 @@ class BodyFailure<E> {
   constructor(readonly error: E) {}
 }
 
+// Web Crypto exists on every runtime Effect supports; apps that provide
+// SecureRandom replace it.
+const webRandom = SecureRandom.make(SecureRandom.randomBytesUnsafe);
+
 const hex = (bytes: ArrayBuffer) =>
   Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
 
@@ -48,6 +53,11 @@ export const layer = <Self, Id extends string>(
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
+      const random = Option.getOrElse(
+        yield* Effect.serviceOption(SecureRandom.SecureRandom),
+        () => webRandom,
+      );
 
       const failure =
         (operation: AssetBucket.AssetBucketError["operation"], key: string) => (cause: unknown) =>
@@ -89,7 +99,7 @@ export const layer = <Self, Id extends string>(
             );
 
             const previous = yield* read(key, "put");
-            const version = crypto.randomUUID();
+            const version = yield* random.uuidV4();
             const file = `${hash}.${version}`;
             const target = path.join(directory, file);
 

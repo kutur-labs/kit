@@ -134,6 +134,9 @@ export const server = Layer.effect(
       yield* Effect.context<Provided>(),
     )(routes);
 
+    // The Fetch this one replaces: the network, unless the run provides another.
+    const network = yield* FetchHttpClient.Fetch;
+
     // Fresh: a layer is built once per run and shared, and storage's client
     // has already built this one, without the Fetch below.
     return yield* HttpClient.HttpClient.pipe(
@@ -141,7 +144,7 @@ export const server = Layer.effect(
       Effect.provideService(FetchHttpClient.Fetch, (input, init) => {
         const request = new Request(input, init);
 
-        return new URL(request.url).origin === origin ? handler(request) : fetch(request);
+        return new URL(request.url).origin === origin ? handler(request) : network(request);
       }),
     );
   }),

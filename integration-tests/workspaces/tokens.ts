@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { Clock, Context, Effect, Layer, Option, Redacted, Schema } from "effect";
+import { Context, DateTime, Effect, Layer, Option, Redacted, Schema } from "effect";
 import { Digest, SecureRandom } from "effect/crypto";
 import { Base64Url } from "effect/encoding";
 
@@ -58,7 +58,7 @@ export class AgentTokens extends Context.Service<
             userId: user.id,
             tokenHash: yield* digest(token),
             scopes: [...scopes],
-            createdAt: new Date(yield* Clock.currentTimeMillis),
+            createdAt: DateTime.toDateUtc(yield* DateTime.now),
           });
 
           return { id, userId: user.id, scopes, token };

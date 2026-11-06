@@ -3,6 +3,7 @@ import * as Endpoint from "@distilled.cloud/aws/Endpoint";
 import * as Region from "@distilled.cloud/aws/Region";
 import * as S3 from "@distilled.cloud/aws/s3";
 import { Config, Context, Effect, Layer, Option, Redacted, Stream } from "effect";
+import { SecureRandom } from "effect/crypto";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { GenericContainer, Wait } from "testcontainers";
 
@@ -89,12 +90,18 @@ export const aws = Layer.unwrap(
   ),
 );
 
+// Test processes share the server. Web Crypto keeps their names apart even when
+// a test provides a seeded SecureRandom.
+const uniqueId = SecureRandom.SecureRandom.use((random) => random.uuidV4()).pipe(
+  Effect.provide(SecureRandom.layerWebCrypto),
+);
+
 /**
  * Creates an empty bucket on the server and deletes it with its objects when
  * the scope closes, so tests sharing one server stay isolated.
  */
 export const bucket = Effect.gen(function* () {
-  const name = `test-${globalThis.crypto.randomUUID()}`;
+  const name = `test-${yield* uniqueId}`;
 
   yield* S3.createBucket({ Bucket: name });
 

@@ -6,6 +6,24 @@ import base from "./base.ts";
 
 const effect: OxlintConfig = {
   extends: [base, recommended],
+  rules: {
+    // Globals that bypass Effect's services, so layers and tests cannot replace them.
+    "effecttsgo/crypto-random-uuid": "warn",
+    "effecttsgo/crypto-random-uuid-in-effect": "warn",
+    "effecttsgo/global-console": "warn",
+    "effecttsgo/global-console-in-effect": "warn",
+    "effecttsgo/global-date": "warn",
+    "effecttsgo/global-date-in-effect": "warn",
+    "effecttsgo/global-fetch": "warn",
+    "effecttsgo/global-fetch-in-effect": "warn",
+    "effecttsgo/global-random": "warn",
+    "effecttsgo/global-random-in-effect": "warn",
+    "effecttsgo/global-timers": "warn",
+    "effecttsgo/global-timers-in-effect": "warn",
+    "effecttsgo/process-env": "warn",
+    "effecttsgo/process-env-in-effect": "warn",
+    "effecttsgo/service-not-as-class": "warn",
+  },
   options: { typeAware: true },
 };
 
