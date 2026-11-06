@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
-import { Clock, Context, Crypto, Effect, Layer, Option, Redacted, Schema } from "effect";
-import { Base64Url, Hex } from "effect/encoding";
+import { Clock, Context, Effect, Layer, Option, Redacted, Schema } from "effect";
+import { Digest, SecureRandom } from "effect/crypto";
+import { Base64Url } from "effect/encoding";
 
 import { users } from "./accounts.ts";
 import { TokenNotFound } from "./api.ts";
@@ -38,20 +39,19 @@ export class AgentTokens extends Context.Service<
     AgentTokens,
     Effect.gen(function* () {
       const database = yield* Database;
-      const crypto = yield* Crypto.Crypto;
+      const random = yield* SecureRandom.SecureRandom;
+      const digests = yield* Digest.Digest;
       const decodeScopes = Schema.decodeEffect(AgentScopes.schema);
 
       const digest = (token: Redacted.Redacted<string>) =>
-        crypto
-          .digest("SHA-256", new TextEncoder().encode(Redacted.value(token)))
-          .pipe(Effect.map(Hex.encode));
+        digests.digestHex(Digest.sha256, new TextEncoder().encode(Redacted.value(token)));
 
       return AgentTokens.of({
         issue: Effect.fn("AgentTokens.issue")(function* (requested) {
           const user = yield* CurrentUser;
           const scopes = yield* decodeScopes(requested);
-          const id = yield* crypto.randomUUIDv7();
-          const token = Redacted.make(Base64Url.encode(yield* crypto.randomBytes(32)));
+          const id = yield* random.uuidV7();
+          const token = Redacted.make(Base64Url.encode(yield* random.randomBytes(32)));
 
           yield* database.insert(agentTokens).values({
             id,

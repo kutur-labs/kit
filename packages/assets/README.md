@@ -2,7 +2,7 @@
 
 Typed file storage for Effect. An asset declares its bucket, its keys, the content types it accepts and its maximum size. Storage is a Layer per bucket: memory, a directory, S3-compatible storage or an R2 bucket through [alchemy](https://alchemy.run). Clients can upload and download through signed URLs, and objects of public buckets get URLs under a CDN or public domain.
 
-Tested with Effect 4.0.5.
+Tested with Effect 4.1.2.
 
 ```sh
 pnpm add @kutur-kit/assets@alpha effect
@@ -109,8 +109,8 @@ Give an object a new key when its content changes, such as a new id per upload, 
 ## R2 with alchemy
 
 ```ts
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as AssetsR2 from "@kutur-kit/assets/alchemy/r2";
-import * as Cloudflare from "alchemy/Cloudflare";
 
 const Uploads = Cloudflare.R2.Bucket("Uploads", {
   cors: [AssetsR2.corsRule(["https://app.example.com"])],
@@ -147,9 +147,9 @@ for (const { name, run } of AssetBucketContract.cases)
 
 ## Requirements
 
-- `effect` 4.0.5 or later 4.x.
-- `@kutur-kit/assets/s3` needs `@distilled.cloud/aws` 1.0.0-rc.15.
-- `@kutur-kit/assets/alchemy/r2` needs `alchemy` 2.0.0-beta.83.
+- `effect` 4.1.2 or later 4.x.
+- `@kutur-kit/assets/s3` needs `@distilled.cloud/aws` 1.0.0-rc.18.
+- `@kutur-kit/assets/alchemy/r2` needs `alchemy` and `@alchemy.run/cloudflare` 2.0.0-beta.85.
 
 ## Limitations
 

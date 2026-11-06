@@ -29,7 +29,11 @@ for (const preset of ["base", "effect"]) {
       );
 
       const lint = (file: string) =>
-        spawnSync("pnpm", ["exec", "oxlint", "--config", config, file], { encoding: "utf8" });
+        spawnSync(
+          "pnpm",
+          ["exec", "effect-tsgo", "--tsrs-lint", "oxlint", "--config", config, file],
+          { encoding: "utf8" },
+        );
 
       const accepted = lint(good);
       const rejected = lint(bad);

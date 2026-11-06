@@ -1,7 +1,7 @@
 import { Auth, Client, Operations } from "@yielded/auth";
 import { Effect, Layer, Redacted, Ref, type Scope } from "effect";
 import {
-  Cookies,
+  type Cookies,
   FetchHttpClient,
   HttpClient,
   HttpClientRequest,
@@ -106,7 +106,7 @@ export const provision = (user: string) =>
  * the app's own code would, the CSRF header.
  */
 export const browser = Effect.gen(function* () {
-  const cookies = yield* Ref.make(Cookies.empty);
+  const cookies = yield* Ref.make<ReadonlyArray<Cookies.Cookie>>([]);
 
   const httpClient = (yield* HttpClient.HttpClient).pipe(
     HttpClient.withCookiesRef(cookies),

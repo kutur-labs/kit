@@ -5,7 +5,8 @@ import * as AssetSigning from "@kutur-kit/assets/AssetSigning";
 import * as Audit from "@kutur-kit/audit/Audit";
 import * as AuditEvent from "@kutur-kit/audit/AuditEvent";
 import { and, asc, eq } from "drizzle-orm";
-import { ByteSize, Clock, Context, Crypto, Effect, Layer, Schema } from "effect";
+import { ByteSize, Clock, Context, Effect, Layer, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
 
 import { type Documents, ProjectFile } from "./assets.ts";
 import { Database, files, projects, Transactions } from "./database.ts";
@@ -87,7 +88,7 @@ export class ProjectFiles extends Context.Service<
       const database = yield* Database;
       const transactions = yield* Transactions;
       const auditLog = yield* Audit.AuditLog;
-      const crypto = yield* Crypto.Crypto;
+      const random = yield* SecureRandom.SecureRandom;
       const viewProject = yield* ViewProject;
       const uploadFile = yield* UploadFile;
       const viewFile = yield* ViewFile;
@@ -165,7 +166,7 @@ export class ProjectFiles extends Context.Service<
           yield* uploadFile.require(found).pipe(hiddenProject);
 
           const user = yield* CurrentUser;
-          const id = FileId.make(yield* Effect.orDie(crypto.randomUUIDv7()));
+          const id = FileId.make(yield* random.uuidV7());
 
           const pending: File = {
             id,

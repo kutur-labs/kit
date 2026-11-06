@@ -16,7 +16,7 @@ Use `pnpm format` and `pnpm lint:fix` to apply fixes.
 
 Tests that need PostgreSQL or S3-compatible storage start containers through Testcontainers, so Docker must be running. The R2 tests of `@kutur-kit/assets` run against alchemy's local emulation; `TEST_R2_LIVE=1` with `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` deploys them to Cloudflare instead. `pnpm bench` runs the benchmarks in `integration-tests`.
 
-Installation patches TypeScript and Oxlint for Effect diagnostics. Run `pnpm prepare` if install scripts were skipped. Use the workspace TypeScript SDK in your editor.
+Type checks and type-aware lint run on [tsrs](https://github.com/oxc-project/tsrs), with Effect diagnostics through `effect-tsgo`. VS Code runs the same through the TypeScript 7 extension (`.vscode/tsdk`).
 
 ## Packages
 

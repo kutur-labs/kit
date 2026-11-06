@@ -103,7 +103,17 @@ for (const preset of ["base", "effect"]) {
 
     const result = spawnSync(
       "pnpm",
-      ["exec", "oxlint", "--config", config, "--format", "unix", ...files],
+      [
+        "exec",
+        "effect-tsgo",
+        "--tsrs-lint",
+        "oxlint",
+        "--config",
+        config,
+        "--format",
+        "unix",
+        ...files,
+      ],
       {
         encoding: "utf8",
       },

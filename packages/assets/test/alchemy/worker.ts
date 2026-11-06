@@ -1,6 +1,6 @@
-import type { RuntimeContext } from "alchemy/RuntimeContext";
+import type { RuntimeContext } from "alchemy";
 
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { ByteSize, Cause, Duration, Effect, Exit, Layer, Schema, Stream } from "effect";
 import { FetchHttpClient } from "effect/http";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";

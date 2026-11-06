@@ -10,7 +10,7 @@
         "allowedUnstableApis": [
           "@effect/sql-pg",
           "@effect/vitest",
-          "effect/Crypto",
+          "effect/crypto",
           "effect/reactivity",
           "effect/sql"
         ]

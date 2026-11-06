@@ -10,15 +10,9 @@
       "groupName": "effect"
     },
     {
-      "description": "TypeScript, Oxlint, oxlint-tsgolint and @effect/tsgo are upgraded as a compatible set.",
-      "matchPackageNames": [
-        "typescript",
-        "oxlint",
-        "oxlint-tsgolint",
-        "@oxlint/plugins",
-        "@effect/tsgo"
-      ],
-      "groupName": "typescript and oxlint"
+      "description": "tsrs, Oxlint and @effect/tsgo are upgraded as a compatible set.",
+      "matchPackageNames": ["tsrs", "oxlint", "@oxlint/plugins", "@effect/tsgo"],
+      "groupName": "tsrs and oxlint"
     }
   ]
 }

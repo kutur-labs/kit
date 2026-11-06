@@ -2,7 +2,7 @@
 
 Typed audit events for Effect. Each kind of event is defined once with schemas for what it is about and what it records. Logging fills in the time, the actor and the trace, keeps secrets out of entries and fails the action when its entry cannot be stored. Storage is a service: PostgreSQL through Drizzle is included.
 
-Tested with Effect 4.0.5.
+Tested with Effect 4.1.2.
 
 ```sh
 pnpm add @kutur-kit/audit@alpha effect
@@ -46,15 +46,15 @@ const approve = (invoice: Invoice) =>
 
 Each entry records:
 
-| Field               | Source                                                                   |
-| ------------------- | ------------------------------------------------------------------------ |
-| `id`                | A UUIDv7, from the `Crypto` service if one is provided, else Web Crypto. |
-| `action`, `outcome` | The definition and `log`.                                                |
-| `reason`            | `log`.                                                                   |
-| `target`, `details` | The target through its view, and the details, as JSON.                   |
-| `actor`             | The actor set with `Audit.withActor`, if any.                            |
-| `at`                | Effect's `Clock`.                                                        |
-| `traceId`, `spanId` | The current span, if any.                                                |
+| Field               | Source                                                                         |
+| ------------------- | ------------------------------------------------------------------------------ |
+| `id`                | A UUIDv7, from the `SecureRandom` service if one is provided, else Web Crypto. |
+| `action`, `outcome` | The definition and `log`.                                                      |
+| `reason`            | `log`.                                                                         |
+| `target`, `details` | The target through its view, and the details, as JSON.                         |
+| `actor`             | The actor set with `Audit.withActor`, if any.                                  |
+| `at`                | Effect's `Clock`.                                                              |
+| `traceId`, `spanId` | The current span, if any.                                                      |
 
 Set the actor once per request, where the caller is known:
 
@@ -124,7 +124,7 @@ The isolation and failure requirements depend on the database, so test them agai
 
 ## Requirements
 
-- `effect` 4.0.5 or later 4.x.
+- `effect` 4.1.2 or later 4.x.
 - `@kutur-kit/audit/drizzle/postgres` needs `drizzle-orm` 1.0.0-rc.5.
 
   Drizzle's own declarations do not type-check with `skipLibCheck: false`.

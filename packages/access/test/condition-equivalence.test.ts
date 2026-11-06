@@ -240,12 +240,12 @@ it.effect("handles membership lists longer than PostgreSQL's parameter limit", (
 // Not supported yet. Each test below states the behaviour we want and fails
 // today; `fails` passes while it does, and fails once the behaviour exists.
 
-// Each comparison is a parameter, and @effect/sql-pg sends at most 32767.
+// Each comparison is a parameter, and @effect/sql-pg sends at most 65535.
 it.effect.fails("selects with more separate comparisons than the parameter limit", () =>
   Effect.gen(function* () {
     const select = yield* seeded;
 
-    const shared = Array.from({ length: 40_000 }, (_, index) => where.eq("id", `s${index}`));
+    const shared = Array.from({ length: 70_000 }, (_, index) => where.eq("id", `s${index}`));
 
     // Only the outcome, as the failed query would print all of its parameters.
     const exit = yield* select(where.or(...shared, where.eq("id", "d001"))).pipe(Effect.exit);
