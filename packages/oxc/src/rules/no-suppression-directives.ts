@@ -9,9 +9,10 @@ const fenceRules = ["no-abusive-eslint-disable", "ban-ts-comment"];
 // `*`, so Oxlint ignores a directive there and so does this rule.
 const lintDisableKeyword = /^\s*(?:oxlint|eslint)-disable(?:-next-line|-line)?(?=\s|$)/;
 
-// tsgo honours `@effect-diagnostics` anywhere in a comment, JSDoc included. A directive runs to
-// the end of its line or to the next `@effect-diagnostics`, so a second directive on the same line
-// cannot hide in the first one's reason.
+// tsgo honours `@effect-diagnostics` anywhere in a comment, JSDoc included. It also reads string
+// literals, which this rule does not check. A directive runs to the end of its line or to the next
+// `@effect-diagnostics`, so a second directive on the same line cannot hide in the first one's
+// reason.
 const effectDirective =
   /@effect-diagnostics(?:-next-line)?(?=\s|$)(?<text>(?:(?!@effect-diagnostics)[^\n])*)/g;
 
@@ -31,7 +32,8 @@ type Directive =
   | { readonly kind: "lint-disable"; readonly rules: string[]; readonly reason: string }
   | { readonly kind: "effect-diagnostics"; readonly entries: string[]; readonly reason: string };
 
-// A type alias, unlike an interface, is a `JsonObject`, so `context.options` can be asserted to it.
+// A type alias, unlike an interface, is assignable to `JsonObject`, so `context.options` can be
+// asserted to it.
 type Options = { readonly allowWithReason: boolean };
 
 type MessageId = "suppression" | "unexplained" | "fence";
