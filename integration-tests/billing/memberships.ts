@@ -26,7 +26,6 @@ export class Memberships extends Context.Service<
     Memberships,
     Effect.gen(function* () {
       const database = yield* Database;
-      const unavailable = Effect.mapError(() => new MembershipUnavailable());
 
       return Memberships.of({
         roleIn: (userId, orgId) =>
@@ -35,7 +34,8 @@ export class Memberships extends Context.Service<
             .from(memberships)
             .where(and(eq(memberships.userId, userId), eq(memberships.orgId, orgId)))
             .pipe(
-              unavailable,
+              Effect.tapError((error) => Effect.logError("Membership lookup failed", error)),
+              Effect.mapError(() => new MembershipUnavailable()),
               Effect.map((found) => Option.fromNullishOr(found[0]?.role)),
             ),
         orgsOf: (userId) =>
@@ -44,7 +44,8 @@ export class Memberships extends Context.Service<
             .from(memberships)
             .where(eq(memberships.userId, userId))
             .pipe(
-              unavailable,
+              Effect.tapError((error) => Effect.logError("Membership lookup failed", error)),
+              Effect.mapError(() => new MembershipUnavailable()),
               Effect.map((found) => found.map(({ orgId }) => OrgId.make(orgId))),
             ),
       });

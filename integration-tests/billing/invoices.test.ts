@@ -2,7 +2,8 @@ import { it } from "@effect/vitest";
 import { Decision } from "@kutur-kit/access";
 import { PermissionTesting } from "@kutur-kit/access/testing";
 import { eq } from "drizzle-orm";
-import { Deferred, Effect, Fiber, Layer, Redacted, Schema } from "effect";
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core";
+import { Deferred, Effect, Fiber, Layer, Logger, Redacted, Schema } from "effect";
 import { TestClock } from "effect/testing";
 import { expect } from "vitest";
 
@@ -252,21 +253,40 @@ it.effect("limits agents to their token's scopes, hiding invoices they cannot vi
   }).pipe(Effect.provide(app)),
 );
 
-it.effect("fails with the membership outage rather than refusing, and records no decision", () =>
-  Effect.gen(function* () {
-    const invoices = yield* Invoices;
-    const database = yield* Database;
+it.effect(
+  "fails with the membership outage rather than refusing, logs its cause and records no decision",
+  () => {
+    const logged: Array<{ readonly level: string; readonly message: unknown }> = [];
 
-    yield* database.$client.unsafe("DROP TABLE memberships");
+    const capture = Logger.layer([
+      Logger.make(({ logLevel, message }) => {
+        logged.push({ level: logLevel, message });
+      }),
+    ]);
 
-    expect(yield* invoices.list(everything).pipe(asUser(alex), Effect.flip)).toEqual(
-      new MembershipUnavailable(),
-    );
-    expect(yield* invoices.approve(small.id).pipe(asUser(alex), Effect.flip)).toEqual(
-      new MembershipUnavailable(),
-    );
-    expect(yield* recorded).toEqual([]);
-  }).pipe(Effect.provide(app)),
+    return Effect.gen(function* () {
+      const invoices = yield* Invoices;
+      const database = yield* Database;
+
+      yield* database.$client.unsafe("DROP TABLE memberships");
+
+      expect(yield* invoices.list(everything).pipe(asUser(alex), Effect.flip)).toEqual(
+        new MembershipUnavailable(),
+      );
+      expect(yield* invoices.approve(small.id).pipe(asUser(alex), Effect.flip)).toEqual(
+        new MembershipUnavailable(),
+      );
+      expect(yield* recorded).toEqual([]);
+
+      // Clients see only the outage, so the database's error must reach the logs.
+      const lookupFailed = {
+        level: "Error",
+        message: ["Membership lookup failed", expect.any(EffectDrizzleQueryError)],
+      };
+
+      expect(logged).toEqual([lookupFailed, lookupFailed]);
+    }).pipe(Effect.provide(Layer.merge(app, capture)));
+  },
 );
 
 it.effect("audits approval decisions and approvals with ids and amounts, never bank accounts", () =>

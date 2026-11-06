@@ -2,7 +2,19 @@ import { it } from "@effect/vitest";
 import { Condition, Decision } from "@kutur-kit/access";
 import { PermissionTesting } from "@kutur-kit/access/testing";
 import { eq } from "drizzle-orm";
-import { Deferred, Effect, Exit, Fiber, Option, Predicate, Ref, Schema } from "effect";
+import { EffectDrizzleQueryError } from "drizzle-orm/effect-core";
+import {
+  Deferred,
+  Effect,
+  Exit,
+  Fiber,
+  Layer,
+  Logger,
+  Option,
+  Predicate,
+  Ref,
+  Schema,
+} from "effect";
 import { expect } from "vitest";
 
 import { collector, outsider } from "./data.ts";
@@ -365,8 +377,16 @@ it.effect("audits edits refused because the document cannot be viewed", () =>
   }).pipe(Effect.provide(app)),
 );
 
-it.effect("fails with the directory's error rather than refusing when it is unavailable", () =>
-  Effect.gen(function* () {
+it.effect("fails with the directory's error rather than refusing, and logs its cause", () => {
+  const logged: Array<{ readonly level: string; readonly message: unknown }> = [];
+
+  const capture = Logger.layer([
+    Logger.make(({ logLevel, message }) => {
+      logged.push({ level: logLevel, message });
+    }),
+  ]);
+
+  return Effect.gen(function* () {
     const store = yield* Documents;
     const database = yield* Database;
     const owner = sample[0] ?? "u01";
@@ -394,8 +414,16 @@ it.effect("fails with the directory's error rather than refusing when it is unav
     expect(yield* store.edit(hidden.id, "Lost").pipe(asUser(owner), Effect.flip)).toEqual(
       new DirectoryUnavailable(),
     );
-  }).pipe(Effect.provide(app)),
-);
+
+    // Clients see only the outage, so the database's error must reach the logs.
+    const lookupFailed = {
+      level: "Error",
+      message: ["Directory lookup failed", expect.any(EffectDrizzleQueryError)],
+    };
+
+    expect(logged).toEqual([lookupFailed, lookupFailed, lookupFailed]);
+  }).pipe(Effect.provide(Layer.merge(app, capture)));
+});
 
 it.effect("decides with the caller's uncommitted changes, as lookups join its transaction", () =>
   Effect.gen(function* () {
