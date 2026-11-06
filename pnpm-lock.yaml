@@ -323,6 +323,8 @@ catalogs:
       specifier: 8.3.6
       version: 8.3.6
 
+pnpmfileChecksum: sha256-XkS98AuGaeUXv6qfupn5wZDKtnA0sBsAWil1voXafa8=
+
 importers:
 
   .:
@@ -698,6 +700,21 @@ importers:
       oxlint:
         specifier: catalog:tooling
         version: 1.91.0
+      publint:
+        specifier: catalog:tooling
+        version: 0.3.25
+      tsrs:
+        specifier: catalog:tooling
+        version: 0.22.0-ts7.1.0-beta
+
+  packages/strict:
+    devDependencies:
+      '@kutur-kit/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      '@types/node':
+        specifier: catalog:tooling
+        version: 26.6.6
       publint:
         specifier: catalog:tooling
         version: 0.3.25
