@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { findViolations } from "../pnpmfile.mjs";
+import { findCatalogViolations } from "../pnpmfile.mjs";
 
 type Versions = Readonly<Record<string, string>>;
 
@@ -54,6 +54,18 @@ const install = (workspace: string, files: Readonly<Record<string, PackageJson>>
 const reports = (output: string, problem: string) =>
   squash(output).split(squash(`- ${problem}`)).length - 1;
 
+const outsideCatalogs = (dependency: string) =>
+  `${dependency}. Versions outside the catalogs can differ between packages. Fix: use \`catalog:\` or \`workspace:\`.`;
+
+const looseCatalogEntry = (entry: string) =>
+  `pnpm-workspace.yaml: ${entry}. A range or tag lets the installed version move without an edit to this entry. Fix: replace it with an exact version, such as the one in \`pnpm-lock.yaml\`.`;
+
+const looseExclusion = (entry: string) =>
+  `pnpm-workspace.yaml: minimumReleaseAgeExclude has "${entry}". A name pattern also exempts other packages, and a bare name, range or tag also exempts versions published later. Fix: list one package name with exact versions, as \`name@1.2.3\` or \`name@1.2.3 || 1.2.4\`.`;
+
+const pruneOff =
+  "pnpm-workspace.yaml: minimumReleaseAgeExcludePrune is not true. pnpm adds exclusions on its own and keeps them after the lockfile drops those versions. Fix: set `minimumReleaseAgeExcludePrune: true`.";
+
 await test("rejects versions that bypass the catalogs in every pinned field", () => {
   const { status, output } = install("packages:\n  - packages/*", {
     "package.json": { name: "root", devDependencies: { typescript: "7.0.0" } },
@@ -66,12 +78,12 @@ await test("rejects versions that bypass the catalogs in every pinned field", ()
 
   assert.notEqual(status, 0, output);
 
-  for (const problem of [
-    'package.json: devDependencies.typescript is "7.0.0"; use catalog: or workspace:',
-    'packages/a/package.json: dependencies.is-number is "^7.0.0"; use catalog: or workspace:',
-    'packages/a/package.json: optionalDependencies.fsevents is "latest"; use catalog: or workspace:',
+  for (const dependency of [
+    'package.json: devDependencies.typescript is "7.0.0"',
+    'packages/a/package.json: dependencies.is-number is "^7.0.0"',
+    'packages/a/package.json: optionalDependencies.fsevents is "latest"',
   ]) {
-    assert.equal(reports(output, problem), 1, output);
+    assert.equal(reports(output, outsideCatalogs(dependency)), 1, output);
   }
 });
 
@@ -91,11 +103,11 @@ await test("rejects loose catalog entries that a non-peer field uses, once each"
 
   assert.notEqual(status, 0, output);
 
-  for (const problem of [
-    'pnpm-workspace.yaml: catalogs.default.left-pad is "^1.3.0"; use an exact version',
-    'pnpm-workspace.yaml: catalogs.peers.effect is "^4.0.0"; use an exact version',
+  for (const entry of [
+    'catalogs.default.left-pad is "^1.3.0"',
+    'catalogs.peers.effect is "^4.0.0"',
   ]) {
-    assert.equal(reports(output, problem), 1, output);
+    assert.equal(reports(output, looseCatalogEntry(entry)), 1, output);
   }
 });
 
@@ -103,7 +115,7 @@ await test("accepts workspace links, peer ranges and manifests outside the works
   const loose = { dependencies: { "is-number": "^7.0.0" } };
 
   const { status, output } = install(
-    'packages:\n  - packages/**\n  - "!packages/ignored"\ncatalogs:\n  peers:\n    effect: ^4.0.0',
+    'packages:\n  - packages/**\n  - "!packages/ignored"\ncatalogs:\n  peers:\n    effect: ^4.0.0\nminimumReleaseAgeExcludePrune: true',
     {
       "package.json": { name: "root" },
       "packages/a/package.json": {
@@ -124,7 +136,7 @@ await test("treats only exact versions and exact npm aliases as pinned", () => {
   const usingUi = [{ path: "package.json", manifest: { dependencies: { ui: "catalog:" } } }];
 
   const pinned = (version: string) =>
-    findViolations({ default: { ui: version } }, usingUi).length === 0;
+    findCatalogViolations({ default: { ui: version } }, usingUi).length === 0;
 
   for (const version of [
     "1.2.3",
@@ -155,10 +167,55 @@ await test("treats only exact versions and exact npm aliases as pinned", () => {
   }
 });
 
+await test("rejects name patterns and loose versions in release-age exclusions, with the catalog problems", () => {
+  const entries = [
+    "oxfmt",
+    "@oxfmt/*",
+    "@oxfmt/*@0.77.0",
+    "!not-this-package@7.0.0",
+    "is-numbe?@7.0.0",
+    "is-number@^7.0.0",
+    "left-pad@latest",
+    "fsevents@2.3.3 || ^2.4.0",
+  ];
+
+  const { status, output } = install(
+    `minimumReleaseAgeExclude:\n${entries.map((entry) => `  - ${JSON.stringify(entry)}`).join("\n")}\nminimumReleaseAgeExcludePrune: false`,
+    { "package.json": { name: "root", devDependencies: { typescript: "7.0.0" } } },
+  );
+
+  assert.notEqual(status, 0, output);
+
+  for (const problem of [
+    outsideCatalogs('package.json: devDependencies.typescript is "7.0.0"'),
+    ...entries.map(looseExclusion),
+    pruneOff,
+  ]) {
+    assert.equal(reports(output, problem), 1, output);
+  }
+});
+
+await test("requires pruning release-age exclusions when the setting is unset", () => {
+  const { status, output } = install("", { "package.json": { name: "root" } });
+
+  assert.notEqual(status, 0, output);
+  assert.equal(reports(output, pruneOff), 1, output);
+});
+
+await test("accepts exact release-age exclusions, including scoped and capitalized names and version lists", () => {
+  const { status, output } = install(
+    'minimumReleaseAgeExclude:\n  - oxfmt@0.77.0\n  - "@distilled.cloud/aws@1.0.0-rc.18"\n  - JSONStream@1.3.5\n  - "is-number@6.0.0 || 7.0.0"\nminimumReleaseAgeExcludePrune: true',
+    { "package.json": { name: "root" } },
+  );
+
+  assert.equal(status, 0, output);
+});
+
 await test("does not check overrides yet", () => {
-  const { status, output } = install("overrides:\n  is-number: ^7.0.0", {
-    "package.json": { name: "root" },
-  });
+  const { status, output } = install(
+    "overrides:\n  is-number: ^7.0.0\nminimumReleaseAgeExcludePrune: true",
+    { "package.json": { name: "root" } },
+  );
 
   assert.equal(status, 0, output);
 });
