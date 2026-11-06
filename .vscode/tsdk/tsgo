@@ -1,3 +1,0 @@
-#!/bin/sh
-# VS Code's TypeScript 7 extension starts `<tsdk>/tsgo`; run tsrs with Effect diagnostics.
-exec "$(dirname "$0")/../../node_modules/.bin/effect-tsgo" tsrs "$@"

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Editors start Oxlint's language server here: with the Effect rules, type-aware on tsrs.
+exec "$(dirname "$0")/../../node_modules/.bin/effect-tsgo" --tsrs-lint oxlint "$@"
