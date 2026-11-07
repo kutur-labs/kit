@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { findCatalogViolations } from "../pnpmfile.mjs";
+import { findCatalogViolations, pnpmCommands } from "../pnpmfile.mjs";
 
 type Versions = Readonly<Record<string, string>>;
 
@@ -16,6 +16,7 @@ type PackageJson = {
   readonly devDependencies?: Versions;
   readonly optionalDependencies?: Versions;
   readonly peerDependencies?: Versions;
+  readonly scripts?: Readonly<Record<string, string>>;
 };
 
 const pnpmfile = fileURLToPath(new URL("../pnpmfile.mjs", import.meta.url));
@@ -62,6 +63,12 @@ const looseCatalogEntry = (entry: string) =>
 
 const looseExclusion = (entry: string) =>
   `pnpm-workspace.yaml: minimumReleaseAgeExclude has "${entry}". A name pattern also exempts other packages, and a bare name, range or tag also exempts versions published later. Fix: list one package name with exact versions, as \`name@1.2.3\` or \`name@1.2.3 || 1.2.4\`.`;
+
+const hiddenScript = (path: string, name: string) =>
+  `${path}: scripts.${name} has the name of a pnpm command, so \`pnpm ${name}\` runs that command, not this script. Fix: rename the script.`;
+
+const rootOnlyScript = (path: string, name: string) =>
+  `${path}: scripts.${name} runs only from its own directory. From the root, \`pnpm -r ${name}\` and \`pnpm --filter <package> ${name}\` run pnpm's \`${name}\` command instead. Fix: rename the script, or add a \`${name}\` script to the root package.json.`;
 
 const pruneOff =
   "pnpm-workspace.yaml: minimumReleaseAgeExcludePrune is not true. pnpm adds exclusions on its own and keeps them after the lockfile drops those versions. Fix: set `minimumReleaseAgeExcludePrune: true`.";
@@ -218,4 +225,79 @@ await test("does not check overrides yet", () => {
   );
 
   assert.equal(status, 0, output);
+});
+
+await test("rejects scripts that a pnpm command hides, in the root and workspace packages", () => {
+  const { status, output } = install(
+    "packages:\n  - packages/*\nminimumReleaseAgeExcludePrune: true",
+    {
+      "package.json": {
+        name: "root",
+        scripts: { deploy: "true", i: "true", pm: "true", "deploy:prod": "true" },
+      },
+      "packages/a/package.json": {
+        name: "a",
+        scripts: { why: "true", t: "true", clean: "true", rebuild: "true", build: "true" },
+      },
+    },
+  );
+
+  assert.notEqual(status, 0, output);
+
+  for (const name of ["deploy", "i", "pm"]) {
+    assert.equal(reports(output, hiddenScript("package.json", name)), 1, output);
+  }
+
+  for (const name of ["why", "t"]) {
+    assert.equal(reports(output, hiddenScript("packages/a/package.json", name)), 1, output);
+  }
+
+  for (const name of ["clean", "rebuild"]) {
+    assert.equal(reports(output, rootOnlyScript("packages/a/package.json", name)), 1, output);
+  }
+
+  assert.equal(reports(output, hiddenScript("package.json", "deploy:prod")), 0, output);
+  assert.equal(reports(output, hiddenScript("packages/a/package.json", "build")), 0, output);
+});
+
+await test("accepts scripts that pnpm runs by their name, and root-backed ones in packages", () => {
+  // pnpm runs the first seven by name anywhere; the rest, in a package, only
+  // when the root has them too.
+  const scripts = Object.fromEntries(
+    ["install", "publish", "restart", "start", "stop", "test", "version"]
+      .concat(["clean", "purge", "rb", "rebuild", "tasks"])
+      .map((name) => [name, "true"]),
+  );
+
+  const { status, output } = install(
+    "packages:\n  - packages/*\nminimumReleaseAgeExcludePrune: true",
+    {
+      "package.json": { name: "root", scripts },
+      "packages/a/package.json": { name: "a", scripts },
+    },
+  );
+
+  assert.equal(status, 0, output);
+});
+
+await test("lists every command and alias of the installed pnpm", () => {
+  // Forced color would wrap the names in escape codes.
+  const help = spawnSync("pnpm", ["--help"], {
+    encoding: "utf8",
+    env: { ...process.env, NO_COLOR: "1" },
+  }).stdout;
+
+  const commands = help.slice(help.indexOf("Commands:\n"), help.indexOf("\nOptions:"));
+
+  // Each entry starts a line indented by two spaces.
+  const listed = commands
+    .split(/\n(?=  \S)/)
+    .slice(1)
+    .flatMap((entry) => [
+      ...(/^ {2}(\S+)/.exec(entry)?.slice(1) ?? []),
+      ...(/\[alias(?:es)?: ([^\]]+)\]/.exec(entry)?.[1]?.split(", ") ?? []),
+    ]);
+
+  // pnpm leaves `pm` out of its help.
+  assert.deepEqual([...pnpmCommands].sort(), [...listed, "pm"].sort());
 });

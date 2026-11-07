@@ -10,8 +10,8 @@ catalogMode: strict
 catalogPrune: true
 engineStrict: true
 
-# Fail installs on versions outside exact catalog entries and on release-age
-# exclusions that are not exact.
+# Fail installs on versions outside exact catalog entries, on release-age
+# exclusions that are not exact and on scripts that a pnpm command hides.
 pnpmfile:
   - packages/strict/pnpmfile.mjs
 
