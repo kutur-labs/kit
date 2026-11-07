@@ -32,18 +32,21 @@ const failures: string[] = [];
 const files = new Set<string>();
 
 for (const pattern of positionals) {
-  const entries = globSync(pattern, { exclude: ["**/node_modules"], withFileTypes: true });
+  const matched: string[] = [];
 
-  if (entries.length === 0) {
+  // A symlink such as `CLAUDE.md` is not a file entry, so its target is not reported twice.
+  for (const entry of globSync(pattern, { exclude: ["**/node_modules"], withFileTypes: true })) {
+    if (entry.isFile()) matched.push(join(entry.parentPath, entry.name));
+  }
+
+  // Counted after filtering, so a pattern that matches only directories or symlinks fails too.
+  if (matched.length === 0) {
     failures.push(
       `${pattern}: matches no file. The pattern checks nothing. Fix: correct the pattern or remove it.`,
     );
   }
 
-  // A symlink such as `CLAUDE.md` is not a file entry, so its target is not reported twice.
-  for (const entry of entries) {
-    if (entry.isFile()) files.add(join(entry.parentPath, entry.name));
-  }
+  for (const file of matched) files.add(file);
 }
 
 const checked = new Set(Array.from(files, (file) => resolve(file)));

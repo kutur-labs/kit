@@ -66,14 +66,14 @@ await test("holds a file to its budget in Unicode code points", (context) => {
 });
 
 await test("fails on a pattern or budget that matches no file", (context) => {
-  const directory = directoryWith({ "AGENTS.md": "# Agents\n" }, context);
+  const directory = directoryWith({ "AGENTS.md": "# Agents\n", "notes/todo.txt": "" }, context);
 
-  const result = run(directory, "--budget", "README.md=100", "*.md", "docs/*.md");
+  const result = run(directory, "--budget", "README.md=100", "*.md", "docs/*.md", "notes");
 
   assert.equal(result.status, 1);
   assert.equal(
     result.stderr,
-    "docs/*.md: matches no file. The pattern checks nothing. Fix: correct the pattern or remove it.\nREADME.md: has a budget, but no pattern matches it. The budget checks nothing. Fix: correct the path or add a pattern that matches it.\n",
+    "docs/*.md: matches no file. The pattern checks nothing. Fix: correct the pattern or remove it.\nnotes: matches no file. The pattern checks nothing. Fix: correct the pattern or remove it.\nREADME.md: has a budget, but no pattern matches it. The budget checks nothing. Fix: correct the path or add a pattern that matches it.\n",
   );
 });
 
