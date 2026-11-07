@@ -1,0 +1,52 @@
+{
+  "name": "@kutur-kit/foldkit-stylex-theme",
+  "version": "0.0.0",
+  "private": true,
+  "description": "An optional look for @kutur-kit/foldkit-stylex: token-driven styles for every @foldkit/ui component, with light and dark schemes.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/foldkit-stylex-theme"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./src/internal/compiled.ts",
+    "./dist/internal/compiled.js"
+  ],
+  "exports": {
+    "./*": "./src/*.ts",
+    "./internal/*": null
+  },
+  "publishConfig": {
+    "exports": {
+      "./*": {
+        "types": "./dist/*.d.ts",
+        "default": "./dist/*.js"
+      },
+      "./internal/*": null
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsrs -p tsconfig.build.json",
+    "lint:package": "publint --pack pnpm --strict",
+    "prepack": "pnpm run build",
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "catalog:tooling",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@stylexjs/stylex": "catalog:runtime",
+    "@types/node": "catalog:tooling",
+    "publint": "catalog:tooling",
+    "tsrs": "catalog:tooling"
+  },
+  "peerDependencies": {
+    "@stylexjs/stylex": "catalog:peers"
+  }
+}

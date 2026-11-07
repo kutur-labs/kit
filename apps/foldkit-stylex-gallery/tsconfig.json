@@ -1,0 +1,9 @@
+{
+  "extends": "@kutur-kit/tsconfig/effect.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts", "*.config.ts"]
+}
