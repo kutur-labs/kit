@@ -5,14 +5,14 @@ Fumadocs with TanStack Start for `https://kit.kuturlabs.com`.
 ```sh
 pnpm --filter @kutur-kit/docs dev
 pnpm --filter @kutur-kit/docs build
-pnpm --filter @kutur-kit/docs deploy
+pnpm --filter @kutur-kit/docs deploy:prod
 ```
 
 The build prerenders every route to `.output/public`: pages, `.md` and `llms` text routes, the sitemap, the search index (`/api/search.json`) and loader data for client navigation. It then fails on links to missing pages or headings. New text routes must be added to `pages` in `vite.config.ts`, since the crawler follows HTML links only.
 
 ## Deployment
 
-`deploy` runs `alchemy.run.ts` with the `prod` stage. It builds the site and serves `.output/public` from a Cloudflare Worker with static assets on the custom domain `kit.kuturlabs.com`, which Cloudflare provisions with its DNS record and certificate. The `kuturlabs.com` zone must be in the deploying account. Stack state is kept in the account's alchemy state store, so any machine with access to the account can deploy.
+`deploy:prod` runs `alchemy.run.ts` with the `prod` stage. It builds the site and serves `.output/public` from a Cloudflare Worker with static assets on the custom domain `kit.kuturlabs.com`, which Cloudflare provisions with its DNS record and certificate. The `kuturlabs.com` zone must be in the deploying account. Stack state is kept in the account's alchemy state store, so any machine with access to the account can deploy.
 
 `worker.ts` runs before the assets for `/docs` paths only. It redirects requests that prefer Markdown to the page's `.md` file, as `src/start.ts` does in development.
 

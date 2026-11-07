@@ -8,7 +8,8 @@ import { join } from "node:path";
  * @typedef {Readonly<Record<string, string>>} Versions
  * @typedef {Readonly<Record<string, Versions>>} Catalogs
  * @typedef {"dependencies" | "devDependencies" | "optionalDependencies"} PinnedField
- * @typedef {{ readonly path: string, readonly manifest: Readonly<Partial<Record<PinnedField, Versions>>> }} Manifest
+ * @typedef {Readonly<Record<string, string>>} Scripts
+ * @typedef {{ readonly path: string, readonly manifest: Readonly<Partial<Record<PinnedField, Versions>> & { scripts?: Scripts }> }} Manifest
  * @typedef {{ readonly minimumReleaseAgeExclude?: readonly string[], readonly minimumReleaseAgeExcludePrune?: boolean }} ReleaseAgeSettings
  */
 
@@ -23,6 +24,170 @@ const exactVersion = /^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/;
 // use only the characters npm allows in new package names. Older packages may
 // also have capitals, such as `JSONStream`.
 const packageName = /^(?:@[a-z\d-][\w.-]*\/)?[a-z\d-][\w.-]*$/i;
+
+// Every command and alias that `pnpm --help` lists in pnpm 12, and `pm`, which
+// it leaves out: `pnpm pm <command>` runs a built-in over a same-named script.
+// The tests compare this list with the installed pnpm.
+/** @type {readonly string[]} */
+export const pnpmCommands = [
+  "access",
+  "add",
+  "adduser",
+  "approve",
+  "approve-builds",
+  "audit",
+  "bin",
+  "bugs",
+  "c",
+  "cache",
+  "cat-file",
+  "cat-index",
+  "change",
+  "ci",
+  "clean",
+  "clean-install",
+  "completion",
+  "config",
+  "create",
+  "dedupe",
+  "deploy",
+  "deprecate",
+  "dislink",
+  "dist-tag",
+  "dist-tags",
+  "dlx",
+  "docs",
+  "doctor",
+  "edit",
+  "env",
+  "exec",
+  "fetch",
+  "find",
+  "find-hash",
+  "get",
+  "help",
+  "home",
+  "i",
+  "ic",
+  "ignored-builds",
+  "import",
+  "info",
+  "init",
+  "install",
+  "install-clean",
+  "install-test",
+  "issues",
+  "it",
+  "la",
+  "lane",
+  "licences",
+  "licenses",
+  "link",
+  "list",
+  "ll",
+  "ln",
+  "login",
+  "logout",
+  "ls",
+  "m",
+  "multi",
+  "outdated",
+  "owner",
+  "owners",
+  "pack",
+  "pack-app",
+  "patch",
+  "patch-commit",
+  "patch-remove",
+  "peers",
+  "permissions",
+  "ping",
+  "pipeline",
+  "pkg",
+  "pm",
+  "prefix",
+  "profile",
+  "prune",
+  "publish",
+  "purge",
+  "rb",
+  "rebuild",
+  "recursive",
+  "remove",
+  "repo",
+  "restart",
+  "rm",
+  "root",
+  "rt",
+  "run",
+  "run-script",
+  "runtime",
+  "s",
+  "sbom",
+  "se",
+  "search",
+  "self-update",
+  "set",
+  "set-script",
+  "setup",
+  "shim",
+  "show",
+  "ss",
+  "stage",
+  "star",
+  "stars",
+  "start",
+  "stop",
+  "store",
+  "t",
+  "tasks",
+  "team",
+  "test",
+  "token",
+  "tst",
+  "un",
+  "undeprecate",
+  "uni",
+  "uninstall",
+  "unlink",
+  "unpublish",
+  "unstar",
+  "up",
+  "update",
+  "upgrade",
+  "v",
+  "version",
+  "view",
+  "whoami",
+  "why",
+  "with",
+  "xmas",
+];
+
+// These commands run the script of their name in each selected package: the
+// command itself does for `test`, `start`, `stop` and `restart`, and `install`,
+// `publish` and `version` run it as a lifecycle step.
+const commandsThatRunTheScript = new Set([
+  "install",
+  "publish",
+  "restart",
+  "start",
+  "stop",
+  "test",
+  "version",
+]);
+
+// These commands give way to a same-named script in the package.json of the
+// directory pnpm runs in. From the root, `pnpm -r clean` and
+// `pnpm --filter <package> clean` therefore run the built-in, which removes
+// every `node_modules`, unless the root package.json has a `clean` script too.
+const commandsThatYieldToTheScript = new Set(["clean", "purge", "rb", "rebuild", "tasks"]);
+
+const commandsThatHideTheScript = new Set(
+  pnpmCommands.filter(
+    (name) => !commandsThatRunTheScript.has(name) && !commandsThatYieldToTheScript.has(name),
+  ),
+);
 
 /**
  * Splits a spec at the `@` that ends the package name. A scoped name starts
@@ -121,6 +286,35 @@ const findReleaseAgeViolations = ({
   return problems;
 };
 
+/**
+ * Lists scripts that a pnpm command of the same name runs in their place, such
+ * as a `deploy` script under pnpm's `deploy`.
+ *
+ * @param {readonly Manifest[]} manifests
+ * @returns {string[]}
+ */
+const findHiddenScripts = (manifests) => {
+  const rootScripts = manifests.find(({ path }) => path === "package.json")?.manifest.scripts ?? {};
+
+  return manifests.flatMap(({ path, manifest }) =>
+    Object.keys(manifest.scripts ?? {}).flatMap((name) => {
+      if (commandsThatHideTheScript.has(name)) {
+        return [
+          `${path}: scripts.${name} has the name of a pnpm command, so \`pnpm ${name}\` runs that command, not this script. Fix: rename the script.`,
+        ];
+      }
+
+      if (commandsThatYieldToTheScript.has(name) && !Object.hasOwn(rootScripts, name)) {
+        return [
+          `${path}: scripts.${name} runs only from its own directory. From the root, \`pnpm -r ${name}\` and \`pnpm --filter <package> ${name}\` run pnpm's \`${name}\` command instead. Fix: rename the script, or add a \`${name}\` script to the root package.json.`,
+        ];
+      }
+
+      return [];
+    }),
+  );
+};
+
 /** @param {string} root @param {readonly string[]} patterns */
 const readManifests = (root, patterns) => {
   const included = patterns.filter((pattern) => !pattern.startsWith("!"));
@@ -153,11 +347,11 @@ export const hooks = {
    * @returns {Config}
    */
   updateConfig(config) {
+    const manifests = readManifests(config.workspaceDir, config.workspacePackagePatterns);
+
     const problems = [
-      ...findCatalogViolations(
-        config.catalogs,
-        readManifests(config.workspaceDir, config.workspacePackagePatterns),
-      ),
+      ...findCatalogViolations(config.catalogs, manifests),
+      ...findHiddenScripts(manifests),
       ...findReleaseAgeViolations(config),
     ];
 

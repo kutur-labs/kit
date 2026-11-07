@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/sync-package-docs.ts && vite build && node scripts/check-links.ts",
-    "deploy": "alchemy deploy --stage prod",
+    "deploy:prod": "alchemy deploy --stage prod",
     "dev": "node scripts/sync-package-docs.ts && vite dev",
     "lint": "effect-tsgo --tsrs-lint oxlint .",
     "test": "vitest run",
