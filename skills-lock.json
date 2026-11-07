@@ -1,15 +1,20 @@
 {
   "version": 1,
   "skills": {
+    "diagnosing-bugs": {
+      "source": "./.agents/skills/diagnosing-bugs",
+      "sourceType": "local",
+      "computedHash": "ff37d8ed9a13b39c9dae1aeeaa107318a0b81af1e4ea63d91749973aadb81285"
+    },
     "test-quality": {
       "source": "./.agents/skills/test-quality",
       "sourceType": "local",
-      "computedHash": "72927aac656fee7fa7c370bd600382a377d9c78c03a18df5df4e276cee871c92"
+      "computedHash": "078ffb5927998cf81547df495a063dc4c97d9c99b9e86bd63ba1d8e57a82f7f8"
     },
     "text-slop": {
       "source": "./.agents/skills/text-slop",
       "sourceType": "local",
-      "computedHash": "e587f41ac3767db74730d70ee6b3ebb86e1e185e01767e458685a15e1dc51316"
+      "computedHash": "eb80258465f7683c9cd32ff3deb67aadcd1624969858c5a0b4832a5f8a45d596"
     }
   }
 }

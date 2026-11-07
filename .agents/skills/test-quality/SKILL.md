@@ -6,6 +6,7 @@ description: Write or review tests that catch defects in application or library 
 # Test quality
 
 - Test observable behavior, edge cases and regressions. Identify the defect each test would catch in production code; omit tests without one.
+- When adding behavior or fixing a bug, watch the new test fail for the expected reason before making it pass.
 - Exercise the actual implementation. Do not copy its logic into tests or test functions defined only in fixtures.
 - Do not retest dependency primitives, trivial constructors or behavior already guaranteed by the compiler. Use type tests for public inference and compatibility contracts.
 - Assert outcomes independently of implementation details. Mock external boundaries only when needed; do not mock the behavior being tested.
