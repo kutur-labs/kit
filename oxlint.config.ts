@@ -20,8 +20,12 @@ export default defineConfig({
   },
   overrides: [
     {
-      // The link check and benches report by printing.
-      files: ["apps/docs/scripts/**", "integration-tests/**/*.bench.ts"],
+      // The link check, the benches and `kit-prose` report by printing.
+      files: [
+        "apps/docs/scripts/**",
+        "integration-tests/**/*.bench.ts",
+        "packages/oxc/src/prose/cli.ts",
+      ],
       rules: { "effecttsgo/global-console": "off" },
     },
   ],

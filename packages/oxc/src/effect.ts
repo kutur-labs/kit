@@ -22,6 +22,7 @@ const effect: OxlintConfig = {
     "effecttsgo/global-timers-in-effect": "warn",
     "effecttsgo/process-env": "warn",
     "effecttsgo/process-env-in-effect": "warn",
+    // Effect's documented form for a service is a class that extends `Context.Service`.
     "effecttsgo/service-not-as-class": "warn",
   },
   options: { typeAware: true },

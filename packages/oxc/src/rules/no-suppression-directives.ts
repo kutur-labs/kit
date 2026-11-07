@@ -1,27 +1,15 @@
 import { defineRule } from "@oxlint/plugins";
 
+import { effectDirective, lintDirective, reasonSeparator } from "./directives.ts";
+
 const thisRule = "no-suppression-directives";
 
 // Rules that keep the remaining suppressions visible. Suppressing them reopens what this rule closes.
 const fenceRules = ["no-abusive-eslint-disable", "ban-ts-comment"];
 
-// Oxlint honours a disable directive only at the start of a comment. A JSDoc comment starts with
-// `*`, so Oxlint ignores a directive there and so does this rule.
-const lintDisableKeyword = /^\s*(?:oxlint|eslint)-disable(?:-next-line|-line)?(?=\s|$)/;
-
-// tsgo honours `@effect-diagnostics` anywhere in a comment, JSDoc included. It also reads string
-// literals, which this rule does not check. A directive runs to the end of its line or to the next
-// `@effect-diagnostics`, so a second directive on the same line cannot hide in the first one's
-// reason.
-const effectDirective =
-  /@effect-diagnostics(?:-next-line)?(?=\s|$)(?<text>(?:(?!@effect-diagnostics)[^\n])*)/g;
-
 // An Effect entry that sets one diagnostic to a level, such as `floatingEffect:off`. `*:off` and
 // `skip-file` do not match.
 const effectRuleLevel = /^[\w-]+:(?:off|warning|error|message|suggestion)$/;
-
-// The reason follows ` -- `; neither tool reads it as a rule.
-const reasonSeparator = /\s--\s/;
 
 // Oxlint splits a rule list on whitespace and commas, tsgo on whitespace.
 const lintRuleSeparator = /[\s,]+/;
@@ -59,11 +47,11 @@ const directivesIn = (comment: string): Directive[] => {
     return { kind: "effect-diagnostics", entries: words(list, effectEntrySeparator), reason };
   });
 
-  const lintKeyword = lintDisableKeyword.exec(comment);
+  const lint = lintDirective.exec(comment);
 
-  if (lintKeyword === null) return effect;
+  if (lint?.groups?.disable === undefined) return effect;
 
-  const { list, reason } = splitReason(comment.slice(lintKeyword[0].length));
+  const { list, reason } = splitReason(lint.groups.text ?? "");
 
   return [{ kind: "lint-disable", rules: words(list, lintRuleSeparator), reason }, ...effect];
 };

@@ -6,6 +6,8 @@ const extension = import.meta.url.endsWith(".ts") ? "ts" : "js";
 
 const antiSlop: OxlintConfig = {
   jsPlugins: [
+    // `/base` registers the same plugin with the same specifier, so Oxlint loads it once.
+    { name: "kit", specifier: fileURLToPath(new URL(`./plugin.${extension}`, import.meta.url)) },
     {
       name: "anti-slop",
       specifier: fileURLToPath(new URL(`./vendor/anti-slop/index.${extension}`, import.meta.url)),
@@ -18,6 +20,7 @@ const antiSlop: OxlintConfig = {
     },
   ],
   rules: {
+    "kit/comment-prose": "error",
     "oxc/no-accumulating-spread": "error",
     "anti-slop/no-array-filter-map": "error",
     "anti-slop/no-reduce-accumulator-copy": "error",

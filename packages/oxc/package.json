@@ -1,12 +1,15 @@
 {
   "name": "@kutur-kit/oxc",
   "version": "0.1.0-alpha.2",
-  "description": "Oxlint and Oxfmt presets for TypeScript, with optional Effect rules.",
+  "description": "Oxlint and Oxfmt presets for TypeScript, with optional Effect rules and a prose check for Markdown.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/kutur-labs/kit.git",
     "directory": "packages/oxc"
+  },
+  "bin": {
+    "kit-prose": "./src/prose/cli.ts"
   },
   "files": [
     "src",
@@ -20,6 +23,9 @@
     "./anti-slop": "./src/anti-slop.ts"
   },
   "publishConfig": {
+    "bin": {
+      "kit-prose": "./dist/prose/cli.js"
+    },
     "exports": {
       "./base": {
         "types": "./dist/base.d.ts",
