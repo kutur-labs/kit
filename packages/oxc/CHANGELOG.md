@@ -1,5 +1,11 @@
 # @kutur-kit/oxc
 
+## 0.1.0-alpha.4
+
+### Patch Changes
+
+- 75921ca: A `kit-prose` budget failure also says to delete rules that a check or the code already holds.
+
 ## 0.1.0-alpha.3
 
 ### Minor Changes
