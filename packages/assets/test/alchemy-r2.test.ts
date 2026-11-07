@@ -1,7 +1,7 @@
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Test from "@alchemy.run/test/Vitest";
 import * as Alchemy from "alchemy";
-import { Data, Effect, Schedule, Schema } from "effect";
+import { Config, Data, Effect, Schedule, Schema } from "effect";
 import { HttpClient, HttpClientRequest, type HttpClientResponse } from "effect/http";
 import { expect } from "vitest";
 
@@ -14,7 +14,7 @@ import AssetsFixture from "./alchemy/worker.ts";
 // with an emulated bucket, without a Cloudflare account. `TEST_R2_LIVE=1`
 // deploys both to the account of the current alchemy profile, or of
 // `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in CI.
-const live = process.env["TEST_R2_LIVE"] === "1";
+const live = Effect.runSync(Config.Boolean("TEST_R2_LIVE").pipe(Config.withDefault(false)));
 
 const { test, beforeAll, afterAll, deploy, destroy } = Test.make({
   providers: Cloudflare.providers(),

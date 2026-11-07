@@ -1,4 +1,3 @@
-// @effect-diagnostics missingEffectContext:off
 import type * as Audit from "@kutur-kit/audit/Audit";
 
 import { type Layer, Schema } from "effect";
@@ -27,7 +26,7 @@ it("adds the audit log to the requirements of recorded Layers", () => {
 it("rejects views describing fields the target does not have", () => {
   ViewLayer.pipe(PermissionAudit.record(View, { view: Schema.Struct({ id: Schema.String }) }));
   ViewLayer.pipe(PermissionAudit.record(View, { view: false }));
-  // @ts-expect-error
+  // @ts-expect-error -- the target has no `name` field
   ViewLayer.pipe(PermissionAudit.record(View, { view: Schema.Struct({ name: Schema.String }) }));
 });
 
@@ -35,6 +34,6 @@ it("rejects views for permissions without a target", () => {
   PublishLayer.pipe(PermissionAudit.record(Publish, { view: false }));
   const view = Schema.Struct({ id: Schema.String });
 
-  // @ts-expect-error
+  // @ts-expect-error -- Publish has no target to view
   PublishLayer.pipe(PermissionAudit.record(Publish, { view }));
 });

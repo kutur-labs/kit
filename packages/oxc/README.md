@@ -35,7 +35,38 @@ Install the required tools in `devDependencies` and include linted files in your
 
 `effect-tsgo` runs Oxlint with the Effect rules without patching `node_modules`. Check [supported tool versions](https://github.com/Effect-TS/tsgo#supported-package-versions) when upgrading.
 
-`/anti-slop` is optional and includes the generic and Effect rules from [anti-slop](https://github.com/dmmulroy/anti-slop).
+`/effect` also warns where code uses a runtime global that has an Effect service, such as `console`, `Date` or `process.env`. Its rules warn, so set `maxWarnings: 0` to fail on them. Turn a rule off with `overrides` only for files where the global is the point, such as a script that prints its result.
+
+`/anti-slop` is optional and includes the generic and Effect rules from [anti-slop](https://github.com/dmmulroy/anti-slop), and `kit/comment-prose` (see [Prose](#prose)).
+
+### Suppression comments
+
+`kit/no-suppression-directives` reports comments that suppress Oxlint rules or Effect diagnostics, reading `oxlint-disable`, `eslint-disable` and `@effect-diagnostics` as Oxlint and tsgo read them. With `{ allowWithReason: true }`, as `/base` sets it, a comment passes when it names each rule and gives a reason after `--`:
+
+```ts
+// oxlint-disable-next-line no-debugger -- the page demonstrates the debugger
+// @effect-diagnostics-next-line floatingEffect:off -- the test asserts the type only
+```
+
+Blanket comments, `*:off`, `skip-file` and comments that disable `unicorn/no-abusive-eslint-disable` or `typescript/ban-ts-comment` still fail. Without the option, every suppression fails. `@ts-*` comments are left to `typescript/ban-ts-comment`.
+
+A comment that disables `kit/no-suppression-directives` itself turns the rule off for its file, so the comment suppresses nothing and `reportUnusedDisableDirectives` fails on it. `/base` sets that option to `"error"`. Your own `options` merge with the preset's, so it stays on unless you override it.
+
+tsgo also reads `@effect-diagnostics` in string literals, which the rule does not check.
+
+## Prose
+
+`kit/comment-prose`, which `/anti-slop` turns on, checks comments. The `kit-prose` command checks Markdown. Both report vague words such as `lands`, `gated` or `leverage`, and dashes used as punctuation: an em dash anywhere, or an en dash, `-` or `--` with a space on each side. Each message names the fix. Put a literal use, such as an identifier, in a code span.
+
+Code spans, fenced code, URLs, link targets, autolinks and HTML comments are not checked. In comments, JSDoc margins and a directive's keyword and rules, up to the `--` before its reason, are skipped too; the reason is checked. String literals are never checked, so product copy can use a spaced en dash.
+
+`kit-prose` expands quoted glob patterns and skips symlinks and `node_modules`:
+
+```sh
+kit-prose --budget AGENTS.md=7400 '*.md' 'packages/*/README.md'
+```
+
+It prints each problem as `<file>:<line>` and exits with 1 on any failure. `--budget <file>=<characters>` fails when the file has more characters than the limit, counted as Unicode code points. A budget whose file no pattern matches fails, and so does a pattern that matches no file, so a typo cannot switch a check off.
 
 ## Formatting
 

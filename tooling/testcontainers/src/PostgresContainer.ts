@@ -1,6 +1,7 @@
 import * as PgClient from "@effect/sql-pg/PgClient";
 import { PostgreSqlContainer } from "@testcontainers/postgresql";
 import { Config, Context, Effect, Layer, Option, Redacted } from "effect";
+import { SecureRandom } from "effect/crypto";
 import * as Reactivity from "effect/reactivity/Reactivity";
 
 export const image =
@@ -38,6 +39,12 @@ export class PostgresContainer extends Context.Service<
   );
 }
 
+// Test processes share the server. Web Crypto keeps their names apart even when
+// a test provides a seeded SecureRandom.
+const uniqueId = SecureRandom.SecureRandom.use((random) => random.uuidV4()).pipe(
+  Effect.provide(SecureRandom.layerWebCrypto),
+);
+
 /**
  * Creates an empty database on the server and drops it when the scope closes,
  * so tests sharing one server stay isolated.
@@ -45,7 +52,7 @@ export class PostgresContainer extends Context.Service<
 export const database = Effect.gen(function* () {
   const { url } = yield* PostgresContainer;
   const admin = yield* PgClient.make({ url }).pipe(Effect.provide(Reactivity.layer));
-  const name = `test_${globalThis.crypto.randomUUID().replaceAll("-", "")}`;
+  const name = `test_${(yield* uniqueId).replaceAll("-", "")}`;
 
   yield* admin.unsafe(`CREATE DATABASE "${name}"`);
   yield* Effect.addFinalizer(() =>

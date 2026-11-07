@@ -1,3 +1,4 @@
+import { DateTime } from "effect";
 import { expectTypeOf, it } from "vitest";
 
 import { Condition } from "../src/index.ts";
@@ -17,7 +18,7 @@ const where = Condition.make<Invoice>();
 
 it("does not compare dates, optional, nested or array fields yet", () => {
   // @ts-expect-error -- dates
-  expectTypeOf(where.eq).toBeCallableWith("dueAt", new Date(0));
+  expectTypeOf(where.eq).toBeCallableWith("dueAt", DateTime.toDateUtc(DateTime.makeUnsafe(0)));
   // @ts-expect-error -- optional fields
   expectTypeOf(where.eq).toBeCallableWith("memo", "Rush");
   // @ts-expect-error -- nested fields

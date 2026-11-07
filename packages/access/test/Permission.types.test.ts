@@ -1,4 +1,3 @@
-// @effect-diagnostics missingEffectContext:off missingEffectError:off
 import { Context, Effect, type Layer, Schema } from "effect";
 import { expectTypeOf, it } from "vitest";
 
@@ -45,7 +44,8 @@ it("types refusals by permission, so handling one leaves the others", () => {
 });
 
 it("rejects policies reading services the permission does not declare", () => {
-  // @ts-expect-error
+  // @ts-expect-error -- ViewNote does not declare CurrentCaller
+  // @effect-diagnostics-next-line missingEffectContext:off -- tsgo repeats the type error this test expects
   ViewNote.toLayer(() => Effect.map(CurrentCaller, () => Decision.allow()));
 });
 
@@ -64,10 +64,10 @@ it("reports services acquired by the policy's Layer, not by its checks", () => {
 
 it("takes the declared target, or no arguments without one", () => {
   expectTypeOf(ViewNote.check).toBeCallableWith(note);
-  // @ts-expect-error
+  // @ts-expect-error -- the target lacks `authorId` and `hidden`
   expectTypeOf(ViewNote.check).toBeCallableWith({ id: "n1" });
   expectTypeOf(Publish.check).toBeCallableWith();
-  // @ts-expect-error
+  // @ts-expect-error -- Publish takes no target
   expectTypeOf(Publish.check).toBeCallableWith(note);
 });
 
@@ -80,7 +80,7 @@ it("types stored ids as the ids of the set's permissions", () => {
     ReadonlyArray<"notes.view" | "notes.edit">
   >();
   expectTypeOf(Scopes.restrictTo).toBeCallableWith(["notes.edit"]);
-  // @ts-expect-error
+  // @ts-expect-error -- the set holds only `notes.view` and `notes.edit`
   expectTypeOf(Scopes.restrictTo).toBeCallableWith(["test/Publish"]);
 });
 
@@ -90,7 +90,8 @@ it("rejects policies failing with errors the permission does not declare", () =>
     {},
   ) {}
 
-  // @ts-expect-error
+  // @ts-expect-error -- ViewNote does not declare LookupFailed
+  // @effect-diagnostics-next-line missingEffectError:off -- tsgo repeats the type error this test expects
   ViewNote.toLayer(() => Effect.fail(new LookupFailed()));
 });
 

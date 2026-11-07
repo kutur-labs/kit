@@ -9,9 +9,8 @@ Preserve the author's meaning, facts and voice. Edit only the requested text.
 
 - Lead with the useful fact or instruction. Remove introductions that merely announce the subject, repeated summaries and conversational closers.
 - Replace promotional claims with concrete behavior. Delete unsupported claims; do not invent measurements, guarantees or examples to make prose sound specific.
-- Prefer ordinary verbs: “use” over “leverage,” “supports” over “empowers.” Judge words in context rather than enforcing a blacklist.
-- Avoid dashes as sentence punctuation, including em dashes, and omit Oxford commas. Use periods, parentheses or rephrase instead. Preserve necessary hyphens in technical terms, identifiers and commands.
-- Avoid vague engineering buzzwords: “stamp/stamped,” “land/lands/landed,” “gate/gated/gating,” “unlock,” “supercharge,” “seamless” and “battle-tested.” Say what actually happens: “when this merges,” “after deployment,” “approved” or “recorded,” as appropriate. Keep literal technical uses such as timestamps or a documented API identifier.
+- Prefer ordinary verbs that say what happens, such as “merged,” “deployed” or “approved.” `@kutur-kit/oxc` reports a fixed list of vague words and dashes used as punctuation: the `kit/comment-prose` lint rule in comments and `pnpm exec kit-prose <file>` in Markdown. Each message names the fix. Run `kit-prose` on drafts that no check covers, and judge other words in context.
+- Omit Oxford commas. Put a literal use of a reported word or dash, such as an identifier or a command, in a code span.
 - Keep technical terms, qualifications and warnings needed for accuracy. Shorter is not better if it changes the meaning.
 - Package READMEs explain exports, usage, requirements and limitations. Omit monorepo details and the history of how the package was built.
 - Do not restate configuration as prose, such as listing enabled lint rules. Document how to use it and any constraints the code does not explain.

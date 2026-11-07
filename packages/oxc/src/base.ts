@@ -15,7 +15,13 @@ const base: OxlintConfig = {
   plugins: ["typescript", "oxc", "unicorn", "import"],
   categories: { correctness: "error" },
   rules: {
+    "kit/no-suppression-directives": ["error", { allowWithReason: true }],
     "kit/no-yield-in-if": "error",
+    "unicorn/no-abusive-eslint-disable": "error",
+    "typescript/ban-ts-comment": [
+      "error",
+      { "ts-expect-error": "allow-with-description", "ts-ignore": true, "ts-nocheck": true },
+    ],
     "sonarjs/cognitive-complexity": ["error", 15],
     "max-depth": ["error", 3],
     "typescript/no-explicit-any": "error",
@@ -43,7 +49,7 @@ const base: OxlintConfig = {
     "no-debugger": "error",
     "prefer-const": "error",
   },
-  options: { typeAware: true },
+  options: { typeAware: true, reportUnusedDisableDirectives: "error" },
 };
 
 export default base;

@@ -3,7 +3,7 @@ import type * as AssetSigning from "../AssetSigning.ts";
 import * as Credentials from "@distilled.cloud/aws/Credentials";
 import * as Presign from "@distilled.cloud/aws/Presign";
 import * as Region from "@distilled.cloud/aws/Region";
-import { Clock, DateTime, Duration, Effect } from "effect";
+import { DateTime, Duration, Effect } from "effect";
 
 import * as AssetBucket from "../AssetBucket.ts";
 import { encodeKey } from "./url.ts";
@@ -36,7 +36,7 @@ export const make = <R>(
       Effect.gen(function* () {
         const { endpoint, bucket } = yield* target;
         const credentials = yield* yield* Credentials.Credentials;
-        const now = yield* Clock.currentTimeMillis;
+        const now = yield* DateTime.now;
         const seconds = Math.ceil(Duration.toMillis(Duration.min(expiresIn, maxExpiry)) / 1000);
 
         const url = yield* Presign.presignUrl({
@@ -47,7 +47,7 @@ export const make = <R>(
           expiresIn: seconds,
           headers: signed,
           // The signing time comes from Effect's clock, as the expiry does.
-          datetime: new Date(now).toISOString().replace(/[-:]|\.\d{3}/gu, ""),
+          datetime: DateTime.formatIso(now).replace(/[-:]|\.\d{3}/gu, ""),
         }).pipe(Effect.provideService(Region.Region, Effect.succeed(credentials.region)));
 
         return {
@@ -57,7 +57,7 @@ export const make = <R>(
           headers: Object.fromEntries(
             Object.entries(signed).filter(([name]) => name !== "content-length"),
           ),
-          expiresAt: DateTime.makeUnsafe(now + seconds * 1000),
+          expiresAt: DateTime.add(now, { seconds }),
         };
       }).pipe(
         Effect.provideContext(context),
