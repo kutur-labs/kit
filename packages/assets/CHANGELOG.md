@@ -1,5 +1,11 @@
 # @kutur-kit/assets
 
+## 0.1.0-alpha.2
+
+### Patch Changes
+
+- cc08b1e: The filesystem bucket names body files with the app's `SecureRandom` service when it provides one, else Web Crypto.
+
 ## 0.1.0-alpha.1
 
 ### Minor Changes

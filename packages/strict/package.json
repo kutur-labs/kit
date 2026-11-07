@@ -1,6 +1,6 @@
 {
   "name": "@kutur-kit/strict",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.0",
   "description": "A pnpm hook that requires exact catalog versions for workspace dependencies and exact release-age exclusions.",
   "license": "MIT",
   "repository": {
