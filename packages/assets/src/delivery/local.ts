@@ -1,7 +1,9 @@
 import type * as AssetBucket from "../AssetBucket.ts";
 
-import { Effect, Option } from "effect";
-import { HttpRouter, HttpServerResponse } from "effect/http";
+import * as Effect from "effect/Effect";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Option from "effect/Option";
 
 import { mount, respond, target } from "../internal/http.ts";
 

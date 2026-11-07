@@ -1,6 +1,8 @@
-import type { Scope } from "effect";
+import type * as Scope from "effect/Scope";
 
-import { Context, Effect, Layer } from "effect";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import * as Condition from "./Condition.ts";
 import * as Permission from "./Permission.ts";

@@ -1,7 +1,8 @@
 import type * as Condition from "../Condition.ts";
 
 import { and, type Column, eq, isNull, or, type SQL, sql } from "drizzle-orm";
-import { Match, Predicate } from "effect";
+import * as Match from "effect/Match";
+import * as Predicate from "effect/Predicate";
 
 /**
  * Column kinds whose SQL equality is JavaScript's, so a query selects exactly

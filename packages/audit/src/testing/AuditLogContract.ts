@@ -1,4 +1,7 @@
-import { DateTime, Effect, Predicate, Schema } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 
 import * as Audit from "../Audit.ts";
 import * as TestAuditLog from "./TestAuditLog.ts";

@@ -1,7 +1,9 @@
 import type * as AssetBucket from "../AssetBucket.ts";
 
-import { Effect, Option } from "effect";
-import { HttpServerRequest, HttpServerResponse } from "effect/http";
+import * as Effect from "effect/Effect";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Option from "effect/Option";
 
 /** The routes' prefix and wildcard path under a base URL, absolute or not. */
 export const mount = (baseUrl: string) => {

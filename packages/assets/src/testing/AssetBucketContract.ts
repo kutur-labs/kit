@@ -1,4 +1,9 @@
-import { ByteSize, Effect, Option, Result, Schema, Stream } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Result from "effect/Result";
+import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 import * as AssetBucket from "../AssetBucket.ts";
 

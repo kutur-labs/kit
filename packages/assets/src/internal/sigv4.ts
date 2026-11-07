@@ -3,7 +3,9 @@ import type * as AssetSigning from "../AssetSigning.ts";
 import * as Credentials from "@distilled.cloud/aws/Credentials";
 import * as Presign from "@distilled.cloud/aws/Presign";
 import * as Region from "@distilled.cloud/aws/Region";
-import { DateTime, Duration, Effect } from "effect";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 
 import * as AssetBucket from "../AssetBucket.ts";
 import { encodeKey } from "./url.ts";

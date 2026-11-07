@@ -1,4 +1,6 @@
-import { type Schema, SchemaAST } from "effect";
+import type * as Schema from "effect/Schema";
+
+import * as SchemaAST from "effect/SchemaAST";
 
 const annotation = "~kutur-kit/audit/key";
 

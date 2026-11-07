@@ -1,7 +1,13 @@
 import type * as Asset from "./Asset.ts";
 import type * as AssetBucket from "./AssetBucket.ts";
 
-import { ByteSize, Context, Duration, Effect, Option, Schema, SchemaGetter } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 
 /**
  * A request a client sends to storage itself, such as a browser uploading a

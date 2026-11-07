@@ -1,7 +1,11 @@
 import type * as Asset from "./Asset.ts";
 import type * as AssetBucket from "./AssetBucket.ts";
 
-import { ByteSize, Effect, Layer, Option, Stream } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Stream from "effect/Stream";
 
 import { concat } from "./internal/bytes.ts";
 

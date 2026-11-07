@@ -1,4 +1,8 @@
-import { Array as Arr, Context, DateTime, Effect, Layer } from "effect";
+import * as Arr from "effect/Array";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import * as Audit from "../Audit.ts";
 

@@ -1,6 +1,7 @@
 import type * as Decision from "../Decision.ts";
 
-import { Effect, Predicate } from "effect";
+import * as Effect from "effect/Effect";
+import * as Predicate from "effect/Predicate";
 
 import * as Condition from "../Condition.ts";
 

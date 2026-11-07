@@ -1,5 +1,9 @@
-import { ByteSize, Duration, Effect, Option } from "effect";
-import { HttpClient, HttpClientRequest } from "effect/http";
+import * as ByteSize from "effect/ByteSize";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Option from "effect/Option";
 
 import * as AssetSigning from "../AssetSigning.ts";
 import { ContractBucket } from "./AssetBucketContract.ts";

@@ -1,6 +1,11 @@
 import type * as AssetBucket from "./AssetBucket.ts";
 
-import { ByteSize, Effect, Option, Schema, SchemaGetter, Stream } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Stream from "effect/Stream";
 
 /**
  * A media type without parameters, such as `image/png`. Only the top-level
