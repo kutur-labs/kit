@@ -107,6 +107,9 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml", "$TURBO_ROOT$/.gitignore"],
       "outputs": []
     },
+    "//#lint:prose": {
+      "outputs": []
+    },
     "//#lint:structure": {
       "outputs": []
     }

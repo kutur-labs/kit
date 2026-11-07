@@ -9,7 +9,7 @@
     "text-slop": {
       "source": "./.agents/skills/text-slop",
       "sourceType": "local",
-      "computedHash": "d9a781cf8930f25fc1360a05669c1113578ac991ca3d31b81c641ec818918ffc"
+      "computedHash": "e587f41ac3767db74730d70ee6b3ebb86e1e185e01767e458685a15e1dc51316"
     }
   }
 }
