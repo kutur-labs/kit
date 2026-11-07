@@ -28,6 +28,6 @@ Type checks and type-aware lint run on [tsrs](https://github.com/oxc-project/tsr
 - [@kutur-kit/audit](./packages/audit/README.md): Typed audit events with PostgreSQL storage.
 - [@kutur-kit/tsconfig](./packages/tsconfig/README.md): TypeScript and Effect presets.
 - [@kutur-kit/oxc](./packages/oxc/README.md): Oxlint rules and Oxfmt configuration.
-- [@kutur-kit/strict](./packages/strict/README.md): A pnpm hook that requires exact catalog versions.
+- [@kutur-kit/strict](./packages/strict/README.md): A pnpm hook that requires exact catalog versions and exact release-age exclusions.
 
 See [AGENTS.md](./AGENTS.md) for repository conventions.

@@ -10,9 +10,13 @@ catalogMode: strict
 catalogPrune: true
 engineStrict: true
 
-# Fail installs on versions outside exact catalog entries.
+# Fail installs on versions outside exact catalog entries and on release-age
+# exclusions that are not exact.
 pnpmfile:
   - packages/strict/pnpmfile.mjs
+
+# Drop release-age exclusions that the lockfile no longer uses.
+minimumReleaseAgeExcludePrune: true
 
 # Require each package to install its own peers for development and tests.
 autoInstallPeers: false

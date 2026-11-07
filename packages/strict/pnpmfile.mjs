@@ -9,6 +9,7 @@ import { join } from "node:path";
  * @typedef {Readonly<Record<string, Versions>>} Catalogs
  * @typedef {"dependencies" | "devDependencies" | "optionalDependencies"} PinnedField
  * @typedef {{ readonly path: string, readonly manifest: Readonly<Partial<Record<PinnedField, Versions>>> }} Manifest
+ * @typedef {{ readonly minimumReleaseAgeExclude?: readonly string[], readonly minimumReleaseAgeExcludePrune?: boolean }} ReleaseAgeSettings
  */
 
 // Peer ranges tell consumers what they may install, so only these fields must
@@ -18,9 +19,38 @@ const pinnedFields = ["dependencies", "devDependencies", "optionalDependencies"]
 
 const exactVersion = /^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/;
 
+// pnpm reads `!`, `*` and `?` in an excluded name as a pattern, so a name may
+// use only the characters npm allows in new package names. Older packages may
+// also have capitals, such as `JSONStream`.
+const packageName = /^(?:@[a-z\d-][\w.-]*\/)?[a-z\d-][\w.-]*$/i;
+
+/**
+ * Splits a spec at the `@` that ends the package name. A scoped name starts
+ * with `@`, so that one never counts. A bare name has an empty version.
+ *
+ * @param {string} spec
+ * @returns {[name: string, version: string]}
+ */
+const splitSpec = (spec) => {
+  const at = spec.lastIndexOf("@");
+
+  return at > 0 ? [spec.slice(0, at), spec.slice(at + 1)] : [spec, ""];
+};
+
 /** @param {string} spec */
 const isExact = (spec) =>
-  exactVersion.test(spec.startsWith("npm:") ? spec.slice(spec.lastIndexOf("@") + 1) : spec);
+  exactVersion.test(spec.startsWith("npm:") ? splitSpec(spec.slice("npm:".length))[1] : spec);
+
+// pnpm writes several excluded versions of one package as `name@1.0.0 || 1.0.1`.
+/** @param {string} entry */
+const isExactExclusion = (entry) => {
+  const [name, versions] = splitSpec(entry);
+
+  return (
+    packageName.test(name) &&
+    versions.split("||").every((version) => exactVersion.test(version.trim()))
+  );
+};
 
 /**
  * @param {Catalogs} catalogs
@@ -32,7 +62,7 @@ const problemWith = (catalogs, path, field, [name, spec]) => {
   if (spec.startsWith("workspace:")) return undefined;
 
   if (!spec.startsWith("catalog:")) {
-    return `${path}: ${field}.${name} is "${spec}"; use catalog: or workspace:`;
+    return `${path}: ${field}.${name} is "${spec}". Versions outside the catalogs can differ between packages. Fix: use \`catalog:\` or \`workspace:\`.`;
   }
 
   const catalog = spec.slice("catalog:".length) || "default";
@@ -40,7 +70,7 @@ const problemWith = (catalogs, path, field, [name, spec]) => {
 
   return version === undefined || isExact(version)
     ? undefined
-    : `pnpm-workspace.yaml: catalogs.${catalog}.${name} is "${version}"; use an exact version`;
+    : `pnpm-workspace.yaml: catalogs.${catalog}.${name} is "${version}". A range or tag lets the installed version move without an edit to this entry. Fix: replace it with an exact version, such as the one in \`pnpm-lock.yaml\`.`;
 };
 
 /**
@@ -51,7 +81,7 @@ const problemWith = (catalogs, path, field, [name, spec]) => {
  * @param {readonly Manifest[]} manifests
  * @returns {string[]}
  */
-export const findViolations = (catalogs, manifests) => {
+export const findCatalogViolations = (catalogs, manifests) => {
   const problems = manifests.flatMap(({ path, manifest }) =>
     pinnedFields.flatMap((field) =>
       Object.entries(manifest[field] ?? {}).map((dependency) =>
@@ -62,6 +92,33 @@ export const findViolations = (catalogs, manifests) => {
 
   // Each package using a loose catalog entry would report it again.
   return [...new Set(problems.filter((problem) => problem !== undefined))];
+};
+
+/**
+ * Lists release-age exclusions that also exempt versions published later, and
+ * a prune setting that is not on.
+ *
+ * @param {ReleaseAgeSettings} settings
+ * @returns {string[]}
+ */
+const findReleaseAgeViolations = ({
+  minimumReleaseAgeExclude = [],
+  minimumReleaseAgeExcludePrune,
+}) => {
+  const problems = minimumReleaseAgeExclude
+    .filter((entry) => !isExactExclusion(entry))
+    .map(
+      (entry) =>
+        `pnpm-workspace.yaml: minimumReleaseAgeExclude has "${entry}". A name pattern also exempts other packages, and a bare name, range or tag also exempts versions published later. Fix: list one package name with exact versions, as \`name@1.2.3\` or \`name@1.2.3 || 1.2.4\`.`,
+    );
+
+  if (minimumReleaseAgeExcludePrune !== true) {
+    problems.push(
+      "pnpm-workspace.yaml: minimumReleaseAgeExcludePrune is not true. pnpm adds exclusions on its own and keeps them after the lockfile drops those versions. Fix: set `minimumReleaseAgeExcludePrune: true`.",
+    );
+  }
+
+  return problems;
 };
 
 /** @param {string} root @param {readonly string[]} patterns */
@@ -91,19 +148,22 @@ const readManifests = (root, patterns) => {
 
 export const hooks = {
   /**
-   * @template {{ workspaceDir: string, workspacePackagePatterns: readonly string[], catalogs: Catalogs }} Config
+   * @template {ReleaseAgeSettings & { workspaceDir: string, workspacePackagePatterns: readonly string[], catalogs: Catalogs }} Config
    * @param {Config} config
    * @returns {Config}
    */
   updateConfig(config) {
-    const problems = findViolations(
-      config.catalogs,
-      readManifests(config.workspaceDir, config.workspacePackagePatterns),
-    );
+    const problems = [
+      ...findCatalogViolations(
+        config.catalogs,
+        readManifests(config.workspaceDir, config.workspacePackagePatterns),
+      ),
+      ...findReleaseAgeViolations(config),
+    ];
 
     if (problems.length > 0) {
       throw new Error(
-        `@kutur-kit/strict: dependency versions must come from exact catalog entries or the workspace\n${problems.map((problem) => `- ${problem}`).join("\n")}`,
+        `@kutur-kit/strict stopped the install\n${problems.map((problem) => `- ${problem}`).join("\n")}`,
       );
     }
 
