@@ -3,7 +3,11 @@ import type * as Credentials from "@distilled.cloud/aws/Credentials";
 import type * as HttpClient from "effect/http/HttpClient";
 
 import * as S3 from "@distilled.cloud/aws/s3";
-import { ByteSize, Effect, Layer, Option, Stream } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Stream from "effect/Stream";
 
 import * as AssetBucket from "./AssetBucket.ts";
 import * as AssetSigningModule from "./AssetSigning.ts";

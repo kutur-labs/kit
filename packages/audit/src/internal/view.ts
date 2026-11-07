@@ -1,4 +1,9 @@
-import { Effect, Option, Predicate, Redacted, Schema, SchemaAST } from "effect";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 
 import * as AuditKey from "../AuditKey.ts";
 

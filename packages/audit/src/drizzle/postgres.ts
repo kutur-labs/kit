@@ -2,11 +2,15 @@ import type { AnyRelations } from "drizzle-orm";
 import type { EffectDrizzleQueryError, QueryEffectHKTBase } from "drizzle-orm/effect-core";
 import type { PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type { PgEffectDatabase } from "drizzle-orm/pg-core/effect";
+import type * as Schema from "effect/Schema";
 import type * as SqlClient from "effect/sql/SqlClient";
 
 import { sql } from "drizzle-orm";
 import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { Context, DateTime, Effect, Layer, type Schema } from "effect";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 
 import { AuditLog, type Entry } from "../Audit.ts";
 

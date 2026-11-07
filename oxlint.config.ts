@@ -28,6 +28,15 @@ export default defineConfig({
       ],
       rules: { "effecttsgo/global-console": "off" },
     },
+    {
+      // Unbundled Node and Metro load every module an `effect` barrel re-exports, and esbuild
+      // keeps whole namespace objects, so published code imports Effect modules by subpath.
+      // Package tsconfigs set the rule's options for `src` only, so tests and docs keep the barrel
+      // imports that Effect's docs teach. `topLevelNamedReexports: "follow"` also reports
+      // functions such as `pipe` imported from the barrel.
+      files: ["packages/*/src/**"],
+      rules: { "effecttsgo/prefer-namespace-import": "error" },
+    },
   ],
   ignorePatterns: [
     "apps/docs/.output/**",

@@ -1,5 +1,11 @@
-import { Effect, FileSystem, Layer, Option, Path, Schema, Stream } from "effect";
-import { SecureRandom } from "effect/crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Path from "effect/Path";
+import * as Schema from "effect/Schema";
+import * as Stream from "effect/Stream";
 
 import * as AssetBucket from "./AssetBucket.ts";
 

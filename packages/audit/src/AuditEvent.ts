@@ -1,5 +1,8 @@
-import { DateTime, Effect, Option, Schema } from "effect";
-import { SecureRandom } from "effect/crypto";
+import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 
 import * as Audit from "./Audit.ts";
 import { type Codec, projectOrDie, rejectRedacted, viewOf } from "./internal/view.ts";

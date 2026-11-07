@@ -1,4 +1,6 @@
-import { Data, Match, Predicate } from "effect";
+import * as Data from "effect/Data";
+import * as Match from "effect/Match";
+import * as Predicate from "effect/Predicate";
 
 /** The values conditions compare. */
 export type Value = string | number | boolean | bigint | null;

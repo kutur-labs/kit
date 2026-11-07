@@ -1,4 +1,10 @@
-import { type ByteSize, Context, type Effect, type Option, Schema, type Stream } from "effect";
+import type * as ByteSize from "effect/ByteSize";
+import type * as Effect from "effect/Effect";
+import type * as Option from "effect/Option";
+import type * as Stream from "effect/Stream";
+
+import * as Context from "effect/Context";
+import * as Schema from "effect/Schema";
 
 export interface Info {
   readonly size: ByteSize.ByteSize;

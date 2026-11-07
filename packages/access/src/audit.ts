@@ -1,6 +1,9 @@
 import * as Audit from "@kutur-kit/audit/Audit";
 import * as AuditEvent from "@kutur-kit/audit/AuditEvent";
-import { Effect, Layer, Predicate, Schema } from "effect";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 
 import * as Permission from "./Permission.ts";
 

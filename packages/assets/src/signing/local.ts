@@ -1,17 +1,16 @@
 import type * as AssetBucket from "../AssetBucket.ts";
 
-import {
-  ByteSize,
-  Clock,
-  DateTime,
-  Duration,
-  Effect,
-  Layer,
-  Option,
-  Redacted,
-  Stream,
-} from "effect";
-import { HttpRouter, HttpServerResponse } from "effect/http";
+import * as ByteSize from "effect/ByteSize";
+import * as Clock from "effect/Clock";
+import * as DateTime from "effect/DateTime";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Redacted from "effect/Redacted";
+import * as Stream from "effect/Stream";
 
 import * as AssetSigning from "../AssetSigning.ts";
 import { mount, respond, target } from "../internal/http.ts";

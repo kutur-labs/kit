@@ -17,6 +17,15 @@
           "effect/Path",
           "effect/PlatformError",
           "effect/Schema#ByteSize"
+        ],
+        "overrides": [
+          {
+            "include": ["src/**/*.ts"],
+            "options": {
+              "namespaceImportPackages": ["effect"],
+              "topLevelNamedReexports": "follow"
+            }
+          }
         ]
       }
     ],

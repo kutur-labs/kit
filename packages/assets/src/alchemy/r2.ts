@@ -5,7 +5,11 @@ import type { WorkerEnvironment } from "@alchemy.run/cloudflare/Workers";
 import { ReadWriteBucket, S3Credentials } from "@alchemy.run/cloudflare/R2";
 import * as Credentials from "@distilled.cloud/aws/Credentials";
 import { RuntimeContext } from "alchemy";
-import { ByteSize, Effect, Layer, Option, Stream } from "effect";
+import * as ByteSize from "effect/ByteSize";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
+import * as Stream from "effect/Stream";
 
 import * as AssetBucket from "../AssetBucket.ts";
 import * as AssetSigningModule from "../AssetSigning.ts";

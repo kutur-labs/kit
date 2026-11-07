@@ -13,6 +13,15 @@
           "effect/crypto",
           "effect/reactivity",
           "effect/sql"
+        ],
+        "overrides": [
+          {
+            "include": ["src/**/*.ts"],
+            "options": {
+              "namespaceImportPackages": ["effect"],
+              "topLevelNamedReexports": "follow"
+            }
+          }
         ]
       }
     ],
