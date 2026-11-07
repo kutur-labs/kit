@@ -1,5 +1,11 @@
 # @kutur-kit/audit
 
+## 0.1.0-alpha.4
+
+### Patch Changes
+
+- e6b2d2b: Imports Effect modules by subpath, so unbundled runs and esbuild bundles load only the modules the package uses.
+
 ## 0.1.0-alpha.3
 
 ### Minor Changes
