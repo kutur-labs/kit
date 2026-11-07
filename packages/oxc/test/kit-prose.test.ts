@@ -61,7 +61,7 @@ await test("holds a file to its budget in Unicode code points", (context) => {
   assert.equal(over.status, 1);
   assert.equal(
     over.stderr,
-    "AGENTS.md: 26 characters, over its budget of 25. Raising the budget needs the user. Fix: shorten it or move a rule into a check.\n",
+    "AGENTS.md: 26 characters, over its budget of 25. Raising the budget needs the user. Fix: move a rule into a check or shorten it, and delete rules that a check or the code already holds.\n",
   );
 });
 

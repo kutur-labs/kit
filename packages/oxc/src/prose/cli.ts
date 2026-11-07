@@ -72,7 +72,7 @@ for (const file of Array.from(files).sort()) {
 
   if (budget !== undefined && characters > budget.limit) {
     failures.push(
-      `${file}: ${characters} characters, over its budget of ${budget.limit}. Raising the budget needs the user. Fix: shorten it or move a rule into a check.`,
+      `${file}: ${characters} characters, over its budget of ${budget.limit}. Raising the budget needs the user. Fix: move a rule into a check or shorten it, and delete rules that a check or the code already holds.`,
     );
   }
 }
