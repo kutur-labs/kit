@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "diagnosing-bugs": {
+      "source": "./.agents/skills/diagnosing-bugs",
+      "sourceType": "local",
+      "computedHash": "ff37d8ed9a13b39c9dae1aeeaa107318a0b81af1e4ea63d91749973aadb81285"
+    },
     "test-quality": {
       "source": "./.agents/skills/test-quality",
       "sourceType": "local",
