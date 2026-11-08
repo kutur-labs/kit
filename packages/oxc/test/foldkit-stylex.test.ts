@@ -24,13 +24,17 @@ import * as stylex from "@stylexjs/stylex";
 const cases: ReadonlyArray<Case> = [
   {
     file: "ui-bundle-bad.ts",
-    code: `${preamble}import { Popover, Tabs } from "@foldkit/ui";
-import { PopoverStyle, TabsStyle, sx } from "@kutur-kit/foldkit-stylex";
+    code: `${preamble}import { DragAndDrop, Popover, Tabs } from "@foldkit/ui";
+import { DragAndDropStyle, PopoverStyle, TabsStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { Array, pipe } from "effect";
+import * as Arr from "effect/Array";
+import * as Function from "effect/Function";
 
 const styles = stylex.create({ wide: { inlineSize: 320 }, ring: { outlineWidth: 2 } });
 
 export const popoverView = PopoverStyle.view(Popover.view);
 export const tabsView = TabsStyle.view(Tabs.view);
+const draggable = DragAndDropStyle.draggable(DragAndDrop.draggable, { draggable: styles.ring });
 
 export const popoverInputs = (h: HtmlBuilder<never>) => ({
   toView: ({ wrapper, button, panel }: never) =>
@@ -43,26 +47,129 @@ export const popoverInputs = (h: HtmlBuilder<never>) => ({
 export const tabsInputs = (h: HtmlBuilder<never>) => ({
   toView: ({ tabs }: never) => tabs.map((tab: never) => h.button([...tab.tab, sx(styles.ring)], [])),
 });
+
+// Foldkit's tabs example renders the active panel through Effect's Array.
+export const panelInputs = (h: HtmlBuilder<never>) => ({
+  toView: ({ tabs, activeIndex }: never) =>
+    h.div([], [
+      ...Array.map(Array.filter(tabs, (tab: never) => tab.index === activeIndex), (tab: never) => h.div([...tab.panel, sx(styles.ring)], [])),
+      ...tabs.filter((tab: never) => tab.index === activeIndex).map((tab: never) => h.div([...tab.panel, sx(styles.ring)], [])),
+      ...tabs.flatMap((tab: never) => [h.div([...tab.panel, sx(styles.ring)], [])]),
+      ...Arr.flatMap(tabs, (tab: never) => [h.div([...tab.panel, sx(styles.ring)], [])]),
+      ...pipe(tabs, Array.map((tab: never) => h.div([...tab.panel, sx(styles.ring)], []))),
+      ...Function.pipe(tabs, Array.filter((tab: never) => tab.index === activeIndex), Array.flatMap((tab: never) => [h.div([...tab.panel, sx(styles.ring)], [])])),
+    ]),
+});
+
+export const cards = (config: never, h: HtmlBuilder<never>) => [
+  h.li([...draggable(config, h), sx(styles.wide)], []),
+  h.li([h.Class("card"), ...draggable(config, h)], []),
+];
+
+// toView callbacks passed by name, as Foldkit's examples write them.
+export const checkboxInputs = (h: HtmlBuilder<never>) => {
+  const checkboxView = (attributes: never) => h.button([...attributes.checkbox, h.Class("box")], []);
+
+  function labelView({ label }: never) {
+    return h.label([...label, sx(styles.ring)], []);
+  }
+
+  return [{ toView: checkboxView }, { toView: labelView }];
+};
 `,
     errors: [
-      "foldkit-stylex-attributes/uiBundle",
-      "foldkit-stylex-attributes/uiBundle",
-      "foldkit-stylex-attributes/uiBundle",
-      "foldkit-stylex-attributes/uiBundle",
+      "foldkit-stylex-attributes/partStyle",
+      ...Array.from({ length: 13 }, () => "foldkit-stylex-attributes/partClass"),
     ],
   },
   {
     file: "ui-bundle-good.ts",
-    code: `${preamble}import { Popover } from "@foldkit/ui";
+    code: `${preamble}import type { Attribute } from "foldkit/html";
+
+import { DragAndDrop, Popover } from "@foldkit/ui";
 import { PopoverStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { Array, pipe } from "effect";
 
 const styles = stylex.create({ wide: { inlineSize: 320 }, ring: { outlineWidth: 2 }, text: { color: "red" } });
 
 export const popoverView = PopoverStyle.view(Popover.view, { button: styles.ring, panel: styles.wide });
 
+// The app's own helpers spread their own attributes, above or below a toView with the same names.
+export const above = (attributes: ReadonlyArray<Attribute<never>>, h: HtmlBuilder<never>) =>
+  h.input([...attributes, sx(styles.text)]);
+
 export const popoverInputs = (h: HtmlBuilder<never>) => ({
-  toView: ({ wrapper, button, panel }: never) =>
-    h.div([...wrapper], [h.button([...button], []), h.div([...panel], [h.p([sx(styles.text)], [])])]),
+  toView: (attributes: never) =>
+    h.div([...attributes.wrapper], [h.button([...attributes.button], []), h.div([...attributes.panel], [h.p([sx(styles.text)], [])])]),
+});
+
+export const below = (attributes: ReadonlyArray<Attribute<never>>, h: HtmlBuilder<never>) =>
+  h.input([...attributes, sx(styles.text)]);
+
+// A function passed by name to another input gets no bundle.
+export const checkboxInputs = (h: HtmlBuilder<never>) => {
+  const toggled = (attributes: ReadonlyArray<Attribute<never>>) => h.span([...attributes, sx(styles.text)], []);
+
+  return { onToggle: toggled };
+};
+
+// A function that passes its own parameter on as toView gets no bundle itself.
+export function framed(view: never, attributes: ReadonlyArray<Attribute<never>>, h: HtmlBuilder<never>) {
+  return { toView: view, frame: h.div([...attributes, sx(styles.text)], []) };
+}
+
+// droppable and sortable carry no style.
+export const list = (h: HtmlBuilder<never>) =>
+  h.ul([...DragAndDrop.droppable("list"), ...DragAndDrop.sortable("item"), sx(styles.wide)], []);
+
+// The app's own attribute lists, iterated as bundles are, get no bundle.
+export const rows = (lists: ReadonlyArray<ReadonlyArray<Attribute<never>>>, h: HtmlBuilder<never>) => [
+  ...Array.map(Array.filter(lists, (list) => list.length > 0), (list) => h.li([...list, sx(styles.text)], [])),
+  ...pipe(lists, Array.map((list) => h.li([...list, sx(styles.text)], []))),
+];
+`,
+    errors: [],
+  },
+  {
+    file: "attributes-input-bad.ts",
+    code: `${preamble}import { childAttributes } from "foldkit/html";
+import { Listbox } from "@foldkit/ui";
+import { ListboxStyle, sx } from "@kutur-kit/foldkit-stylex";
+
+const styles = stylex.create({ dim: { opacity: 0.5 } });
+const Languages = Listbox.create<"pl" | "en">();
+
+export const languagesView = ListboxStyle.view(Languages.view);
+
+export const inputs = (h: HtmlBuilder<never>) => ({
+  buttonAttributes: childAttributes([h.AriaLabel("Language"), h.Class("trigger")]),
+  backdropAttributes: childAttributes([sx(styles.dim)]),
+  itemsAttributes: childAttributes([h.Style({ maxHeight: "none" })]),
+  attributes: childAttributes([h.Attribute("class", "wrapper")]),
+});
+`,
+    errors: [
+      "foldkit-stylex-attributes/partClass",
+      "foldkit-stylex-attributes/partClass",
+      "foldkit-stylex-attributes/partStyle",
+      "foldkit-stylex-attributes/partClass",
+    ],
+  },
+  {
+    file: "attributes-input-good.ts",
+    code: `${preamble}import { childAttributes } from "foldkit/html";
+import { sx } from "@kutur-kit/foldkit-stylex";
+
+const styles = stylex.create({ box: { opacity: 0.5 } });
+
+export const inputs = (h: HtmlBuilder<never>) => ({
+  buttonAttributes: childAttributes([h.AriaLabel("Language")]),
+});
+
+// A Submodel of the app's own publishes its parts' attributes, styles included, under a key that
+// does not match \`*Attributes\`, which the rule reads as a @foldkit/ui view input.
+export const published = (h: HtmlBuilder<never>) => ({
+  checkbox: childAttributes([h.Role("checkbox"), sx(styles.box)]),
 });
 `,
     errors: [],
@@ -73,10 +180,18 @@ export const popoverInputs = (h: HtmlBuilder<never>) => ({
 
 const styles = stylex.create({ a: { color: "red" }, b: { color: "blue" } });
 
-export const own = (h: HtmlBuilder<never>) => h.div([sx(styles.a), sx(styles.b)], []);
+export const own = (h: HtmlBuilder<never>) => h.div([sx(styles.a), h.Class("p-4"), sx(styles.b)], []);
 export const tailwind = (h: HtmlBuilder<never>) => h.div([h.Class("p-4"), h.Class("m-2")], []);
 `,
-    errors: ["foldkit-stylex-attributes/oneCall", "foldkit-stylex-attributes/oneCall"],
+    errors: [
+      "foldkit-stylex-attributes/oneCall",
+      "foldkit-stylex-attributes/oneCall",
+      "foldkit-stylex-attributes/oneClass",
+    ],
+    messages: [
+      "Pass every style of this element to one sx(...) call",
+      "Join these class names into one Class.",
+    ],
   },
   {
     file: "one-call-good.ts",
@@ -123,7 +238,7 @@ export const tailwind = (h: HtmlBuilder<never>, extra: ReadonlyArray<never>) =>
 export const own = (h: HtmlBuilder<never>) =>
   h.div([h.Attribute("class", "card"), h.Attribute("style", "color: red")], []);
 `,
-    errors: ["foldkit-stylex-attributes/rawAttribute", "foldkit-stylex-attributes/rawAttribute"],
+    errors: ["foldkit-stylex-attributes/rawClass", "foldkit-stylex-attributes/rawStyle"],
   },
   {
     file: "raw-attribute-good.ts",
@@ -311,11 +426,17 @@ export const styles = stylex.create({
   wide: { padding: { default: 8, "@media (min-width: 640px)": 16, "@media (min-width: 320px)": 12 } },
   narrow: { padding: { default: 8, "@media (max-width: 40rem)": 4, "@media (max-width: 1024px)": 6 } },
   range: { padding: { default: 8, "@media (width >= 768px)": 16, "@media (min-width: 48rem)": 12 } },
+  motion: {
+    padding: { default: 8, "@media (min-width: 640px) and (prefers-reduced-motion: reduce)": 4, "@media (min-width: 320px)": 6 },
+  },
+  dark: {
+    color: { default: "black", "@media (prefers-color-scheme: dark) and (min-width: 640px)": "white", "@media (prefers-color-scheme:dark)": "gray" },
+  },
 });
 `,
-    errors: Array.from({ length: 3 }, () => "foldkit-stylex-condition-key/mediaOrder"),
+    errors: Array.from({ length: 5 }, () => "foldkit-stylex-condition-key/mediaOrder"),
     messages: [
-      "'@media (min-width: 640px)' never matches: StyleX rewrites each width query to exclude the ones after it, and '@media (min-width: 320px)' covers its whole range.",
+      "'@media (min-width: 640px)' never matches: StyleX rewrites each media query to exclude the ones after it in the same property, and '@media (min-width: 320px)' matches wherever it does.",
     ],
   },
   {
@@ -326,9 +447,52 @@ export const styles = stylex.create({
   narrow: { padding: { default: 8, "@media (max-width: 1024px)": 6, "@media (max-width: 40rem)": 4 } },
   // The later query stops just below 768px, so the earlier one still matches at 768px.
   edge: { padding: { default: 8, "@media (max-width: 768px)": 6, "@media (width < 768px)": 4 } },
-  motion: {
-    padding: { default: 8, "@media (min-width: 640px) and (prefers-reduced-motion: reduce)": 4, "@media (min-width: 320px)": 6 },
+  // The later query is narrower, so the earlier one still matches below 640px.
+  motion: { transitionDuration: { default: "200ms", "@media (prefers-reduced-motion: reduce)": "0s", "@media (min-width: 640px)": "300ms" } },
+  // The later query needs a feature the earlier one does not, so the earlier one still matches
+  // without it.
+  reduced: {
+    padding: { default: 8, "@media (min-width: 640px)": 6, "@media (min-width: 320px) and (prefers-reduced-motion: reduce)": 4 },
   },
+  compound: {
+    padding: { default: 8, "@media (min-width: 320px)": 6, "@media (min-width: 640px) and (prefers-reduced-motion: reduce)": 4 },
+  },
+});
+`,
+    errors: [],
+  },
+  {
+    file: "focus-rank-bad.ts",
+    code: `${preamble}
+export const styles = stylex.create({
+  button: { backgroundColor: { default: "white", ":hover": "gray", ":focus-visible": "blue" } },
+  field: { borderColor: { default: "gray", ":focus-within": "blue", ":hover": "black" } },
+  link: { color: { default: "black", ":focus": "red", ":focus-visible": "blue" } },
+  input: { borderColor: { default: "gray", ":user-invalid": "red", ":focus-visible": "blue" } },
+  drop: { outlineColor: { default: "transparent", ":hover": "gray", ":has(:focus-visible)": "blue" } },
+});
+`,
+    errors: Array.from({ length: 5 }, () => "foldkit-stylex-condition-key/focusRank"),
+    messages: [
+      "StyleX 0.19 ranks ':focus-visible' below ':hover', so ':hover' wins wherever both match and hides the focus style.",
+      "StyleX 0.19 ranks ':focus-visible' below ':user-invalid'",
+      "StyleX 0.19 ranks ':has(:focus-visible)' below ':hover'",
+    ],
+  },
+  {
+    file: "focus-rank-good.ts",
+    code: `${preamble}
+export const styles = stylex.create({
+  button: {
+    backgroundColor: { default: "white", ":hover:not(:focus-visible)": "gray", ":focus-visible": "blue" },
+    outlineWidth: { default: 0, ":focus-visible": 2 },
+    opacity: { default: 1, ":hover": 0.8, ":active": 0.6 },
+  },
+  field: { borderColor: { default: "gray", ":focus": "blue", ":focus-within": "black" } },
+  // Ties: StyleX ranks both keys of each pair alike, 40 or 45, and orders them by value, which the
+  // rule leaves alone.
+  card: { outlineColor: { default: "transparent", ":is([data-theme=dark])": "white", ":focus-visible": "blue" } },
+  drop: { outlineColor: { default: "transparent", ":has(:user-invalid)": "red", ":has(:focus-visible)": "blue" } },
 });
 `,
     errors: [],
@@ -365,10 +529,14 @@ export const color = stylex.defineVars({ surface: "#ffffff" });
     file: "overrides-bad.stylex.ts",
     code: `import * as stylex from "@stylexjs/stylex";
 
+import type { ThemeOverrides } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
+
 export const brand = stylex.defineVars({ "--fks-acent": "#c2410c" });
 export const loose = stylex.defineVars({ "--fks-color-accent": "#c2410c" } satisfies Record<string, string>);
+export const cast = stylex.defineVars({ "--fks-acent": "#c2410c" } as ThemeOverrides);
+export const angle = stylex.defineVars(<ThemeOverrides>{ "--fks-acent": "#c2410c" });
 `,
-    errors: ["foldkit-stylex-styles/overrides", "foldkit-stylex-styles/overrides"],
+    errors: Array.from({ length: 4 }, () => "foldkit-stylex-styles/overrides"),
   },
   {
     file: "overrides-good.stylex.ts",
@@ -377,20 +545,66 @@ export const loose = stylex.defineVars({ "--fks-color-accent": "#c2410c" } satis
 import { defineVars } from "@stylexjs/stylex";
 
 export const brand = defineVars({ "--fks-color-accent": "#c2410c" } satisfies Overrides);
+export const exported = defineVars({ "--fks-radius-control": "0" } satisfies Overrides as Overrides);
+`,
+    errors: [],
+  },
+  {
+    file: "element-token-bad.ts",
+    code: `${preamble}
+export const styles = stylex.create({
+  inverted: { "--fks-color-surface": "black", color: { default: "white", ":hover": "gray" } },
+  tinted: (accent: string) => ({ "--fks-color-accent": accent }),
+});
+
+export const card = (isOn: boolean, h: HtmlBuilder<never>) =>
+  h.div([h.Style(isOn ? { "--fks-color-text": "red" } : {})], []);
+`,
+    errors: Array.from({ length: 3 }, () => "foldkit-stylex-styles/elementToken"),
+    messages: [
+      "'--fks-color-surface' changes nothing on an element: the tokens read it once, at :root.",
+    ],
+  },
+  {
+    file: "element-token-good.ts",
+    code: `${preamble}import { sx } from "@kutur-kit/foldkit-stylex";
+
+import { color } from "./tokens.stylex.ts";
+
+const styles = stylex.create({ inverted: { [color.surface]: "black", "--hue": "200" }, tinted: { [color.surface]: "var(--tint)" } });
+
+// A theme picker's presets, which a Command sets on <html>.
+export const presets = { ember: { "--fks-color-surface": "black" } };
+
+export const card = (tint: string, h: HtmlBuilder<never>) => h.div([h.Style({ "--tint": tint }), sx(styles.inverted, styles.tinted)], []);
 `,
     errors: [],
   },
   {
     file: "annotation-bad.ts",
-    code: `${preamble}import type { ListboxStyle, PopoverStyle } from "@kutur-kit/foldkit-stylex";
+    code: `${preamble}import { Popover } from "@foldkit/ui";
+import { type ListboxStyle, PopoverStyle } from "@kutur-kit/foldkit-stylex";
 
 const styles = stylex.create({ panel: { padding: 16 } });
 
 export const shared: PopoverStyle.Styles = { panel: styles.panel };
-export const many: ListboxStyle.Multi.Styles = {};
+export const cast = { items: styles.panel } as ListboxStyle.Styles;
+export const angle = <PopoverStyle.Styles>{ panel: styles.panel };
+
+export const looks: PopoverStyle.Styles[] = [{ panel: styles.panel }];
+export const frozen: ReadonlyArray<PopoverStyle.Styles> = [{ panel: styles.panel }];
+export const kept: readonly ListboxStyle.Styles[] = [{ items: styles.panel }];
+export const casts = [{ panel: styles.panel }] as Array<PopoverStyle.Styles>;
+export const themed = (...extras: PopoverStyle.Styles[]) => PopoverStyle.view(Popover.view, ...extras);
 `,
-    errors: ["foldkit-stylex-styles/annotation", "foldkit-stylex-styles/annotation"],
-    messages: ["Write shared = { ... } satisfies PopoverStyle.Styles instead of annotating it."],
+    errors: [
+      ...Array.from({ length: 3 }, () => "foldkit-stylex-styles/annotation"),
+      ...Array.from({ length: 5 }, () => "foldkit-stylex-styles/arrayAnnotation"),
+    ],
+    messages: [
+      "Check these styles with satisfies PopoverStyle.Styles instead.",
+      "Check these styles with satisfies readonly ListboxStyle.Styles[] instead",
+    ],
   },
   {
     file: "annotation-good.ts",
@@ -401,7 +615,9 @@ import type { Theme } from "./theme.ts";
 const styles = stylex.create({ panel: { padding: 16 } });
 
 export const shared = { panel: styles.panel } satisfies PopoverStyle.Styles;
+export const looks = [{ panel: styles.panel }] satisfies PopoverStyle.Styles[];
 export const theme: Theme.Styles = {};
+export const names: ReadonlyArray<keyof PopoverStyle.Styles> = ["panel"];
 `,
     errors: [],
   },

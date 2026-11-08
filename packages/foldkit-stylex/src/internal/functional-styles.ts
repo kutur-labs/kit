@@ -65,8 +65,8 @@ export const dialog = stylex.create({
 // With panelMount "All", @foldkit/ui renders every panel and hides none. Applied after the app's styles.
 export const tabs = stylex.create({ hidden: { display: "none" } });
 
-// FileDrop's input, which @foldkit/ui hides only with Tailwind's sr-only class (F3). Visually
-// hidden this way, it stays focusable and reachable by screen readers.
+// FileDrop's input, which @foldkit/ui hides only with Tailwind's sr-only class. Visually hidden
+// this way, it stays focusable and reachable by screen readers.
 export const fileDrop = stylex.create({
   input: {
     position: "absolute",

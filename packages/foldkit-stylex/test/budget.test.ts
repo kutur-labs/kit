@@ -7,6 +7,8 @@ import path from "node:path";
 
 import { describe, expect, it } from "vitest";
 
+import { babel, resolvePlugin, src, stylexPlugin } from "./syntax.ts";
+
 const budget = 2048;
 
 // The files kit lint allows to define styles, relative to src.
@@ -16,46 +18,8 @@ const definitions = [
   "internal/markers.stylex.ts",
 ];
 
-const src = path.join(import.meta.dirname, "../src");
-
-// The Babel, StyleX plugin and Lightningcss that @stylexjs/unplugin runs, so the CSS matches what
-// an app's build emits.
+// The Lightningcss that @stylexjs/unplugin runs, so the CSS matches what an app's build emits.
 const require = createRequire(import.meta.resolve("@stylexjs/unplugin"));
-
-type BabelOptions = Readonly<{
-  filename: string;
-  babelrc: false;
-  configFile: false;
-  parserOpts: Readonly<{ plugins: ReadonlyArray<string> }>;
-  plugins: ReadonlyArray<
-    readonly [
-      string,
-      Readonly<{
-        dev: false;
-        runtimeInjection: false;
-        unstable_moduleResolution: Readonly<{ type: "commonJS"; rootDir: string }>;
-      }>,
-    ]
-  >;
-}>;
-
-// SAFETY: require returns any; @babel/core 7 exports transformSync with this signature.
-const babel = require("@babel/core") as Readonly<{
-  transformSync: (
-    code: string,
-    options: BabelOptions,
-  ) => Readonly<{
-    metadata: Readonly<{ stylex?: ReadonlyArray<unknown> }>;
-  }> | null;
-}>;
-
-// SAFETY: require returns any; @stylexjs/babel-plugin 0.19 exports processStylexRules.
-const stylexPlugin = require("@stylexjs/babel-plugin") as Readonly<{
-  processStylexRules: (
-    rules: ReadonlyArray<unknown>,
-    options: Readonly<{ useLayers: boolean }>,
-  ) => string;
-}>;
 
 // SAFETY: require returns any; Lightningcss exports transform with this signature.
 const lightningcss = require("lightningcss") as Readonly<{
@@ -77,7 +41,7 @@ const compile = (file: string) => {
     parserOpts: { plugins: ["typescript"] },
     plugins: [
       [
-        require.resolve("@stylexjs/babel-plugin"),
+        resolvePlugin("@stylexjs/babel-plugin"),
         {
           dev: false,
           runtimeInjection: false,

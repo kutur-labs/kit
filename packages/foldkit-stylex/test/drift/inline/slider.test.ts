@@ -8,9 +8,9 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Slider's track, fill and thumb own, in every orientation and alignment", () => {
-  const track = owns<Own.SliderTrack>()("position", "touchAction");
+  const track = owns<Own.Owns["Slider"]["track"]>()("position", "touchAction");
 
-  const filledTrack = owns<Own.SliderFill>()(
+  const filledTrack = owns<Own.Owns["Slider"]["filledTrack"]>()(
     "position",
     "top",
     "right",
@@ -21,7 +21,13 @@ it("@foldkit/ui writes inline what Slider's track, fill and thumb own, in every 
     "pointerEvents",
   );
 
-  const thumb = owns<Own.SliderThumb>()("position", "bottom", "left", "transform", "touchAction");
+  const thumb = owns<Own.Owns["Slider"]["thumb"]>()(
+    "position",
+    "bottom",
+    "left",
+    "transform",
+    "touchAction",
+  );
 
   const seen = {
     track: new Set<string>(),

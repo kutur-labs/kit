@@ -1,5 +1,4 @@
 import type { Has, Reads, Styles } from "./internal/calendar.ts";
-import type * as Own from "./internal/owned.ts";
 import type { Layers } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Calendar } from "@foldkit/ui";
@@ -15,8 +14,13 @@ export type { CellState, State, Styles } from "./internal/calendar.ts";
  * as `view`. Pass several styles objects to layer them: later ones win property by property.
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
-  calendarView: Supported<"Calendar", Has, Reads, typeof Calendar.view>,
-  ...layers: Layers<List, Own.None>
+  calendarView: Supported<
+    "Calendar",
+    Has<Calendar.ViewInputs>,
+    Reads<"toView">,
+    typeof Calendar.view
+  >,
+  ...layers: Layers<List, Styles, "Calendar">
 ): View<Calendar.Model, Calendar.Message, Calendar.ViewInputs> =>
   defineView<Calendar.Model, Calendar.Message, Calendar.ViewInputs>((model, inputs, h) =>
     calendarView(

@@ -1,11 +1,11 @@
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type * as Own from "./internal/owned.ts";
-import type { Layers, PartValue } from "./internal/part.ts";
+import type { Layers, StatelessPart } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { VirtualList } from "@foldkit/ui";
 
 import { defineView, type View } from "foldkit/submodel";
 
+import { staticPartsOf } from "./internal/part.ts";
 import { sxClassName } from "./sx.ts";
 
 /** Styles for a VirtualList. @foldkit/ui sets no `data-*` attribute that reflects its state. */
@@ -14,11 +14,9 @@ export interface Styles {
    * The scrolling `<ul>`. @foldkit/ui makes it scroll and drops its list style, margin and padding
    * inline; give it a bounded height so it scrolls.
    */
-  readonly container?: PartValue;
+  readonly container?: StatelessPart;
   readonly row?: "VirtualList's rows take no class: style the element itemToView returns, which fills its row.";
 }
-
-type Owns = Readonly<{ container: Own.VirtualListContainer }>;
 
 /** Class name inputs this package fills, typed as the message their misuse prints. */
 type Filled = FilledFromStyles<{ containerClassName: "container" }>;
@@ -43,12 +41,12 @@ export const view = <Item, const List extends ReadonlyArray<Styles>>(
     Reads,
     View<VirtualList.Model, VirtualList.Message, VirtualList.ViewInputs<Item>>
   >,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "VirtualList">
 ): View<VirtualList.Model, VirtualList.Message, ViewInputs<Item>> =>
   defineView<VirtualList.Model, VirtualList.Message, ViewInputs<Item>>((model, inputs, h) =>
     virtualListView(
       model,
-      { ...inputs, containerClassName: sxClassName(layers.map((s) => s.container)) },
+      { ...inputs, containerClassName: sxClassName(staticPartsOf(layers)((s) => s.container)) },
       h,
     ),
   );

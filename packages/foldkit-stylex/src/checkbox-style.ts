@@ -1,7 +1,6 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Checkbox } from "@foldkit/ui";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
 
@@ -27,16 +26,20 @@ export interface Styles {
   readonly description?: PartStyle<State>;
 }
 
-// Everything this module reads from @foldkit/ui's Checkbox. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
-type Reads = Readonly<{
+// Everything this module reads from @foldkit/ui's Checkbox. `stateOf` and `view` read only
+// through these types, and `Supported` checks that the installed @foldkit/ui still has them. They
+// take the app's Message, so `view` reads each bundle with its own type.
+type Reads<Message = never> = Readonly<{
   Config: Readonly<{
     isChecked: boolean;
     isIndeterminate?: boolean;
     isDisabled?: boolean;
     isReadOnly?: boolean;
+    toView: (attributes: never) => void;
   }>;
-  RenderInfo: Readonly<Record<"checkbox" | "label" | "description", ReadonlyArray<unknown>>>;
+  RenderInfo: Readonly<
+    Record<"checkbox" | "label" | "description", ReadonlyArray<Attribute<Message>>>
+  >;
 }>;
 
 type Has = Readonly<{
@@ -58,7 +61,7 @@ const stateOf = (config: Reads["Config"]): State => ({
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     checkboxView: Supported<"Checkbox", Has, Reads, typeof Checkbox.view>,
-    ...layers: Layers<List, Own.None>
+    ...layers: Layers<List, Styles, "Checkbox">
   ) =>
   <Message>(config: Checkbox.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));
@@ -66,22 +69,25 @@ export const view =
     return checkboxView(
       {
         ...config,
-        toView: (attributes) =>
-          config.toView({
+        toView: (attributes) => {
+          const reads: Reads<Message>["RenderInfo"] = attributes;
+
+          return config.toView({
             ...attributes,
             checkbox: appendClass(
-              attributes.checkbox,
+              reads.checkbox,
               part((s) => s.checkbox),
             ),
             label: appendClass(
-              attributes.label,
+              reads.label,
               part((s) => s.label),
             ),
             description: appendClass(
-              attributes.description,
+              reads.description,
               part((s) => s.description),
             ),
-          }),
+          });
+        },
       },
       h,
     );

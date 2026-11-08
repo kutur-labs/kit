@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Slider } from "@foldkit/ui";
 import type { ChildAttribute } from "foldkit/html";
@@ -34,21 +33,19 @@ export interface Styles {
   readonly thumb?: PartStyle<State>;
 }
 
-type Owns = Readonly<{
-  track: Own.SliderTrack;
-  filledTrack: Own.SliderFill;
-  thumb: Own.SliderThumb;
-}>;
-
 type Part = "root" | "label" | "track" | "filledTrack" | "thumb";
 
+// Everything this module reads from @foldkit/ui's Slider. `stateOf` and `view` read only through
+// these types, and `Supported` checks that the installed @foldkit/ui still has them. Tags and
+// orientations are spelled out, so a renamed one fails `Supported` too.
 type Reads = Readonly<{
   RenderInfo: Readonly<Record<Part, ReadonlyArray<ChildAttribute>>>;
-  Model: Readonly<{ dragState: Readonly<{ _tag: string }> }>;
+  Model: Readonly<{ dragState: Readonly<{ _tag: "Idle" }> | Readonly<{ _tag: "Dragging" }> }>;
   ViewInputs: Readonly<{
     isDisabled?: boolean;
     isReadOnly?: boolean;
-    orientation?: Slider.Orientation;
+    orientation?: "Horizontal" | "Vertical";
+    toView: (attributes: never) => void;
   }>;
 }>;
 
@@ -68,7 +65,7 @@ const stateOf = (model: Reads["Model"], inputs: Reads["ViewInputs"]): State => (
 /** `Slider.view` with each part's styles on the bundles `toView` gets. */
 export const view = <const List extends ReadonlyArray<Styles>>(
   sliderView: Supported<"Slider", Has, Reads, typeof Slider.view>,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "Slider">
 ): View<Slider.Model, Slider.Message, Slider.ViewInputs> =>
   defineView<Slider.Model, Slider.Message, Slider.ViewInputs>((model, inputs, h) => {
     const state = stateOf(model, inputs);
@@ -78,30 +75,33 @@ export const view = <const List extends ReadonlyArray<Styles>>(
       model,
       {
         ...inputs,
-        toView: (attributes) =>
-          inputs.toView({
+        toView: (attributes) => {
+          const reads: Reads["RenderInfo"] = attributes;
+
+          return inputs.toView({
             ...attributes,
             root: appendChildClass(
-              attributes.root,
+              reads.root,
               part((s) => s.root),
             ),
             label: appendChildClass(
-              attributes.label,
+              reads.label,
               part((s) => s.label),
             ),
             track: appendChildClass(
-              attributes.track,
+              reads.track,
               part((s) => s.track),
             ),
             filledTrack: appendChildClass(
-              attributes.filledTrack,
+              reads.filledTrack,
               part((s) => s.filledTrack),
             ),
             thumb: appendChildClass(
-              attributes.thumb,
+              reads.thumb,
               part((s) => s.thumb),
             ),
-          }),
+          });
+        },
       },
       h,
     );

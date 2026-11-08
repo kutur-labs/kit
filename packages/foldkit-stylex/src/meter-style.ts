@@ -1,7 +1,6 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Meter } from "@foldkit/ui";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
 import { boundsOf, clamp } from "./internal/range.ts";
@@ -38,11 +37,10 @@ export interface Styles {
   readonly fill?: PartStyle<State>;
 }
 
-type Owns = Readonly<{ fill: Own.ValueFill }>;
-
-// Everything this module reads from @foldkit/ui's Meter. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
-type Reads = Readonly<{
+// Everything this module reads from @foldkit/ui's Meter. `stateOf` and `view` read only
+// through these types, and `Supported` checks that the installed @foldkit/ui still has them. They
+// take the app's Message, so `view` reads each bundle with its own type.
+type Reads<Message = never> = Readonly<{
   Config: Readonly<{
     value: number;
     min?: number;
@@ -50,8 +48,9 @@ type Reads = Readonly<{
     low?: number;
     high?: number;
     optimum?: number;
+    toView: (attributes: never) => void;
   }>;
-  RenderInfo: Readonly<Record<"meter" | "label" | "fill", ReadonlyArray<unknown>>>;
+  RenderInfo: Readonly<Record<"meter" | "label" | "fill", ReadonlyArray<Attribute<Message>>>>;
 }>;
 
 type Has = Readonly<{
@@ -78,7 +77,7 @@ const stateOf = (config: Reads["Config"]): State => {
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     meterView: Supported<"Meter", Has, Reads, typeof Meter.view>,
-    ...layers: Layers<List, Owns>
+    ...layers: Layers<List, Styles, "Meter">
   ) =>
   <Message>(config: Meter.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));
@@ -86,22 +85,25 @@ export const view =
     return meterView(
       {
         ...config,
-        toView: (attributes) =>
-          config.toView({
+        toView: (attributes) => {
+          const reads: Reads<Message>["RenderInfo"] = attributes;
+
+          return config.toView({
             ...attributes,
             meter: appendClass(
-              attributes.meter,
+              reads.meter,
               part((s) => s.meter),
             ),
             label: appendClass(
-              attributes.label,
+              reads.label,
               part((s) => s.label),
             ),
             fill: appendClass(
-              attributes.fill,
+              reads.fill,
               part((s) => s.fill),
             ),
-          }),
+          });
+        },
       },
       h,
     );

@@ -81,41 +81,48 @@ type Cell = Readonly<{
   isDisabled: boolean;
 }>;
 
-/**
- * Everything the calendar's parts and cell state read from the attributes `toView` gets.
- * `Supported` checks that the installed @foldkit/ui still has them, and `Attributes._tag` that it
- * has no view mode this package does not style.
- */
-export type Reads = Readonly<{
-  Attributes: Readonly<{ _tag: "Days" | "Months" | "Years" }>;
+type DayCell = Cell & Readonly<{ isToday: boolean; isInViewMonth: boolean }>;
+
+type MonthCell = Cell & Readonly<{ isCurrentMonth: boolean }>;
+
+type YearCell = Cell & Readonly<{ isCurrentYear: boolean }>;
+
+// A column header or a week: an element with one bundle.
+type Row = Readonly<{ attributes: Bundle }>;
+
+// Everything the calendar's parts and cell state read from the attributes `toView` gets.
+// `styledAttributes` reads only through these types.
+type AttributeReads = Readonly<{
+  Attributes: Readonly<{ _tag: "Days" | "Months" | "Years"; root: Bundle; grid: Bundle }>;
   DaysAttributes: Readonly<
-    Record<
-      "root" | "previousMonthButton" | "nextMonthButton" | "headingButton" | "grid" | "headerRow",
-      Bundle
-    > & {
-      columnHeaders: ReadonlyArray<Readonly<{ attributes: Bundle }>>;
-      weeks: ReadonlyArray<
-        Readonly<{
-          attributes: Bundle;
-          cells: ReadonlyArray<Cell & Readonly<{ isToday: boolean; isInViewMonth: boolean }>>;
-        }>
-      >;
+    Record<"previousMonthButton" | "nextMonthButton" | "headingButton" | "headerRow", Bundle> & {
+      columnHeaders: ReadonlyArray<Row>;
+      weeks: ReadonlyArray<Row & Readonly<{ cells: ReadonlyArray<DayCell> }>>;
     }
   >;
-  MonthsAttributes: Readonly<
-    Record<"root" | "headingButton" | "grid", Bundle> & {
-      cells: ReadonlyArray<Cell & Readonly<{ isCurrentMonth: boolean }>>;
-    }
-  >;
+  MonthsAttributes: Readonly<{
+    headingButton: Bundle;
+    cells: ReadonlyArray<MonthCell>;
+  }>;
   YearsAttributes: Readonly<
-    Record<"root" | "previousPageButton" | "nextPageButton" | "grid", Bundle> & {
-      cells: ReadonlyArray<Cell & Readonly<{ isCurrentYear: boolean }>>;
+    Record<"previousPageButton" | "nextPageButton", Bundle> & {
+      cells: ReadonlyArray<YearCell>;
     }
   >;
 }>;
 
-/** The @foldkit/ui types `Reads` is checked against, under the same names. */
-export type Has = Readonly<{
+/**
+ * Everything a calendar view reads from @foldkit/ui: that its `ToView` input, Calendar's `toView`
+ * or DatePicker's `toCalendarView`, still gets the attributes, and what the parts and cell state
+ * read from them. `Supported` checks that the installed @foldkit/ui still has them, and
+ * `Attributes._tag` that it has no view mode this package does not style.
+ */
+export type Reads<ToView extends string> = AttributeReads &
+  Readonly<{ ViewInputs: Readonly<Record<ToView, (attributes: never) => void>> }>;
+
+/** The @foldkit/ui types `Reads` is checked against, under the same names, with the view's inputs. */
+export type Has<Inputs> = Readonly<{
+  ViewInputs: Inputs;
   Attributes: Calendar.CalendarAttributes;
   DaysAttributes: Calendar.DaysModeAttributes;
   MonthsAttributes: Calendar.MonthsModeAttributes;
@@ -127,9 +134,11 @@ export const styledAttributes = (
   layers: ReadonlyArray<Styles>,
   attributes: Calendar.CalendarAttributes,
 ): Calendar.CalendarAttributes => {
-  const state: State = { viewMode: attributes._tag };
+  const reads: AttributeReads["Attributes"] = attributes;
+  const state: State = { viewMode: reads._tag };
   const part = partsOf(layers, state);
 
+  // Generic, so the cell keeps the fields this package does not read.
   const styledCell = <C extends Cell>(cell: C, isToday: boolean, isOutsideMonth: boolean): C => {
     const cellPart = partsOf(layers, {
       ...state,
@@ -153,76 +162,92 @@ export const styledAttributes = (
     };
   };
 
+  const styledDayCell = <C extends DayCell>(cell: C): C =>
+    styledCell(cell, cell.isToday, !cell.isInViewMonth);
+
+  const styledMonthCell = <C extends MonthCell>(cell: C): C =>
+    styledCell(cell, cell.isCurrentMonth, false);
+
+  const styledYearCell = <C extends YearCell>(cell: C): C =>
+    styledCell(cell, cell.isCurrentYear, false);
+
+  const styledRow = <R extends Row>(
+    row: R,
+    pick: (styles: Styles) => PartStyle<State> | undefined,
+  ): R => ({ ...row, attributes: appendChildClass(row.attributes, part(pick)) });
+
   const root = appendChildClass(
-    attributes.root,
+    reads.root,
     part((s) => s.root),
   );
 
   const grid = appendChildClass(
-    attributes.grid,
+    reads.grid,
     part((s) => s.grid),
   );
 
   return Match.valueTags(attributes, {
-    Days: (days) => ({
-      ...days,
-      root,
-      grid,
-      previousMonthButton: appendChildClass(
-        days.previousMonthButton,
-        part((s) => s.previousMonthButton),
-      ),
-      nextMonthButton: appendChildClass(
-        days.nextMonthButton,
-        part((s) => s.nextMonthButton),
-      ),
-      headingButton: appendChildClass(
-        days.headingButton,
-        part((s) => s.headingButton),
-      ),
-      headerRow: appendChildClass(
-        days.headerRow,
-        part((s) => s.headerRow),
-      ),
-      columnHeaders: days.columnHeaders.map((header) => ({
-        ...header,
-        attributes: appendChildClass(
-          header.attributes,
-          part((s) => s.columnHeader),
+    Days: (days) => {
+      const modeReads: AttributeReads["DaysAttributes"] = days;
+
+      return {
+        ...days,
+        root,
+        grid,
+        previousMonthButton: appendChildClass(
+          modeReads.previousMonthButton,
+          part((s) => s.previousMonthButton),
         ),
-      })),
-      weeks: days.weeks.map((week) => ({
-        ...week,
-        attributes: appendChildClass(
-          week.attributes,
-          part((s) => s.week),
+        nextMonthButton: appendChildClass(
+          modeReads.nextMonthButton,
+          part((s) => s.nextMonthButton),
         ),
-        cells: week.cells.map((cell) => styledCell(cell, cell.isToday, !cell.isInViewMonth)),
-      })),
-    }),
-    Months: (months) => ({
-      ...months,
-      root,
-      grid,
-      headingButton: appendChildClass(
-        months.headingButton,
-        part((s) => s.headingButton),
-      ),
-      cells: months.cells.map((cell) => styledCell(cell, cell.isCurrentMonth, false)),
-    }),
-    Years: (years) => ({
-      ...years,
-      root,
-      grid,
-      previousPageButton: appendChildClass(
-        years.previousPageButton,
-        part((s) => s.previousPageButton),
-      ),
-      nextPageButton: appendChildClass(
-        years.nextPageButton,
-        part((s) => s.nextPageButton),
-      ),
-      cells: years.cells.map((cell) => styledCell(cell, cell.isCurrentYear, false)),
-    }),
+        headingButton: appendChildClass(
+          modeReads.headingButton,
+          part((s) => s.headingButton),
+        ),
+        headerRow: appendChildClass(
+          modeReads.headerRow,
+          part((s) => s.headerRow),
+        ),
+        columnHeaders: days.columnHeaders.map((header) => styledRow(header, (s) => s.columnHeader)),
+        weeks: days.weeks.map((week) => ({
+          ...styledRow(week, (s) => s.week),
+          cells: week.cells.map(styledDayCell),
+        })),
+      };
+    },
+    Months: (months) => {
+      const modeReads: AttributeReads["MonthsAttributes"] = months;
+
+      return {
+        ...months,
+        root,
+        grid,
+        headingButton: appendChildClass(
+          modeReads.headingButton,
+          part((s) => s.headingButton),
+        ),
+        cells: months.cells.map(styledMonthCell),
+      };
+    },
+    Years: (years) => {
+      const modeReads: AttributeReads["YearsAttributes"] = years;
+
+      return {
+        ...years,
+        root,
+        grid,
+        previousPageButton: appendChildClass(
+          modeReads.previousPageButton,
+          part((s) => s.previousPageButton),
+        ),
+        nextPageButton: appendChildClass(
+          modeReads.nextPageButton,
+          part((s) => s.nextPageButton),
+        ),
+        cells: years.cells.map(styledYearCell),
+      };
+    },
   });
 };

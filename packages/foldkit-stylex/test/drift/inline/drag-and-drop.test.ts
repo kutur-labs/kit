@@ -9,7 +9,12 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what a draggable owns", () => {
-  const draggable = owns<Own.Draggable>()("touchAction", "userSelect", "WebkitUserSelect");
+  const draggable = owns<Own.Owns["DragAndDrop"]["draggable"]>()(
+    "touchAction",
+    "userSelect",
+    "WebkitUserSelect",
+  );
+
   const seen = new Set<string>();
 
   Scene.scene(

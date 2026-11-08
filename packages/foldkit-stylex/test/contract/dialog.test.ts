@@ -174,14 +174,14 @@ describe("DialogStyle.view", () => {
 
 describe("@foldkit/ui defects DialogStyle works around", () => {
   // A hidden attribute alone would not do: an app's display beats the user agent's [hidden] rule.
-  it("F6: a closed dialog has no inline display", () => {
+  it("a closed dialog has no inline display", () => {
     Scene.scene(
       { update, view },
       Scene.given(closed),
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, "#confirm"),
-          "@foldkit/ui now hides a closed Dialog inline (F6). Drop dialog.hidden from functional-styles.ts and its after-rule from dialog-style.ts; update the README's What the package sets table.",
+          "@foldkit/ui now hides a closed Dialog inline. Drop dialog.hidden from functional-styles.ts and its after-rule from dialog-style.ts; update the README's What the package sets table.",
         ).not.toHaveStyle("display");
       }),
     );

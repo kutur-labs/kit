@@ -1,5 +1,4 @@
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type * as Own from "./internal/owned.ts";
 import type { Layers, PartStyle } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Animation } from "@foldkit/ui";
@@ -7,7 +6,7 @@ import type { Animation } from "@foldkit/ui";
 import { defineView, type View } from "foldkit/submodel";
 
 import { partsOf } from "./internal/part.ts";
-import { isClosed, visibilityOf } from "./internal/transition.ts";
+import { isClosed, visibilityOf, type TransitionState } from "./internal/transition.ts";
 import { sxClassName } from "./sx.ts";
 
 /** The animated element's state, from the Animation model. */
@@ -41,7 +40,7 @@ type Filled = FilledFromStyles<{ className: "element" }>;
 // Everything this module reads from or writes to @foldkit/ui's Animation. `stateOf` reads only
 // these, and `Supported` checks that the installed @foldkit/ui still has them.
 type Reads = Readonly<{
-  Model: Readonly<{ isShowing: boolean; transitionState: string }>;
+  Model: Readonly<{ isShowing: boolean; transitionState: TransitionState }>;
   ViewInputs: ClassNames<Filled>;
 }>;
 
@@ -63,7 +62,7 @@ export type ViewInputs = Animation.ViewInputs & Filled;
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   animationView: Supported<"Animation", Has, Reads, typeof Animation.view>,
-  ...layers: Layers<List, Own.None>
+  ...layers: Layers<List, Styles, "Animation">
 ): View<Animation.Model, Animation.Message, ViewInputs> =>
   defineView<Animation.Model, Animation.Message, ViewInputs>((model, inputs, h) =>
     animationView(

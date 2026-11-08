@@ -16,7 +16,10 @@ type Missing<Has, Reads> = {
  * `View` while the installed @foldkit/ui still has everything this package reads from it (`Has`
  * names its types, `Reads` what this package needs of them), otherwise a message. Open peer ranges
  * let an app install a @foldkit/ui this release has not seen; a renamed part or state field then
- * fails at the call site instead of styling the wrong state.
+ * fails at the call site instead of styling the wrong state. A callback this package passes, such
+ * as `toView`, takes `never` in `Reads`: that checks the input still takes it with no more
+ * parameters, and another section checks what it gets. It returns `void`, which takes any return
+ * type, because this package hands the result to @foldkit/ui unread.
  */
 export type Supported<Component extends string, Has, Reads, View> = [Missing<Has, Reads>] extends [
   never,

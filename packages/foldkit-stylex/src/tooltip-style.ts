@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Tooltip } from "@foldkit/ui";
 import type { ChildAttribute } from "foldkit/html";
@@ -30,14 +29,12 @@ export interface Styles {
   readonly panel?: PartStyle<State>;
 }
 
-type Owns = Readonly<{ panel: Own.TooltipPanel }>;
-
-// Everything this module reads from @foldkit/ui's Tooltip. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
+// Everything this module reads from @foldkit/ui's Tooltip. `stateOf` and `view` read only through
+// these types, and `Supported` checks that the installed @foldkit/ui still has them.
 type Reads = Readonly<{
   RenderInfo: Readonly<Record<"trigger" | "panel", ReadonlyArray<ChildAttribute>>> &
     Readonly<{ isVisible: boolean }>;
-  ViewInputs: Readonly<{ isDisabled?: boolean }>;
+  ViewInputs: Readonly<{ isDisabled?: boolean; toView: (render: never) => void }>;
 }>;
 
 type Has = Readonly<{ RenderInfo: Tooltip.RenderInfo; ViewInputs: Tooltip.ViewInputs }>;
@@ -53,7 +50,7 @@ const stateOf = (inputs: Reads["ViewInputs"], render: Reads["RenderInfo"]): Stat
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   tooltipView: Supported<"Tooltip", Has, Reads, typeof Tooltip.view>,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "Tooltip">
 ): View<Tooltip.Model, Tooltip.Message, Tooltip.ViewInputs> =>
   defineView<Tooltip.Model, Tooltip.Message, Tooltip.ViewInputs>((model, inputs, h) =>
     tooltipView(
@@ -61,16 +58,17 @@ export const view = <const List extends ReadonlyArray<Styles>>(
       {
         ...inputs,
         toView: (render) => {
-          const part = partsOf(layers, stateOf(inputs, render));
+          const reads: Reads["RenderInfo"] = render;
+          const part = partsOf(layers, stateOf(inputs, reads));
 
           return inputs.toView({
             ...render,
             trigger: appendChildClass(
-              render.trigger,
+              reads.trigger,
               part((s) => s.trigger),
             ),
             panel: appendChildClass(
-              render.panel,
+              reads.panel,
               anchored.panel,
               part((s) => s.panel),
             ),

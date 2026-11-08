@@ -769,6 +769,9 @@ importers:
       '@foldkit/ui':
         specifier: catalog:runtime
         version: 0.170.0(effect@4.1.2)(foldkit@0.170.0(@effect/platform-browser@4.1.2(effect@4.1.2))(effect@4.1.2))
+      '@kutur-kit/diagnostics':
+        specifier: workspace:*
+        version: link:../../tooling/diagnostics
       '@kutur-kit/tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -823,6 +826,9 @@ importers:
       '@foldkit/ui':
         specifier: catalog:runtime
         version: 0.170.0(effect@4.1.2)(foldkit@0.170.0(@effect/platform-browser@4.1.2(effect@4.1.2))(effect@4.1.2))
+      '@kutur-kit/diagnostics':
+        specifier: workspace:*
+        version: link:../../tooling/diagnostics
       '@kutur-kit/foldkit-stylex':
         specifier: workspace:*
         version: link:../foldkit-stylex
@@ -920,6 +926,25 @@ importers:
       publint:
         specifier: catalog:tooling
         version: 0.3.25
+
+  tooling/diagnostics:
+    dependencies:
+      vitest:
+        specifier: catalog:testing
+        version: 5.1.0(@types/node@26.6.6)(@vitest/browser-playwright@5.1.0)(@vitest/ui@5.1.0)(happy-dom@21.0.4)(vite@8.3.6(@types/node@26.6.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
+    devDependencies:
+      '@effect/tsgo':
+        specifier: catalog:tooling
+        version: 0.67.4
+      '@kutur-kit/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: catalog:tooling
+        version: 26.6.6
+      tsrs:
+        specifier: catalog:tooling
+        version: 0.22.0-ts7.1.0-beta
 
   tooling/testcontainers:
     dependencies:

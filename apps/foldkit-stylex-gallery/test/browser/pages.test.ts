@@ -11,7 +11,7 @@ describe.each(schemes)("in the %s scheme", (scheme) => {
   it.each(["", ...slugs])("hydrates /%s without errors", async (slug) => {
     const { page, errors } = await open(`/${slug}`, scheme);
 
-    expect(await hydration(page)).toEqual({ discarded: [], created: [] });
+    expect(await hydration(page)).toEqual({ discarded: [], created: [], patched: [] });
     expect(await duplicateIds(page)).toEqual([]);
     expect(errors).toEqual([]);
   });

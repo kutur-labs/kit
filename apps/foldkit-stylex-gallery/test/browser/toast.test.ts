@@ -22,13 +22,16 @@ describe.each(schemes)("Toast in the %s scheme", (scheme) => {
     await expect.poll(() => entry.count()).toBe(0);
   });
 
+  // The sticky error first: the saved entry leaves after @foldkit/ui's 4 seconds, so it is audited
+  // as soon as it shows, and the count afterwards fails the test if it left before the audit.
   it("keeps the themed entries readable and their dismiss buttons reachable", async () => {
     const { page } = await open("/toast", scheme);
     const themed = page.locator("#themed-demo");
     const entries = page.locator("#themed-notifications [data-variant]");
-    await openPanel(themed.getByRole("button", { name: "Save", exact: true }), entries.nth(0));
-    await openPanel(themed.getByRole("button", { name: "Fail to save" }), entries.nth(1));
+    await openPanel(themed.getByRole("button", { name: "Fail to save" }), entries.nth(0));
+    await openPanel(themed.getByRole("button", { name: "Save", exact: true }), entries.nth(1));
 
     expect(await audit(page, "#themed-notifications")).toEqual([]);
+    expect(await entries.count()).toBe(2);
   });
 });

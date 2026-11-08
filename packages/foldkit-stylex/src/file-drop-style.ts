@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { FileDrop } from "@foldkit/ui";
 import type { ChildAttribute } from "foldkit/html";
@@ -29,12 +28,12 @@ export interface Styles {
   readonly input?: "FileDrop's input is visually hidden: style root, with ':has(:focus-visible)' for keyboard focus.";
 }
 
-// Everything this module reads from @foldkit/ui's FileDrop. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
+// Everything this module reads from @foldkit/ui's FileDrop. `stateOf` and `view` read only through
+// these types, and `Supported` checks that the installed @foldkit/ui still has them.
 type Reads = Readonly<{
   RenderInfo: Readonly<Record<"root" | "input", ReadonlyArray<ChildAttribute>>>;
   Model: Readonly<{ isDragOver: boolean }>;
-  ViewInputs: Readonly<{ isDisabled?: boolean }>;
+  ViewInputs: Readonly<{ isDisabled?: boolean; toView: (attributes: never) => void }>;
 }>;
 
 type Has = Readonly<{
@@ -54,23 +53,26 @@ const stateOf = (model: Reads["Model"], inputs: Reads["ViewInputs"]): State => (
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   fileDropView: Supported<"FileDrop", Has, Reads, typeof FileDrop.view>,
-  ...layers: Layers<List, Own.None>
+  ...layers: Layers<List, Styles, "FileDrop">
 ): View<FileDrop.Model, FileDrop.Message, FileDrop.ViewInputs> =>
   defineView<FileDrop.Model, FileDrop.Message, FileDrop.ViewInputs>((model, inputs, h) =>
     fileDropView(
       model,
       {
         ...inputs,
-        toView: (attributes) =>
-          inputs.toView({
+        toView: (attributes) => {
+          const reads: Reads["RenderInfo"] = attributes;
+
+          return inputs.toView({
             ...attributes,
             root: appendChildClass(
-              attributes.root,
+              reads.root,
               partsOf(layers, stateOf(model, inputs))((s) => s.root),
             ),
             // Replaces @foldkit/ui's Tailwind sr-only class, which no stylesheet of the app defines.
-            input: appendChildClass(attributes.input, fileDrop.input),
-          }),
+            input: appendChildClass(reads.input, fileDrop.input),
+          });
+        },
       },
       h,
     ),

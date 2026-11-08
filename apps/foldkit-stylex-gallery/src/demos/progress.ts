@@ -23,16 +23,25 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     ClickedReset: () => ({ model: { uploaded: 0 } }),
   });
 
+// From wholly before the track's inline start to wholly past its end. A logical margin, so it
+// runs the other way in a right-to-left page.
 const sweep = stylex.keyframes({
-  from: { translate: "-100% 0" },
-  to: { translate: "300% 0" },
+  from: { marginInlineStart: "-25%" },
+  to: { marginInlineStart: "100%" },
 });
 
 const styles = stylex.create({
   root: { display: "grid", gap: 8, maxInlineSize: 320 },
   buttons: { display: "flex", gap: 8 },
   button: { minBlockSize: 44, paddingInline: 16, font: "inherit" },
-  track: { blockSize: 8, borderRadius: 4, backgroundColor: "gainsboro", overflow: "hidden" },
+  // A row, so the indicator takes the width @foldkit/ui gives it, or its minimum while it sweeps.
+  track: {
+    display: "flex",
+    blockSize: 8,
+    borderRadius: 4,
+    backgroundColor: "gainsboro",
+    overflow: "hidden",
+  },
   indicator: { blockSize: "100%", backgroundColor: "black" },
   // @foldkit/ui sets no width while indeterminate, so the styles give it one.
   sweeping: {

@@ -48,6 +48,7 @@
     "@effect/platform-browser": "catalog:runtime",
     "@effect/tsgo": "catalog:tooling",
     "@foldkit/ui": "catalog:runtime",
+    "@kutur-kit/diagnostics": "workspace:*",
     "@kutur-kit/tsconfig": "workspace:*",
     "@stryker-mutator/core": "catalog:testing",
     "@stryker-mutator/vitest-runner": "catalog:testing",

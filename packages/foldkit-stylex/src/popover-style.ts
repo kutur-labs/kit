@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Popover } from "@foldkit/ui";
 import type { ChildAttribute, Html } from "foldkit/html";
@@ -8,7 +7,7 @@ import { defineView, type View } from "foldkit/submodel";
 import { anchored } from "./internal/functional-styles.ts";
 import { popoverPanel } from "./internal/markers.stylex.ts";
 import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
-import { isClosed } from "./internal/transition.ts";
+import { isClosed, type TransitionState } from "./internal/transition.ts";
 import { sx, type ClassAttribute } from "./sx.ts";
 
 /** A popover's state, the same for each of its parts. */
@@ -38,23 +37,15 @@ export interface Styles {
   readonly arrow?: PartStyle<State>;
 }
 
-type Owns = Readonly<{
-  wrapper: Own.Wrapper;
-  button: Own.OpenTrigger;
-  panel: Own.AnchoredPanel;
-  backdrop: Own.Backdrop;
-  arrow: Own.Arrow;
-}>;
-
-// Everything this module reads from @foldkit/ui's Popover. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
+// Everything this module reads from @foldkit/ui's Popover. `stateOf` and `view` read only through
+// these types, and `Supported` checks that the installed @foldkit/ui still has them.
 type Reads = Readonly<{
   RenderInfo: Readonly<
     Record<"button" | "panel" | "backdrop" | "arrow", ReadonlyArray<ChildAttribute>>
   > &
     Readonly<{ isVisible: boolean }>;
-  Model: Readonly<{ animation: Readonly<{ transitionState: string }> }>;
-  ViewInputs: Readonly<{ isDisabled?: boolean }>;
+  Model: Readonly<{ animation: Readonly<{ transitionState: TransitionState }> }>;
+  ViewInputs: Readonly<{ isDisabled?: boolean; toView: (render: never) => void }>;
 }>;
 
 type Has = Readonly<{
@@ -86,18 +77,18 @@ export type ViewInputs = Omit<Popover.ViewInputs, "toView"> &
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   popoverView: Supported<"Popover", Has, Reads, typeof Popover.view>,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "Popover">
 ): View<Popover.Model, Popover.Message, ViewInputs> =>
-  defineView<Popover.Model, Popover.Message, ViewInputs>((model, { toView, ...inputs }, h) =>
+  defineView<Popover.Model, Popover.Message, ViewInputs>((model, inputs, h) =>
     popoverView(
       model,
       {
         ...inputs,
         toView: (render) => {
-          const state = stateOf(model, inputs, render);
-          const part = partsOf(layers, state);
+          const reads: Reads["RenderInfo"] = render;
+          const part = partsOf(layers, stateOf(model, inputs, reads));
 
-          return toView({
+          return inputs.toView({
             ...render,
             wrapper: [
               sx(
@@ -106,22 +97,22 @@ export const view = <const List extends ReadonlyArray<Styles>>(
               ),
             ],
             button: appendChildClass(
-              render.button,
+              reads.button,
               part((s) => s.button),
             ),
             panel: appendChildClass(
-              render.panel,
+              reads.panel,
               anchored.panel,
               popoverPanel,
               part((s) => s.panel),
             ),
             backdrop: appendChildClass(
-              render.backdrop,
+              reads.backdrop,
               anchored.backdrop,
               part((s) => s.backdrop),
             ),
             arrow: appendChildClass(
-              render.arrow,
+              reads.arrow,
               anchored.arrow,
               part((s) => s.arrow),
             ),

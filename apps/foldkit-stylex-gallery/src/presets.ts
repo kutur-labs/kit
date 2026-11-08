@@ -1,4 +1,4 @@
-import type { ThemeOverrides } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
+import type { ThemePreset } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 
 import { Effect, Schema } from "effect";
 import { Command } from "foldkit";
@@ -23,7 +23,7 @@ const presets = {
     "--fks-radius-control": "0px",
     "--fks-radius-panel": "0px",
   },
-} satisfies Record<Preset, ThemeOverrides>;
+} satisfies Record<Preset, ThemePreset>;
 
 export const Message = defineMessageUnion({ CompletedApplyPreset: {} });
 

@@ -8,7 +8,7 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Meter's fill owns", () => {
-  const fill = owns<Own.ValueFill>()("width");
+  const fill = owns<Own.Owns["Meter"]["fill"]>()("width");
   const seen = new Set<string>();
 
   Scene.scene(

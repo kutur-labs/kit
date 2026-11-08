@@ -3,6 +3,7 @@ import type { RadioGroupStyle } from "@kutur-kit/foldkit-stylex";
 import * as stylex from "@stylexjs/stylex";
 
 import { base } from "./internal/base.ts";
+import { field } from "./internal/field.ts";
 import { color, fontSize, motion, radius, size, space } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
@@ -31,9 +32,7 @@ const styles = stylex.create({
   },
   // Doubles the edge without moving the content.
   selected: { borderColor: color.accent, boxShadow: `inset 0 0 0 1px ${color.accent}` },
-  readOnly: { cursor: "default" },
   text: { gridColumn: 2 },
-  description: { color: color.muted, fontSize: fontSize.sm },
 });
 
 /**
@@ -46,11 +45,11 @@ export const radioGroupTheme = {
     styles.option,
     base.focusRing,
     state.isSelected && styles.selected,
-    state.isReadOnly && styles.readOnly,
+    state.isReadOnly && base.readOnly,
     state.isDisabled && base.disabled,
   ],
   label: styles.text,
-  description: [styles.text, styles.description],
+  description: [styles.text, field.description],
 } satisfies RadioGroupStyle.Styles;
 
 /**

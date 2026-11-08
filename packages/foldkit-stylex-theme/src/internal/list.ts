@@ -2,7 +2,8 @@
 // separators and marks alike.
 import * as stylex from "@stylexjs/stylex";
 
-import { color, fontSize, motion, radius, size, space } from "../tokens.stylex.ts";
+import { color, fontSize, radius, size, space } from "../tokens.stylex.ts";
+import { chevron } from "./base.ts";
 
 export const list = stylex.create({
   // At least as wide as the button or field it opens from, padding and edge included, so the two
@@ -18,7 +19,12 @@ export const list = stylex.create({
     cursor: "pointer",
     userSelect: "none",
   },
-  activeItem: { backgroundColor: color.hover },
+  // Forced colors drop the hover fill, so there the active item takes the system's selection
+  // colors, as a native list's does.
+  activeItem: {
+    backgroundColor: { default: color.hover, "@media (forced-colors: active)": "Highlight" },
+    color: { default: null, "@media (forced-colors: active)": "HighlightText" },
+  },
   heading: {
     paddingBlock: space.xs,
     paddingInline: space.sm,
@@ -26,19 +32,19 @@ export const list = stylex.create({
     fontSize: fontSize.sm,
     fontWeight: 600,
   },
-  separator: { blockSize: 1, marginBlock: space.xs, backgroundColor: color.border },
+  // Takes its color from base.borderFill.
+  separator: { blockSize: 1, marginBlock: space.xs },
 });
 
-// The marks an app renders: the chevron in the button, which turns over while the list is open,
-// and the selection mark in an item.
-export const listIndicator = stylex.create({
-  chevron: {
-    color: color.muted,
-    lineHeight: 1,
-    transitionDuration: motion.fast,
-    transitionProperty: "rotate",
-  },
-  open: { rotate: "180deg" },
+const tick = stylex.create({
   tick: { inlineSize: "1em", lineHeight: 1, opacity: 0 },
   ticked: { opacity: 1 },
 });
+
+// The marks an app renders: the chevron in the button, and the selection mark in an item.
+export const listIndicator = {
+  chevron: chevron.chevron,
+  open: chevron.open,
+  tick: tick.tick,
+  ticked: tick.ticked,
+};

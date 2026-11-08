@@ -1,16 +1,17 @@
 // Pins what the foldkit-stylex canary and drift workflows test, in the pnpm-workspace.yaml of the
 // working directory: the latest foldkit, @foldkit/ui and @foldkit/vite-plugin, the newest StyleX
 // within @kutur-kit/foldkit-stylex's peer range and the newest Effect that those Foldkit releases
-// and kit's peer range accept. Each new pin gets an exact minimumReleaseAgeExclude entry, so a
-// release from today installs. Kit's own catalogs pin the lowest versions the peer ranges promise,
-// so the workflows run this in their checkout only.
+// and kit's peer range accept. pnpm adds an exact minimumReleaseAgeExclude entry for each release
+// younger than its minimum age that it installs, so a pin from today installs too. Kit's own
+// catalogs pin the lowest versions the peer ranges promise, so the workflows run this in their
+// checkout only.
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
 const file = "pnpm-workspace.yaml";
 
-// Prints a field of the newest release that matches a tag or range, or nothing when that release
-// lacks the field. Space-separated ranges must all match.
+// Prints a field of the newest release that matches a tag or one range, or nothing when that
+// release lacks the field.
 const view = (name: string, range: string, field: string) => {
   const { status, stdout, stderr } = spawnSync("pnpm", ["view", `${name}@${range}`, field], {
     encoding: "utf8",
@@ -59,9 +60,15 @@ const pinned = entries.filter(({ catalog }) => catalog !== "peers");
 
 const names = new Set(pinned.map(({ name }) => name));
 
-const stylexRange = peers.get("@stylexjs/stylex");
+const peerRange = (name: string) => {
+  const range = peers.get(name);
 
-if (stylexRange === undefined) throw new Error("The peers catalog has no @stylexjs/stylex range.");
+  if (range === undefined) throw new Error(`The peers catalog has no ${name} range.`);
+
+  return range;
+};
+
+const stylexRange = peerRange("@stylexjs/stylex");
 
 const pins = new Map<string, string>();
 
@@ -70,16 +77,50 @@ for (const name of names) {
   else if (name.startsWith("@stylexjs/")) pins.set(name, view(name, stylexRange, "version"));
 }
 
-const effectRange = [
-  peers.get("effect") ?? "",
-  ...[...pins].map(([name, version]) =>
-    isFoldkit(name) ? view(name, version, "peerDependencies.effect") : "",
-  ),
-]
-  .filter((range) => range !== "")
-  .join(" ");
+// Where each range of effect comes from: kit's peers catalog and every pinned Foldkit release.
+const effectRanges = [
+  { source: "kit's peers catalog", range: peerRange("effect") },
+  ...[...pins].flatMap(([name, version]) => {
+    const range = isFoldkit(name) ? view(name, version, "peerDependencies.effect") : "";
 
-const effect = view("effect", effectRange, "version");
+    return range === "" ? [] : [{ source: `${name}@${version}`, range }];
+  }),
+];
+
+// SAFETY: pnpm prints a package's `versions` as a JSON array of version strings.
+const published = JSON.parse(view("effect", "latest", "versions")) as ReadonlyArray<string>;
+
+// pnpm view returns the newest match of one range only, and for space-joined ranges that share no
+// version it returns one outside them. semver's CLI prints the versions every -r range accepts,
+// lowest first; it exits with 1 and prints nothing when there are none. --reporter=silent keeps
+// the install progress that pnpm prints to stderr on a cold dlx cache out of the failure check.
+const accepted = spawnSync(
+  "pnpm",
+  [
+    "--reporter=silent",
+    "dlx",
+    "semver@7.8.5",
+    ...effectRanges.flatMap(({ range }) => ["-r", range]),
+    ...published,
+  ],
+  { encoding: "utf8" },
+);
+
+if (accepted.status !== 0 && accepted.stderr.trim() !== "") {
+  throw new Error(`pnpm dlx semver@7.8.5 failed:\n${accepted.stderr}`);
+}
+
+const effect = accepted.stdout.trim().split("\n").at(-1);
+
+if (accepted.status !== 0 || effect === undefined) {
+  throw new Error(
+    [
+      "No effect release satisfies every range:",
+      ...effectRanges.map(({ source, range }) => `  ${range} from ${source}`),
+      "If only kit's range leaves out an Effect the Foldkit releases share, widen kit's effect peer once kit supports it. Otherwise these Foldkit releases accept no common Effect, which kit cannot fix.",
+    ].join("\n"),
+  );
+}
 
 for (const name of names) if (isEffect(name)) pins.set(name, effect);
 
@@ -91,27 +132,10 @@ const bumps = pinned.flatMap((entry) => {
 
 for (const { index, key, pin } of bumps) lines[index] = `    ${key}: ${pin}`;
 
-const list = lines.indexOf("minimumReleaseAgeExclude:");
-
-if (list === -1) throw new Error(`${file} has no minimumReleaseAgeExclude list.`);
-
-const items = lines.slice(list + 1).findIndex((line) => !line.startsWith("  - "));
-
-const end = items === -1 ? lines.length : list + 1 + items;
-
-const excluded = new Set(lines.slice(list + 1, end).map((line) => unquote(line.slice(4))));
-
-const exclusions = [...new Set(bumps.map(({ name, pin }) => `${name}@${pin}`))].filter(
-  (exclusion) => !excluded.has(exclusion),
-);
-
-lines.splice(end, 0, ...exclusions.map((exclusion) => `  - ${JSON.stringify(exclusion)}`));
-
 writeFileSync(file, lines.join("\n"));
 
 console.log(
-  [
-    ...bumps.map(({ catalog, name, value, pin }) => `${catalog}: ${name} ${value} -> ${pin}`),
-    ...exclusions.map((exclusion) => `minimumReleaseAgeExclude: ${exclusion}`),
-  ].join("\n") || "The catalogs already pin the newest versions.",
+  bumps
+    .map(({ catalog, name, value, pin }) => `${catalog}: ${name} ${value} -> ${pin}`)
+    .join("\n") || "The catalogs already pin the newest versions.",
 );

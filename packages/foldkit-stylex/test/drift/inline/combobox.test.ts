@@ -9,8 +9,18 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Combobox's items own, and nothing on its other parts", () => {
-  const items = owns<Own.AnchoredPanel>()("position", "margin", "visibility");
-  const seen = { items: new Set<string>(), rest: new Set<string>() };
+  const items = owns<Own.Owns["Combobox"]["items"]>()("position", "margin", "visibility");
+  // This package sets what the wrapper and backdrop own.
+  const wrapper = owns<Own.Owns["Combobox"]["wrapper"]>()();
+  const backdrop = owns<Own.Owns["Combobox"]["backdrop"]>()();
+
+  const seen = {
+    items: new Set<string>(),
+    wrapper: new Set<string>(),
+    backdrop: new Set<string>(),
+    rest: new Set<string>(),
+  };
+
   const Cities = Combobox.create<"waw" | "krk">();
 
   const open = Cities.update(
@@ -21,11 +31,9 @@ it("@foldkit/ui writes inline what Combobox's items own, and nothing on its othe
   // Class names only to find each part; the styled view fills them from styles. The button, open
   // or not, is among them: unlike Listbox's, it is not lifted.
   const rest = [
-    "wrapper",
     "input-wrapper",
     "input",
     "button",
-    "backdrop",
     "scroll",
     "item",
     "group",
@@ -63,6 +71,8 @@ it("@foldkit/ui writes inline what Combobox's items own, and nothing on its othe
     },
     Scene.given(open),
     inline("#city-items", seen.items),
+    inline(".wrapper", seen.wrapper),
+    inline(".backdrop", seen.backdrop),
     ...rest.map((part) => inline(`.${part}`, seen.rest)),
     Scene.Mount.resolve(
       Combobox.AttachComboboxPreventBlur,
@@ -76,5 +86,7 @@ it("@foldkit/ui writes inline what Combobox's items own, and nothing on its othe
   );
 
   expect(sorted(seen.items)).toEqual(sorted(items));
+  expect(sorted(seen.wrapper)).toEqual(sorted(wrapper));
+  expect(sorted(seen.backdrop)).toEqual(sorted(backdrop));
   expect(sorted(seen.rest)).toEqual([]);
 });

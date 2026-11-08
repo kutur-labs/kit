@@ -28,4 +28,8 @@ jobs:
       - run: node scripts/pin-foldkit-stylex-canary.ts
       - run: pnpm install --no-frozen-lockfile
       - uses: ./.github/actions/chromium
-      - run: pnpm exec turbo run typecheck test:contract test:browser test:packed --filter "@kutur-kit/foldkit-stylex*" --filter @kutur-kit/oxc
+      - run: pnpm exec turbo run typecheck test:contract test:browser test:packed --filter "@kutur-kit/foldkit-stylex*"
+      # Lints its fixtures with the /foldkit-stylex preset, which loads the
+      # pinned @stylexjs/eslint-plugin. Only oxc's test: the core's test task
+      # also runs the drift suite, which the drift workflow owns.
+      - run: pnpm exec turbo run test --filter @kutur-kit/oxc

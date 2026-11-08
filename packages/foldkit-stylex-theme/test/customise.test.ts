@@ -3,11 +3,13 @@ import { describe, expect, it } from "vitest";
 import { overrides } from "./app/overrides.stylex.ts";
 
 describe("customising", () => {
-  // The tokens read var(--fks-*): an override reaches them only under its literal name.
+  // The tokens read var(--fks-*): an override reaches them only under its literal name, one that
+  // varies by condition included.
   it("keeps the literal --fks-* names of an app's overrides", () => {
     expect(overrides).toMatchObject({
       "--fks-color-accent": "var(--fks-color-accent)",
       "--fks-radius-control": "var(--fks-radius-control)",
+      "--fks-space-md": "var(--fks-space-md)",
     });
   });
 

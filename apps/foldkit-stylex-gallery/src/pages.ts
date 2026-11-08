@@ -15,8 +15,8 @@ export type Page = Readonly<{
   themed: Option.Option<AnyDemo>;
 }>;
 
-// Vite's glob cannot check a module against a type. test/pages.test.ts renders every page on the
-// server, so a demo without the exports `Demo` names fails there.
+// Vite's glob cannot check a module against a type, so test/pages.test.ts checks that each one
+// exports what `Demo` names.
 const coreDemos = import.meta.glob<AnyDemo>("./demos/*.ts", { eager: true });
 
 const themedDemos = import.meta.glob<AnyDemo>("./themed/*.ts", { eager: true });

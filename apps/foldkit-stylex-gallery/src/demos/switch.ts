@@ -43,10 +43,11 @@ const styles = stylex.create({
     blockSize: 20,
     borderRadius: "50%",
     backgroundColor: "white",
-    transitionProperty: "translate",
+    transitionProperty: "margin-inline-start",
     transitionDuration: { default: "150ms", "@media (prefers-reduced-motion: reduce)": "0s" },
   },
-  on: { translate: "20px 0" },
+  // A logical margin, so the thumb slides toward the inline end in a right-to-left page too.
+  on: { marginInlineStart: 20 },
 });
 
 const switchView = SwitchStyle.view(Switch.view, {

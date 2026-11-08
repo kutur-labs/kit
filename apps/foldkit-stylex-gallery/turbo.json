@@ -5,8 +5,12 @@
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/packages/foldkit-stylex/README.md",
-        "$TURBO_ROOT$/packages/foldkit-stylex-theme/README.md"
+        "$TURBO_ROOT$/packages/foldkit-stylex/package.json",
+        "$TURBO_ROOT$/packages/foldkit-stylex-theme/README.md",
+        "$TURBO_ROOT$/packages/foldkit-stylex-theme/package.json",
+        "$TURBO_ROOT$/packages/oxc/package.json"
       ],
       "outputs": []
     },

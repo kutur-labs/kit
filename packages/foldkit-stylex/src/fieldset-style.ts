@@ -1,7 +1,6 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Fieldset } from "@foldkit/ui";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
 
@@ -27,11 +26,14 @@ export interface Styles {
   readonly description?: PartStyle<State>;
 }
 
-// Everything this module reads from @foldkit/ui's Fieldset. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
-type Reads = Readonly<{
-  Config: Readonly<{ isDisabled?: boolean }>;
-  RenderInfo: Readonly<Record<"fieldset" | "legend" | "description", ReadonlyArray<unknown>>>;
+// Everything this module reads from @foldkit/ui's Fieldset. `stateOf` and `view` read only
+// through these types, and `Supported` checks that the installed @foldkit/ui still has them. They
+// take the app's Message, so `view` reads each bundle with its own type.
+type Reads<Message = never> = Readonly<{
+  Config: Readonly<{ isDisabled?: boolean; toView: (attributes: never) => void }>;
+  RenderInfo: Readonly<
+    Record<"fieldset" | "legend" | "description", ReadonlyArray<Attribute<Message>>>
+  >;
 }>;
 
 type Has = Readonly<{
@@ -50,7 +52,7 @@ const stateOf = (config: Reads["Config"]): State => ({
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     fieldsetView: Supported<"Fieldset", Has, Reads, typeof Fieldset.view>,
-    ...layers: Layers<List, Own.None>
+    ...layers: Layers<List, Styles, "Fieldset">
   ) =>
   <Message>(config: Fieldset.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));
@@ -58,22 +60,25 @@ export const view =
     return fieldsetView(
       {
         ...config,
-        toView: (attributes) =>
-          config.toView({
+        toView: (attributes) => {
+          const reads: Reads<Message>["RenderInfo"] = attributes;
+
+          return config.toView({
             ...attributes,
             fieldset: appendClass(
-              attributes.fieldset,
+              reads.fieldset,
               part((s) => s.fieldset),
             ),
             legend: appendClass(
-              attributes.legend,
+              reads.legend,
               part((s) => s.legend),
             ),
             description: appendClass(
-              attributes.description,
+              reads.description,
               part((s) => s.description),
             ),
-          }),
+          });
+        },
       },
       h,
     );

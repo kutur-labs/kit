@@ -8,7 +8,7 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what VirtualList's container owns", () => {
-  const container = owns<Own.VirtualListContainer>()(
+  const container = owns<Own.Owns["VirtualList"]["container"]>()(
     "overflow",
     "overflowAnchor",
     "listStyle",

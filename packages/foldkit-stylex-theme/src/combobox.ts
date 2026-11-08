@@ -3,31 +3,15 @@ import type { ComboboxStyle } from "@kutur-kit/foldkit-stylex";
 import * as stylex from "@stylexjs/stylex";
 
 import { base } from "./internal/base.ts";
+import { field } from "./internal/field.ts";
 import { list, listIndicator } from "./internal/list.ts";
-import { color, fontSize, radius, size, space } from "./tokens.stylex.ts";
+import { color, fontSize, size } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
   // The button lies over the input's end, so the input keeps its own edge and focus ring.
   inputWrapper: { position: "relative", display: "inline-flex", minInlineSize: "14rem" },
-  input: {
-    flexGrow: 1,
-    minInlineSize: 0,
-    minBlockSize: size.target,
-    paddingBlock: 0,
-    paddingInlineStart: space.md,
-    // Room for the button.
-    paddingInlineEnd: size.target,
-    borderWidth: 1,
-    borderStyle: "solid",
-    borderColor: color.control,
-    borderRadius: radius.control,
-    backgroundColor: color.surface,
-    color: color.text,
-    fontFamily: "inherit",
-    fontSize: fontSize.md,
-    "::placeholder": { color: color.muted },
-  },
-  invalid: { borderColor: color.danger },
+  // The Input's field, with room for the button at its end.
+  input: { flexGrow: 1, minInlineSize: 0, paddingInlineEnd: size.target },
   // Out of the tab order, and it keeps focus in the input, so it takes no focus ring. Hover changes
   // its color only: a background would cover the input's edge.
   button: {
@@ -46,22 +30,23 @@ const styles = stylex.create({
     fontSize: fontSize.md,
     cursor: "pointer",
   },
-  readOnlyItem: { cursor: "default" },
   // Takes the button's color, which turns from muted to the text color under the pointer.
   chevron: { color: "inherit" },
 });
 
 /**
- * The look of a Combobox and a Combobox.Multi: an outlined input with the toggle button over its
+ * The look of a Combobox and a Combobox.Multi: the Input's field with the toggle button over its
  * end, and a raised list as wide as the input whose highlighted item takes the hover color. Pass
  * it to `ComboboxStyle.view` or `ComboboxStyle.Multi.view`.
  */
 export const comboboxTheme = {
   inputWrapper: styles.inputWrapper,
   input: (state) => [
+    field.control,
     styles.input,
     base.focusRing,
-    state.isInvalid && styles.invalid,
+    state.isReadOnly && field.readOnly,
+    state.isInvalid && field.invalid,
     state.isDisabled && base.disabled,
   ],
   button: (state) => [styles.button, state.isDisabled && base.disabled],
@@ -69,11 +54,11 @@ export const comboboxTheme = {
   item: (state) => [
     list.item,
     state.isActive && list.activeItem,
-    state.isReadOnly && styles.readOnlyItem,
+    state.isReadOnly && base.readOnly,
     state.isDisabled && base.disabled,
   ],
   heading: list.heading,
-  separator: list.separator,
+  separator: [list.separator, base.borderFill],
 } satisfies ComboboxStyle.Styles;
 
 /**

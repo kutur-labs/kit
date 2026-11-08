@@ -5,9 +5,15 @@ import { createRequire } from "node:module";
 
 import { unplugin } from "@stylexjs/unplugin";
 import * as Predicate from "effect/Predicate";
+import * as Schema from "effect/Schema";
 
-/** StyleX's options. `externalPackages` is read by @stylexjs/unplugin but missing from its type. */
-export type Options = Partial<UserOptions> & Readonly<{ externalPackages?: ReadonlyArray<string> }>;
+/**
+ * StyleX's options without `styleResolution`: the views' layer checks (src/internal/precedence.ts)
+ * follow StyleX's default, property-specificity, where a longhand beats its shorthand whatever the
+ * order. `externalPackages` is read by @stylexjs/unplugin but missing from its type.
+ */
+export type Options = Omit<Partial<UserOptions>, "styleResolution"> &
+  Readonly<{ externalPackages?: ReadonlyArray<string> }>;
 
 // The factories' declarations return `any`; these name the plugin they return. The named
 // `unplugin` export types the same under NodeNext as at runtime, unlike the `/vite` default.
@@ -15,13 +21,11 @@ const vite: (options: Options) => Plugin = unplugin.vite;
 
 const rollup: (options: Options) => Plugin = unplugin.rollup;
 
-// SAFETY: require returns any. This is the Lightningcss that StyleX's plugin runs, so its feature
-// flags match the transform they configure, and neither the app nor this package installs another.
-const { Features } = createRequire(import.meta.resolve("@stylexjs/unplugin"))(
-  "lightningcss",
-) as Readonly<{
-  Features: Readonly<{ LightDark: number }>;
-}>;
+// The Lightningcss that StyleX's plugin runs, so its feature flags match the transform they
+// configure; neither the app nor this package installs another.
+const { Features } = Schema.decodeUnknownSync(
+  Schema.Struct({ Features: Schema.Struct({ LightDark: Schema.Int }) }),
+)(createRequire(import.meta.resolve("@stylexjs/unplugin"))("lightningcss"));
 
 // Both ship `stylex.create` for the app's compiler. Listing one that is not installed is harmless.
 const packages = ["@kutur-kit/foldkit-stylex", "@kutur-kit/foldkit-stylex-theme"];
@@ -61,7 +65,8 @@ const requireClientCss: Plugin = {
 
 /**
  * StyleX for a Foldkit app that uses @kutur-kit/foldkit-stylex, in dev, build and Vitest. Use it in
- * place of `@stylexjs/unplugin/vite`, in vite.config.ts and vitest.config.ts; it takes the same options.
+ * place of `@stylexjs/unplugin/vite`, in vite.config.ts and vitest.config.ts; it takes the same
+ * options except `styleResolution`.
  */
 // Vite takes a mutable array of plugins.
 export const foldkitStylex = (options: Options = {}): Array<Plugin> => {

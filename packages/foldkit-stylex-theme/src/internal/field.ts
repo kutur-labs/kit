@@ -1,5 +1,6 @@
-// Styles the form-field looks share, so that Input, Select and Textarea draw their control, label
-// and description alike, and Fieldset its description.
+// Styles the form-field looks share, so that fields draw alike: Input, Select, Textarea and Combobox
+// their control, Listbox and DatePicker their button's edge, every field its invalid edge, and
+// Checkbox, Switch, RadioGroup and Fieldset their description too.
 import * as stylex from "@stylexjs/stylex";
 
 import { color, fontSize, radius, size, space } from "../tokens.stylex.ts";
@@ -24,6 +25,9 @@ export const field = stylex.create({
     lineHeight: 1.5,
     "::placeholder": { color: color.muted, opacity: 1 },
   },
+  // A button that holds a field's value, such as a Listbox's: base.button with the control's edge,
+  // so it reads as a field beside an Input or a Select.
+  button: { borderColor: color.control },
   readOnly: { backgroundColor: color.hover },
   invalid: { borderColor: color.danger },
   label: { color: color.text, fontSize: fontSize.sm, fontWeight: 600 },

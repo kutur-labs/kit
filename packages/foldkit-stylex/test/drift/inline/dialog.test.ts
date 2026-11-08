@@ -8,7 +8,7 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Dialog's dialog element and backdrop own", () => {
-  const dialog = owns<Own.DialogElement>()(
+  const dialog = owns<Own.Owns["Dialog"]["dialog"]>()(
     "width",
     "height",
     "maxWidth",
@@ -21,7 +21,7 @@ it("@foldkit/ui writes inline what Dialog's dialog element and backdrop own", ()
     "zIndex",
   );
 
-  const backdrop = owns<Own.DialogBackdrop>()("minHeight");
+  const backdrop = owns<Own.Owns["Dialog"]["backdrop"]>()("minHeight");
   const seen = { dialog: new Set<string>(), backdrop: new Set<string>() };
 
   Scene.scene(

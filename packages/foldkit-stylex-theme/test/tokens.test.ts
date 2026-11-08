@@ -97,6 +97,7 @@ const pairs = [
   { foreground: "muted", background: "surface", minimum: 4.5 },
   { foreground: "muted", background: "hover", minimum: 4.5 },
   { foreground: "danger", background: "surface", minimum: 4.5 },
+  { foreground: "danger", background: "hover", minimum: 4.5 },
   { foreground: "onAccent", background: "accent", minimum: 4.5 },
   { foreground: "control", background: "surface", minimum: 3 },
   { foreground: "accent", background: "surface", minimum: 3 },

@@ -1,6 +1,5 @@
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type { Callbacks, GroupToHeading, Has } from "./internal/items.ts";
-import type * as Own from "./internal/owned.ts";
+import type { CallbackReads, Callbacks, Has } from "./internal/items.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Menu } from "@foldkit/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -10,7 +9,7 @@ import { defineView, type View } from "foldkit/submodel";
 import { anchored } from "./internal/functional-styles.ts";
 import { styledCallbacks } from "./internal/items.ts";
 import { partsOf, type Layers, type PartStyle } from "./internal/part.ts";
-import { visibilityOf } from "./internal/transition.ts";
+import { visibilityOf, type TransitionState } from "./internal/transition.ts";
 import { sxClassName } from "./sx.ts";
 
 /** A menu's state, the same for each part but `item`. */
@@ -64,13 +63,6 @@ export interface Styles {
   readonly panel?: "Menu calls its panel items: put these styles under items.";
 }
 
-type Owns = Readonly<{
-  wrapper: Own.Wrapper;
-  button: Own.OpenTrigger;
-  backdrop: Own.Backdrop;
-  items: Own.AnchoredPanel;
-}>;
-
 // Class name inputs this package fills, typed as the message their misuse prints.
 type Filled = FilledFromStyles<{
   className: "wrapper";
@@ -84,12 +76,15 @@ type Filled = FilledFromStyles<{
 
 // Everything this module reads from @foldkit/ui's Menu. `styledInputs` touches only these, and
 // `Supported` checks that the installed @foldkit/ui still has them.
-type Reads = Readonly<{
-  Model: Readonly<{ isOpen: boolean; animation: Readonly<{ transitionState: string }> }>;
-  ViewInputs: ClassNames<Filled> &
-    Readonly<{ isButtonDisabled?: boolean; groupToHeading?: GroupToHeading }>;
-  ItemContext: ItemState;
-}>;
+type Reads = CallbackReads &
+  Readonly<{
+    Model: Readonly<{
+      isOpen: boolean;
+      animation: Readonly<{ transitionState: TransitionState }>;
+    }>;
+    ViewInputs: ClassNames<Filled> & Readonly<{ isButtonDisabled?: boolean }>;
+    ItemContext: ItemState;
+  }>;
 
 /** `Menu.ViewInputs` without class names, which come from `styles`. */
 export type ViewInputs<Item extends string> = Menu.ViewInputs<Item> &
@@ -142,7 +137,7 @@ export const view = <Item extends string, const List extends ReadonlyArray<Style
     Reads,
     (model: Menu.Model, inputs: Menu.ViewInputs<Item>, h: HtmlBuilder<Menu.Message>) => Html
   >,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "Menu">
 ): View<Menu.Model, Menu.Message, ViewInputs<Item>> =>
   defineView<Menu.Model, Menu.Message, ViewInputs<Item>>((model, inputs, h) =>
     menuView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

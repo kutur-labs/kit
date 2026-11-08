@@ -3,123 +3,31 @@
 // that longhand, and lose to an inline style or beat this package's shorthand. StyleX's
 // application-order compiler is the record of which properties share a longhand: it compiles a
 // logical alias to its physical property's key and resets each shorthand's longhands.
-import { readFileSync } from "node:fs";
-import path from "node:path";
-
 import { describe, expect, it } from "vitest";
 
-import {
-  babel,
-  child,
-  children,
-  declarationOf,
-  kind,
-  resolvePlugin,
-  src,
-  statements,
-  text,
-  type Node,
-} from "./syntax.ts";
-
-// CSS shorthands and aliases StyleX's compiler leaves out, as the properties that set one longhand.
-// Add a row when a family owns a property that CSS sets from a shorthand or alias StyleX compiles
-// to a key of its own.
-const unexpanded: ReadonlyArray<ReadonlyArray<string>> = [
-  ["overscrollBehavior", "overscrollBehaviorX", "overscrollBehaviorInline"],
-  ["overscrollBehavior", "overscrollBehaviorY", "overscrollBehaviorBlock"],
-  ["overflow", "overflowX", "overflowInline"],
-  // The border shorthand resets border-image.
-  ...["Source", "Slice", "Width", "Outset", "Repeat"].map((longhand) => [
-    "border",
-    "borderImage",
-    `borderImage${longhand}`,
-  ]),
-];
-
-// Every property StyleX types.
-const typed = (() => {
-  const declarations = readFileSync(
-    new URL("./types/StyleXCSSTypes.d.ts", import.meta.resolve("@stylexjs/stylex")),
-    "utf8",
-  );
-
-  const block = declarations.slice(declarations.indexOf("export type CSSProperties = Readonly<{"));
-
-  return [...block.slice(0, block.indexOf("}>;")).matchAll(/^ {2}(\w+)\?:/gm)].flatMap(
-    ([, property]) => (property === undefined || property === "theme" ? [] : [property]),
-  );
-})();
+import { compileEach, typed, unexpanded } from "./properties.ts";
+import { child, children, declarationOf, kind, statements, text, type Node } from "./syntax.ts";
 
 const properties = [...new Set([...typed, ...unexpanded.flat()])];
 
+const compiled = compileEach(properties, { styleResolution: "application-order" });
+
 // The keys each property compiles to in StyleX's application-order mode, plus its `unexpanded` rows.
-const keysOf = (() => {
-  const file = path.join(src, "families.ts");
-
-  const namespaces = properties
-    .map((property) => `${property}: { ${property}: "inherit" }`)
-    .join(", ");
-
-  const compiled = babel.transformSync(
-    `import * as stylex from "@stylexjs/stylex";\nexport const s = stylex.create({ ${namespaces} });`,
-    {
-      filename: file,
-      babelrc: false,
-      configFile: false,
-      ast: true,
-      code: false,
-      parserOpts: { plugins: ["typescript"] },
-      plugins: [
-        [
-          resolvePlugin("@stylexjs/babel-plugin"),
-          {
-            dev: false,
-            runtimeInjection: false,
-            styleResolution: "application-order",
-            unstable_moduleResolution: { type: "commonJS", rootDir: src },
-          },
-        ],
-      ],
-    },
-  );
-
-  const created = child(
-    children(
-      child(
-        children(child(compiled?.ast ?? undefined, "program"), "body").find(
-          (statement) => kind(statement) === "ExportNamedDeclaration",
-        ),
-        "declaration",
+const keysOf = new Map(
+  properties.map((property) => [
+    property,
+    new Set([
+      ...(compiled.entries.get(property) ?? []).map(({ key }) => key),
+      ...unexpanded.flatMap((row, index) =>
+        row.includes(property) ? [`unexpanded ${index}`] : [],
       ),
-      "declarations",
-    )[0],
-    "init",
-  );
-
-  const keyName = (property: Node) =>
-    text(child(property, "key"), "name") ?? text(child(property, "key"), "value") ?? "";
-
-  const compiledKeys = new Map(
-    children(created, "properties").map((namespace) => [
-      keyName(namespace),
-      children(child(namespace, "value"), "properties")
-        .map(keyName)
-        .filter((key) => key !== "$$css"),
     ]),
-  );
+  ]),
+);
 
-  return new Map(
-    properties.map((property) => [
-      property,
-      new Set([
-        ...(compiledKeys.get(property) ?? []),
-        ...unexpanded.flatMap((row, index) =>
-          row.includes(property) ? [`unexpanded ${index}`] : [],
-        ),
-      ]),
-    ]),
-  );
-})();
+// The keys any of `names` compiles to.
+const keysIn = (names: ReadonlyArray<string>) =>
+  new Set(names.flatMap((name) => [...(keysOf.get(name) ?? [])]));
 
 const declarations = statements("internal/owned.ts");
 
@@ -178,6 +86,38 @@ const membersOf = (type: Node | undefined): ReadonlyArray<string> => {
   }
 };
 
+type Writes = Readonly<{
+  members: ReadonlyArray<string>;
+  written: ReadonlyArray<string>;
+  together: ReadonlyArray<string>;
+}>;
+
+// The `Inline` and `Functional` types a family is made of, through intersections and the file's
+// own aliases: the members of each, those it writes, and those it says work together with them.
+const writesOf = (type: Node | undefined): ReadonlyArray<Writes> => {
+  if (kind(type) === "TSIntersectionType") {
+    return children(type, "types").flatMap(writesOf);
+  }
+
+  const name = text(child(type, "typeName"), "name") ?? "";
+
+  const [members, written, , together] = children(child(type, "typeParameters"), "params");
+
+  return ["Inline", "Functional"].includes(name)
+    ? [
+        {
+          members: membersOf(members),
+          written: membersOf(written),
+          together: together === undefined ? [] : membersOf(together),
+        },
+      ]
+    : aliases.has(name)
+      ? writesOf(child(aliases.get(name), "typeAnnotation"))
+      : [];
+};
+
+const sorted = (names: Iterable<string>) => [...new Set(names)].sort();
+
 const families = declarations
   .filter((statement) => kind(statement) === "ExportNamedDeclaration")
   .map(declarationOf)
@@ -185,6 +125,7 @@ const families = declarations
   .map((declaration) => ({
     family: text(child(declaration, "id"), "name") ?? "",
     members: membersOf(child(declaration, "typeAnnotation")),
+    writes: writesOf(child(declaration, "typeAnnotation")),
   }));
 
 describe("owned families", () => {
@@ -192,10 +133,10 @@ describe("owned families", () => {
     it(`${family} lists every property that sets a longhand it owns`, () => {
       expect(
         members.filter((member) => !keysOf.has(member)),
-        `${family} lists properties StyleX does not type. Fix the name, or add the property's row to unexpanded in test/owned.test.ts.`,
+        `${family} lists properties StyleX does not type. Fix the name, or add the property's row to unexpanded in test/properties.ts.`,
       ).toEqual([]);
 
-      const owned = new Set(members.flatMap((member) => [...(keysOf.get(member) ?? [])]));
+      const owned = keysIn(members);
 
       expect(
         properties.filter(
@@ -205,6 +146,31 @@ describe("owned families", () => {
         ),
         `Add these properties to ${family} in src/internal/owned.ts. Each sets a longhand the family owns, so an app's class setting it would lose to the inline style or beat this package's rule.`,
       ).toEqual([]);
+    });
+  }
+
+  // None owns nothing, so it has no Inline or Functional to read.
+  for (const { family, writes } of families.filter(({ writes }) => writes.length > 0)) {
+    it(`${family} says overlaps only of the members that share a longhand with what it writes`, () => {
+      for (const { members: all, written, together } of writes) {
+        const writtenKeys = keysIn(written);
+
+        const others = all.filter((member) => !written.includes(member));
+
+        const overlaps = (member: string) =>
+          [...(keysOf.get(member) ?? [])].some((key) => writtenKeys.has(key));
+
+        expect(
+          {
+            overlap: sorted(others.filter((member) => !together.includes(member))),
+            together: sorted(together),
+          },
+          `Pass exactly the expected together members as the fourth parameter of ${family}'s Inline or Functional in src/internal/owned.ts. They share no longhand with what it writes, so "overlaps what it sets" would be false for them.`,
+        ).toEqual({
+          overlap: sorted(others.filter(overlaps)),
+          together: sorted(others.filter((member) => !overlaps(member))),
+        });
+      }
     });
   }
 });

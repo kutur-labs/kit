@@ -2,8 +2,8 @@ import type { DisclosureStyle } from "@kutur-kit/foldkit-stylex";
 
 import * as stylex from "@stylexjs/stylex";
 
-import { base } from "./internal/base.ts";
-import { color, motion, space } from "./tokens.stylex.ts";
+import { base, chevron } from "./internal/base.ts";
+import { color, space } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
   button: { justifyContent: "space-between", inlineSize: "100%", textAlign: "start" },
@@ -31,13 +31,4 @@ export const disclosureTheme = {
  * The chevron you render inside `button`, which turns over once open:
  * `sx(disclosureChevron.chevron, isOpen && disclosureChevron.open)`.
  */
-export const disclosureChevron = stylex.create({
-  chevron: {
-    color: color.muted,
-    lineHeight: 1,
-    transitionDuration: motion.fast,
-    transitionProperty: "rotate",
-    transitionTimingFunction: motion.easing,
-  },
-  open: { rotate: "180deg" },
-});
+export const disclosureChevron = chevron;

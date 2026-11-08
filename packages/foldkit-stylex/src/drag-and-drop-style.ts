@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { DragAndDrop } from "@foldkit/ui";
 import type { Attribute, HtmlBuilder } from "foldkit/html";
@@ -38,8 +37,6 @@ export interface Styles {
   readonly draggable?: PartStyle<DraggableState>;
 }
 
-type Owns = Readonly<{ draggable: Own.Draggable }>;
-
 type DragState =
   | Readonly<{ _tag: "Idle" }>
   | Readonly<{ _tag: "Pending" | "Dragging" | "KeyboardDragging"; itemId: string }>;
@@ -66,7 +63,7 @@ const stateOf = ({ itemId, model: { dragState } }: Reads["Config"]): DraggableSt
 export const draggable =
   <const List extends ReadonlyArray<Styles>>(
     draggableAttributes: Supported<"DragAndDrop", Has, Reads, typeof DragAndDrop.draggable>,
-    ...layers: Layers<List, Owns>
+    ...layers: Layers<List, Styles, "DragAndDrop">
   ) =>
   <ParentMessage>(
     config: DragAndDrop.DraggableConfig<ParentMessage>,

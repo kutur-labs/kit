@@ -42,6 +42,7 @@
     "@effect/platform-browser": "catalog:runtime",
     "@effect/tsgo": "catalog:tooling",
     "@foldkit/ui": "catalog:runtime",
+    "@kutur-kit/diagnostics": "workspace:*",
     "@kutur-kit/foldkit-stylex": "workspace:*",
     "@kutur-kit/tsconfig": "workspace:*",
     "@stylexjs/stylex": "catalog:runtime",

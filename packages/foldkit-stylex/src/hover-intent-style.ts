@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { HoverIntent } from "@foldkit/ui";
 import type { ChildAttribute } from "foldkit/html";
@@ -29,14 +28,15 @@ export interface Styles {
   readonly panel?: PartStyle<State>;
 }
 
-// Everything this module reads from @foldkit/ui's HoverIntent. `Supported` checks that the
-// installed @foldkit/ui still has it.
+// Everything this module reads from @foldkit/ui's HoverIntent. `view` reads only through these
+// types, and `Supported` checks that the installed @foldkit/ui still has them.
 type Reads = Readonly<{
   RenderInfo: Readonly<Record<"trigger" | "panel", ReadonlyArray<ChildAttribute>>> &
     Readonly<{ isVisible: boolean }>;
+  ViewInputs: Readonly<{ toView: (render: never) => void }>;
 }>;
 
-type Has = Readonly<{ RenderInfo: HoverIntent.RenderInfo }>;
+type Has = Readonly<{ RenderInfo: HoverIntent.RenderInfo; ViewInputs: HoverIntent.ViewInputs }>;
 
 /**
  * `HoverIntent.view` with each part's styles on the bundles `toView` gets. Pass several styles
@@ -44,7 +44,7 @@ type Has = Readonly<{ RenderInfo: HoverIntent.RenderInfo }>;
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   hoverIntentView: Supported<"HoverIntent", Has, Reads, typeof HoverIntent.view>,
-  ...layers: Layers<List, Own.None>
+  ...layers: Layers<List, Styles, "HoverIntent">
 ): View<HoverIntent.Model, HoverIntent.Message, HoverIntent.ViewInputs> =>
   defineView<HoverIntent.Model, HoverIntent.Message, HoverIntent.ViewInputs>((model, inputs, h) =>
     hoverIntentView(
@@ -52,16 +52,17 @@ export const view = <const List extends ReadonlyArray<Styles>>(
       {
         ...inputs,
         toView: (render) => {
-          const part = partsOf(layers, { isVisible: render.isVisible } satisfies State);
+          const reads: Reads["RenderInfo"] = render;
+          const part = partsOf(layers, { isVisible: reads.isVisible } satisfies State);
 
           return inputs.toView({
             ...render,
             trigger: appendChildClass(
-              render.trigger,
+              reads.trigger,
               part((s) => s.trigger),
             ),
             panel: appendChildClass(
-              render.panel,
+              reads.panel,
               part((s) => s.panel),
             ),
           });

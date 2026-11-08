@@ -1,4 +1,4 @@
-import type { Filled, ItemState, Owns, Reads, Styles } from "./internal/combobox.ts";
+import type { Filled, ItemState, Reads, Styles } from "./internal/combobox.ts";
 import type { Callbacks, Has } from "./internal/items.ts";
 import type { Layers } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
@@ -33,7 +33,7 @@ export const view = <Item extends string, const List extends ReadonlyArray<Style
       h: HtmlBuilder<Combobox.Message>,
     ) => Html
   >,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "Combobox">
 ): View<Combobox.Model, Combobox.Message, ViewInputs<Item>> =>
   defineView<Combobox.Model, Combobox.Message, ViewInputs<Item>>((model, inputs, h) =>
     comboboxView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

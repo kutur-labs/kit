@@ -23,6 +23,45 @@ const components = [
 
 const present = components.filter(({ file }) => existsSync(path.join(src, file)));
 
+const readme = readFileSync(path.join(src, "../README.md"), "utf8");
+
+const rows = [
+  ...readme.matchAll(
+    /^\| (\w+) +\| `@kutur-kit\/foldkit-stylex-theme\/([\w-]+)` +\| `(\w+)` +\|(.*)\|$/gm,
+  ),
+].map(([, name = "", file = "", look = "", children = ""]) => ({
+  name,
+  file: `${file}.ts`,
+  look,
+  children,
+}));
+
+type ChildStyles = { file: string; name: string; keys: Array<string> };
+
+// The named styles a row's last cell lists: "`export`: `key`, `key` where", with later keys of the
+// same export after a "; ", or "`export` from `@kutur-kit/foldkit-stylex-theme/<module>`" for an
+// export of another module.
+const childStylesIn = ({ file, children }: (typeof rows)[number]) => {
+  const named: Array<ChildStyles> = [];
+
+  for (const [, name = "", colon, module] of children.matchAll(
+    /`(\w+)`(:)?(?: from `@kutur-kit\/foldkit-stylex-theme\/([\w-]+)`)?/g,
+  )) {
+    const exported = colon !== undefined || module !== undefined;
+    const current = named.at(-1);
+
+    if (exported) {
+      named.push({ file: module === undefined ? file : `${module}.ts`, name, keys: [] });
+    } else if (current === undefined) {
+      throw new Error(`The ${file} row names \`${name}\` before the export it belongs to.`);
+    } else {
+      current.keys.push(name);
+    }
+  }
+
+  return named;
+};
+
 describe("coverage", () => {
   it("reads the core's components", () => {
     expect(components.map(({ file }) => file)).toContain("checkbox.ts");
@@ -45,16 +84,28 @@ describe("coverage", () => {
   });
 
   it("lists every look in the README, in the core's order", () => {
-    const readme = readFileSync(path.join(src, "../README.md"), "utf8");
-
-    const rows = [
-      ...readme.matchAll(
-        /^\| (\w+) +\| `@kutur-kit\/foldkit-stylex-theme\/([\w-]+)` +\| `(\w+)` +\|/gm,
-      ),
-    ].map(([, name, file, look]) => ({ name, file: `${file}.ts`, look }));
-
-    expect(rows).toEqual(components);
+    expect(rows.map(({ name, file, look }) => ({ name, file, look }))).toEqual(components);
   });
+
+  // A user imports each named style from the module its row names, or the one after "from".
+  it.each(rows.flatMap(childStylesIn))(
+    "exports the README's $name with its keys from src/$file",
+    async ({ file, name, keys }) => {
+      const module: unknown = await import(path.join(src, file));
+
+      expect(
+        module,
+        `Export ${name} from src/${file}, or name its module in the README.`,
+      ).toHaveProperty(name);
+
+      for (const key of keys) {
+        expect(module, `Give ${name} the key ${key}, or fix the README's row.`).toHaveProperty([
+          name,
+          key,
+        ]);
+      }
+    },
+  );
 
   // Importing a look compiles it with StyleX, as an app's build does.
   it.each(present)("$file compiles and exports $look", async ({ file, look }) => {

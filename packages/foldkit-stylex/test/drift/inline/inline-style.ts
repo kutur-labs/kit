@@ -1,8 +1,10 @@
-// The properties @foldkit/ui writes inline on each part equal the ones its test lists, and `owns`
-// fails the type check where the part's owned family in src/internal/owned.ts lacks one, so the
-// part's styles cannot set a property an inline style overrides. test/owned.test.ts checks that
-// each family also lists every property that sets the same longhands. A property @foldkit/ui adds
-// fails a test in this directory.
+// Each test renders its component's parts in Scene and checks that the properties @foldkit/ui
+// writes inline on each part, when its view renders, equal the ones the test lists. `owns` fails
+// the type check where the part's family in `Owns`, in src/internal/owned.ts, does not say
+// @foldkit/ui writes one of them, so the part's styles cannot set a property an inline style
+// overrides. test/owned.test.ts checks that each family also lists every property that sets the
+// same longhands. Scene runs no Mount, so what Floating UI writes on an open anchored panel is
+// checked in the gallery's browser tests instead.
 import { Option } from "effect";
 import * as Scene from "foldkit/scene";
 
@@ -33,19 +35,28 @@ type Unprefixed = { WebkitUserSelect: "userSelect" };
 
 type Named<Property> = Property extends keyof Unprefixed ? Unprefixed[Property] : Property;
 
-// Matches only a property the family lists, so the error names the fix.
+// The properties whose message in `Family` says @foldkit/ui writes them inline.
+type Written<Family> = {
+  [
+    Property in keyof Family & string
+  ]: Family[Property] extends `@foldkit/ui sets ${Property} inline on this part.${string}`
+    ? Property
+    : never;
+}[keyof Family & string];
+
+// Matches only a property the family says @foldkit/ui writes, so the error names the fix.
 type Checked<Family, Property> =
-  Named<Property> extends keyof Family
+  Named<Property> extends Written<Family>
     ? Property
     : Readonly<{
         [
-          Message in `Add ${Named<Property> & string} to the part's owned family in src/internal/owned.ts: @foldkit/ui writes it inline. A prefixed name StyleX does not type goes in Unprefixed instead.`
+          Message in `Add ${Named<Property> & string} to the properties @foldkit/ui writes in the part's family in src/internal/owned.ts, and map the part to that family in Owns. A prefixed name StyleX does not type goes in Unprefixed instead.`
         ]: never;
       }>;
 
 /**
- * `properties`, the ones @foldkit/ui writes inline on a part whose owned family is `Family`. Fails
- * the type check for a property `Family` does not list.
+ * `properties`, the ones @foldkit/ui writes inline on a part whose family is `Family`. Fails the
+ * type check for a property `Family` does not say @foldkit/ui writes.
  */
 export const owns =
   <Family>() =>

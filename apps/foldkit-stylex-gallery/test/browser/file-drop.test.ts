@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 
 import { describe, expect, it } from "vitest";
 
-import { computed, schemes, useGallery } from "./gallery.ts";
+import { computed, isFocused, schemes, tabInto, useGallery } from "./gallery.ts";
 
 const { open } = useGallery();
 
@@ -39,14 +39,22 @@ describe.each(schemes)("FileDrop in the %s scheme", (scheme) => {
     },
   );
 
-  it.each(["attachments", "themed-attachments"])(
-    "rings the #%s zone while its input has keyboard focus",
-    async (id) => {
+  // A click focuses the input too, which ':focus-within' would ring.
+  it.each([
+    ["attachments", "core"],
+    ["themed-attachments", "themed"],
+  ] as const)(
+    "rings the #%s zone while its input has keyboard focus, not after a click",
+    async (id, demo) => {
       const { page } = await open("/file-drop", scheme);
-      const zone = page.locator(`#${id}`).locator("..");
+      const input = page.locator(`#${id}`);
+      const zone = input.locator("..");
 
+      await zone.click();
+      expect(await isFocused(input)).toBe(true);
       expect(await computed(zone, "outline-style")).toBe("none");
-      await page.locator(`#${id}`).focus();
+      await tabInto(page, demo);
+      expect(await isFocused(input)).toBe(true);
       expect(await computed(zone, "outline-style")).toBe("solid");
     },
   );

@@ -16,7 +16,6 @@ const styles = stylex.create({
     inlineSize: "100%",
     blockSize: "0.375rem",
     borderRadius: 9999,
-    backgroundColor: color.border,
     cursor: "pointer",
   },
   verticalTrack: {
@@ -58,7 +57,6 @@ const styles = stylex.create({
     cursor: "grab",
   },
   dragging: { cursor: "grabbing", scale: 1.15 },
-  readOnly: { cursor: "default" },
 });
 
 /**
@@ -74,9 +72,10 @@ export const sliderTheme = {
   label: styles.label,
   track: (state) => [
     styles.track,
+    base.borderFill,
     styles.trackArea,
     state.orientation === "Vertical" && [styles.verticalTrack, styles.verticalTrackArea],
-    state.isReadOnly && styles.readOnly,
+    state.isReadOnly && base.readOnly,
   ],
   filledTrack: styles.filledTrack,
   thumb: (state) => [
@@ -84,6 +83,6 @@ export const sliderTheme = {
     base.hitArea,
     base.focusRing,
     state.isDragging && styles.dragging,
-    state.isReadOnly && styles.readOnly,
+    state.isReadOnly && base.readOnly,
   ],
 } satisfies SliderStyle.Styles;

@@ -59,9 +59,50 @@ export const disposed = runtime.dispose();
     errors: 3,
   },
   {
+    file: "test/suite-runtime.test.ts",
+    code: `import { afterAll, beforeAll, it } from "@effect/vitest";
+import { Effect, Layer, ManagedRuntime } from "effect";
+
+let suite: ManagedRuntime.ManagedRuntime<never, never>;
+
+beforeAll(() => {
+  suite = ManagedRuntime.make(Layer.empty);
+});
+afterAll(() => suite.dispose());
+
+const { runSync, runPromise: run } = ManagedRuntime.make(Layer.empty);
+const { runFork } = suite;
+
+it("runs by hand", async () => {
+  await suite.runPromise(Effect.succeed(1));
+  runSync(Effect.succeed(1));
+  await run(Effect.succeed(1));
+  runFork(Effect.succeed(1));
+});
+`,
+    errors: 4,
+  },
+  {
+    file: "test/other-runtime.test.ts",
+    code: `import { it } from "@effect/vitest";
+import { Effect, Layer, ManagedRuntime } from "effect";
+
+// The runtime is given to the code under test, and a same-named binding elsewhere is not it.
+const runtime = ManagedRuntime.make(Layer.empty);
+
+const serve = (runtime: { runPromise: (task: string) => Promise<string> }) => runtime.runPromise("task");
+
+it.effect("serves", () => Effect.sync(() => serve({ runPromise: (task) => Promise.resolve(task) })));
+
+export const given = runtime;
+`,
+    errors: 0,
+  },
+  {
     file: "src/effect-test.test.ts",
     code: `import { it } from "@effect/vitest";
-import { Effect, TestClock } from "effect";
+import { Effect } from "effect";
+import { TestClock } from "effect/testing";
 
 // A runner on something other than Effect or a ManagedRuntime is not this rule's business.
 const pool = { runPromise: (task: string) => Promise.resolve(task) };
@@ -135,4 +176,5 @@ await test("effect rejects manual Effect runners in test files only", (context) 
 
   assert.match(output, /Manual Effect runner `Effect\.runPromise` in a test\./);
   assert.match(output, /Manual Effect runner `runtime\.runSync` in a test\./);
+  assert.match(output, /Manual Effect runner `runPromise` in a test\./);
 });

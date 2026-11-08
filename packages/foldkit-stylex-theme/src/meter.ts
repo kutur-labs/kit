@@ -2,6 +2,7 @@ import type { MeterStyle } from "@kutur-kit/foldkit-stylex";
 
 import * as stylex from "@stylexjs/stylex";
 
+import { base } from "./internal/base.ts";
 import { color, fontSize, motion } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
@@ -12,7 +13,6 @@ const styles = stylex.create({
     blockSize: "0.5rem",
     overflow: "hidden",
     borderRadius: 9999,
-    backgroundColor: color.border,
   },
   fill: {
     borderRadius: 9999,
@@ -40,7 +40,7 @@ const isWorst = ({
  * the value is past the threshold farthest from `optimum`, as a browser's `<meter>` turns red.
  */
 export const meterTheme = {
-  meter: styles.meter,
+  meter: [styles.meter, base.borderFill],
   label: styles.label,
   fill: (state) => [styles.fill, isWorst(state) && styles.worst],
 } satisfies MeterStyle.Styles;

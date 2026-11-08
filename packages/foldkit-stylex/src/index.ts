@@ -3,8 +3,6 @@ import "./internal/compiled.ts";
 
 export { sx, type ClassAttribute, type SxStyles } from "./sx.ts";
 
-export type { PartStyle, PartValue } from "./internal/part.ts";
-
 export * as AnimationStyle from "./animation-style.ts";
 
 export * as ButtonStyle from "./button-style.ts";

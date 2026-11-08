@@ -22,9 +22,17 @@ export interface Node {
 export type StylexOptions = Readonly<{
   dev: false;
   runtimeInjection: false;
-  styleResolution?: "application-order";
+  styleResolution?: "application-order" | "legacy-expand-shorthands";
+  enableLogicalStylesPolyfill?: true;
   unstable_moduleResolution: Readonly<{ type: "commonJS"; rootDir: string }>;
 }>;
+
+/** A rule StyleX's Babel plugin collects: its class, its CSS for each direction and its priority. */
+export type StylexRule = readonly [
+  className: string,
+  css: Readonly<{ ltr: string; rtl?: string | null }>,
+  priority: number,
+];
 
 export type BabelOptions = Readonly<{
   filename: string;
@@ -39,10 +47,25 @@ export type BabelOptions = Readonly<{
 const require = createRequire(import.meta.resolve("@stylexjs/unplugin"));
 
 // SAFETY: require returns any; @babel/core 7 exports parseSync and transformSync with these
-// signatures, and its syntax trees hold plain data only.
+// signatures, its syntax trees hold plain data only, and StyleX's plugin adds its rules to the
+// metadata.
 export const babel = require("@babel/core") as Readonly<{
   parseSync: (code: string, options: BabelOptions) => Node | null;
-  transformSync: (code: string, options: BabelOptions) => Readonly<{ ast?: Node | null }> | null;
+  transformSync: (
+    code: string,
+    options: BabelOptions,
+  ) => Readonly<{
+    ast?: Node | null;
+    metadata: Readonly<{ stylex?: ReadonlyArray<StylexRule> }>;
+  }> | null;
+}>;
+
+// SAFETY: require returns any; @stylexjs/babel-plugin 0.19 exports processStylexRules.
+export const stylexPlugin = require("@stylexjs/babel-plugin") as Readonly<{
+  processStylexRules: (
+    rules: ReadonlyArray<StylexRule>,
+    options: Readonly<{ useLayers: boolean }>,
+  ) => string;
 }>;
 
 /** The path Babel loads a plugin from, resolved as @stylexjs/unplugin resolves it. */

@@ -6,7 +6,9 @@ import type { Supported } from "../../src/internal/supported.ts";
 // against Slider's reads.
 import { Slider } from "@foldkit/ui";
 
-type Reads = Readonly<{ Model: Readonly<{ dragState: Readonly<{ _tag: string }> }> }>;
+type Reads = Readonly<{
+  Model: Readonly<{ dragState: Readonly<{ _tag: "Idle" }> | Readonly<{ _tag: "Dragging" }> }>;
+}>;
 
 type Has = Readonly<{ Model: Omit<Slider.Model, "dragState"> & Readonly<{ dragState: string }> }>;
 

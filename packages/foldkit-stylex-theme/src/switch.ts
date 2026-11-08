@@ -3,10 +3,12 @@ import type { SwitchStyle } from "@kutur-kit/foldkit-stylex";
 import * as stylex from "@stylexjs/stylex";
 
 import { base } from "./internal/base.ts";
-import { color, fontSize, motion, size } from "./tokens.stylex.ts";
+import { field } from "./internal/field.ts";
+import { color, motion, size } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
-  // A content box two thumbs wide, so `switchThumb.on` moves the thumb by one thumb.
+  // A content box two thumbs wide, so `switchThumb.on` moves the thumb by one thumb, toward the
+  // inline end in either direction.
   track: {
     position: "relative",
     display: "inline-flex",
@@ -26,10 +28,8 @@ const styles = stylex.create({
     transitionProperty: "background-color, border-color",
   },
   checked: { borderColor: color.accent, backgroundColor: color.accent },
-  readOnly: { cursor: "default" },
   // The label toggles the switch too.
   label: { color: color.text, cursor: "pointer", userSelect: "none" },
-  description: { color: color.muted, fontSize: fontSize.sm },
 });
 
 /** The look of a Switch: a rounded track with a 44px target, filled with the accent once on. */
@@ -39,15 +39,15 @@ export const switchTheme = {
     base.hitArea,
     base.focusRing,
     state.isChecked && styles.checked,
-    state.isReadOnly && styles.readOnly,
+    state.isReadOnly && base.readOnly,
     state.isDisabled && base.disabled,
   ],
   label: (state) => [
     styles.label,
-    state.isReadOnly && styles.readOnly,
+    state.isReadOnly && base.readOnly,
     state.isDisabled && base.disabled,
   ],
-  description: styles.description,
+  description: field.description,
 } satisfies SwitchStyle.Styles;
 
 /**
@@ -62,8 +62,8 @@ export const switchThumb = stylex.create({
     borderRadius: 9999,
     backgroundColor: color.control,
     transitionDuration: motion.fast,
-    transitionProperty: "translate, background-color",
+    transitionProperty: "margin-inline-start, background-color",
     transitionTimingFunction: motion.easing,
   },
-  on: { translate: `${size.thumb} 0`, backgroundColor: color.onAccent },
+  on: { marginInlineStart: size.thumb, backgroundColor: color.onAccent },
 });

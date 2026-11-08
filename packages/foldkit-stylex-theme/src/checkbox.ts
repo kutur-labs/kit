@@ -3,7 +3,8 @@ import type { CheckboxStyle } from "@kutur-kit/foldkit-stylex";
 import * as stylex from "@stylexjs/stylex";
 
 import { base } from "./internal/base.ts";
-import { color, fontSize, motion, radius, size } from "./tokens.stylex.ts";
+import { field } from "./internal/field.ts";
+import { color, motion, radius, size } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
   box: {
@@ -24,7 +25,6 @@ const styles = stylex.create({
   },
   checked: { borderColor: color.accent, backgroundColor: color.accent },
   label: { color: color.text, cursor: "pointer" },
-  description: { color: color.muted, fontSize: fontSize.sm },
 });
 
 /** The look of a Checkbox: a box with a 44px target, filled with the accent once checked. */
@@ -34,10 +34,15 @@ export const checkboxTheme = {
     base.hitArea,
     base.focusRing,
     (state.isChecked || state.isIndeterminate) && styles.checked,
+    state.isReadOnly && base.readOnly,
     state.isDisabled && base.disabled,
   ],
-  label: (state) => [styles.label, state.isDisabled && base.disabled],
-  description: styles.description,
+  label: (state) => [
+    styles.label,
+    state.isReadOnly && base.readOnly,
+    state.isDisabled && base.disabled,
+  ],
+  description: field.description,
 } satisfies CheckboxStyle.Styles;
 
 /**

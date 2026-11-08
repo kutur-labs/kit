@@ -1,6 +1,5 @@
 import type * as CalendarParts from "./internal/calendar.ts";
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { DatePicker } from "@foldkit/ui";
 
@@ -9,8 +8,15 @@ import { defineView, type View } from "foldkit/submodel";
 import { styledAttributes } from "./internal/calendar.ts";
 import { anchored } from "./internal/functional-styles.ts";
 import { partsOf, type Layers, type PartStyle } from "./internal/part.ts";
-import { visibilityOf } from "./internal/transition.ts";
+import { visibilityOf, type TransitionState } from "./internal/transition.ts";
 import { sxClassName } from "./sx.ts";
+
+// CalendarStyle's state types, here too: a DatePicker look's declarations name the state of its
+// `calendar` part's functions through DatePickerStyle, the namespace their file imports.
+export type {
+  CellState as CalendarCellState,
+  State as CalendarState,
+} from "./internal/calendar.ts";
 
 /** A date picker's state, the same for each of its parts but `calendar`'s. */
 export interface State {
@@ -40,8 +46,7 @@ type CalendarPartsHere = {
 
 /**
  * Styles for each part of a DatePicker. @foldkit/ui puts the trigger in a `div` inside `wrapper`
- * that takes no class (F17), so a flex or grid layout on `wrapper` arranges that `div`, not the
- * trigger.
+ * that takes no class, so a flex or grid layout on `wrapper` arranges that `div`, not the trigger.
  */
 export interface Styles extends CalendarPartsHere {
   /** The positioned element around the trigger and the hidden form input. */
@@ -57,13 +62,6 @@ export interface Styles extends CalendarPartsHere {
   readonly button?: "DatePicker calls its button trigger: put these styles under trigger.";
 }
 
-type Owns = Readonly<{
-  wrapper: Own.Wrapper;
-  trigger: Own.OpenTrigger;
-  backdrop: Own.Backdrop;
-  panel: Own.AnchoredPanel;
-}>;
-
 type Filled = FilledFromStyles<{
   className: "wrapper";
   triggerClassName: "trigger";
@@ -74,16 +72,18 @@ type Filled = FilledFromStyles<{
 // Everything this module reads from @foldkit/ui's DatePicker and the Calendar it renders. `stateOf`
 // and `styledAttributes` read only these, and `Supported` checks that the installed @foldkit/ui
 // still has them.
-type Reads = CalendarParts.Reads &
+type Reads = CalendarParts.Reads<"toCalendarView"> &
   Readonly<{
     Model: Readonly<{
-      popover: Readonly<{ isOpen: boolean; animation: Readonly<{ transitionState: string }> }>;
+      popover: Readonly<{
+        isOpen: boolean;
+        animation: Readonly<{ transitionState: TransitionState }>;
+      }>;
     }>;
     ViewInputs: ClassNames<Filled> & Readonly<{ isDisabled?: boolean }>;
   }>;
 
-type Has = CalendarParts.Has &
-  Readonly<{ Model: DatePicker.Model; ViewInputs: DatePicker.ViewInputs }>;
+type Has = CalendarParts.Has<DatePicker.ViewInputs> & Readonly<{ Model: DatePicker.Model }>;
 
 const stateOf = (model: Reads["Model"], inputs: Reads["ViewInputs"]): State => ({
   ...visibilityOf(model.popover.isOpen, model.popover.animation.transitionState),
@@ -99,7 +99,7 @@ export type ViewInputs = DatePicker.ViewInputs & Filled;
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   datePickerView: Supported<"DatePicker", Has, Reads, typeof DatePicker.view>,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "DatePicker">
 ): View<DatePicker.Model, DatePicker.Message, ViewInputs> =>
   defineView<DatePicker.Model, DatePicker.Message, ViewInputs>((model, inputs, h) => {
     const part = partsOf(layers, stateOf(model, inputs));

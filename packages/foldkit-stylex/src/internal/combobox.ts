@@ -1,13 +1,12 @@
 // Styles, state and inputs shared by ComboboxStyle.view and ComboboxStyle.Multi.view.
 import type { ClassNames, FilledFromStyles } from "./filled.ts";
-import type { GroupToHeading } from "./items.ts";
-import type * as Own from "./owned.ts";
+import type { CallbackReads } from "./items.ts";
 
 import { sxClassName } from "../sx.ts";
 import { anchored } from "./functional-styles.ts";
 import { styledCallbacks, type Callbacks } from "./items.ts";
 import { partsOf, type PartStyle } from "./part.ts";
-import { visibilityOf } from "./transition.ts";
+import { visibilityOf, type TransitionState } from "./transition.ts";
 
 /** A combobox's state, the same for each part but `item`. */
 export interface State {
@@ -91,12 +90,6 @@ export interface Styles {
   readonly panel?: "Combobox calls its panel items: put these styles under items.";
 }
 
-export type Owns = Readonly<{
-  wrapper: Own.Wrapper;
-  backdrop: Own.Backdrop;
-  items: Own.AnchoredPanel;
-}>;
-
 /** Class name inputs this package fills, typed as the message their misuse prints. */
 export type Filled = FilledFromStyles<{
   className: "wrapper";
@@ -112,17 +105,17 @@ export type Filled = FilledFromStyles<{
 
 // Everything both Combobox views read or write. `styledInputs` touches only these, and `Supported`
 // checks that the installed @foldkit/ui still has them.
-export type Reads = Readonly<{
-  Model: Readonly<{ isOpen: boolean; animation: Readonly<{ transitionState: string }> }>;
-  ViewInputs: ClassNames<Filled> &
-    Readonly<{
-      isDisabled?: boolean;
-      isReadOnly?: boolean;
-      isInvalid?: boolean;
-      groupToHeading?: GroupToHeading;
-    }>;
-  ItemContext: ItemState;
-}>;
+export type Reads = CallbackReads &
+  Readonly<{
+    Model: Readonly<{ isOpen: boolean; animation: Readonly<{ transitionState: TransitionState }> }>;
+    ViewInputs: ClassNames<Filled> &
+      Readonly<{
+        isDisabled?: boolean;
+        isReadOnly?: boolean;
+        isInvalid?: boolean;
+      }>;
+    ItemContext: ItemState;
+  }>;
 
 /** The view inputs @foldkit/ui gets: class names from `styles`, item callbacks wrapped. */
 export const styledInputs = <Item>(

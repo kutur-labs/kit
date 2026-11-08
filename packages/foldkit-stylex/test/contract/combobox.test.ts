@@ -252,19 +252,19 @@ describe("ComboboxStyle.view", () => {
 });
 
 describe("@foldkit/ui defects ComboboxStyle works around", () => {
-  it("F4: the backdrop has no inline cover and the items panel no z-index", () => {
+  it("the backdrop has no inline cover and the items panel no z-index", () => {
     Scene.scene(
       { update, view },
       Scene.given({ combobox: open, flags: unset }),
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, `.${classOf(styles.backdrop)}`),
-          "@foldkit/ui now covers the viewport with Combobox's backdrop inline (F4). Drop anchored.backdrop from internal/combobox.ts, and from functional-styles.ts once no module uses it; type Combobox's backdrop with an Inline family in owned.ts; update the README's What the package sets table.",
+          "@foldkit/ui now covers the viewport with Combobox's backdrop inline. Drop anchored.backdrop from internal/combobox.ts, and from functional-styles.ts once no module uses it; map Combobox's backdrop to an Inline family in Owns in src/internal/owned.ts; update the README's What the package sets table.",
         ).not.toHaveStyle("position");
 
         expect(
           Scene.find(simulation.html, "#city-items"),
-          "@foldkit/ui now sets Combobox's items z-index inline (F4). Drop anchored.panel from internal/combobox.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex in the items' owned family.",
+          "@foldkit/ui now sets Combobox's items z-index inline. Drop anchored.panel from internal/combobox.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex among the properties @foldkit/ui writes in the items' family.",
         ).not.toHaveStyle("z-index");
       }),
       ...mounts,

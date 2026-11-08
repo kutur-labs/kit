@@ -105,7 +105,7 @@ describe("FileDropStyle.view", () => {
 });
 
 describe("@foldkit/ui defects FileDropStyle works around", () => {
-  it("F3: the input is hidden only by a class, not inline", () => {
+  it("the input is hidden only by a class, not inline", () => {
     Scene.scene(
       {
         update: (model: FileDrop.Model) => ({ model }),
@@ -116,7 +116,7 @@ describe("@foldkit/ui defects FileDropStyle works around", () => {
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, "#upload"),
-          "@foldkit/ui now hides FileDrop's input inline (F3). Drop fileDrop from functional-styles.ts and its use in file-drop-style.ts; update the README's What the package sets table.",
+          "@foldkit/ui now hides FileDrop's input inline. Drop fileDrop from functional-styles.ts and its use in file-drop-style.ts; update the README's What the package sets table.",
         ).not.toHaveStyle("position");
       }),
     );

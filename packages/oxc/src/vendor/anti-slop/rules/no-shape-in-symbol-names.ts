@@ -14,6 +14,21 @@ function isBorrowedMemberName(node: ESTree.Node): boolean {
   return parent.property === node && parent.computed === false;
 }
 
+// CSS and SVG properties whose names contain "shape", as StyleX, React and SVG write them.
+const CSS_PROPERTY = /^(?:shape(?:Outside|Margin|ImageThreshold|Rendering)|corner(?:Top|Right|Bottom|Left|Start|End|Block|Inline)*Shape)$/;
+
+/** Return whether an identifier is a key or attribute that names a CSS or SVG property. */
+function isCssPropertyName(node: ESTree.Node & { name: string }): boolean {
+  const parent = node.parent;
+  if (parent === null || !CSS_PROPERTY.test(node.name)) return false;
+  if (parent.type === "JSXAttribute") return parent.name === node;
+  return (
+    (parent.type === "Property" || parent.type === "TSPropertySignature") &&
+    parent.key === node &&
+    parent.computed === false
+  );
+}
+
 /** Ban the case-insensitive substring "shape" in every JavaScript and TypeScript symbol name. */
 export const noForbiddenTermInSymbolNamesRule = defineRule({
   meta: {
@@ -29,7 +44,13 @@ export const noForbiddenTermInSymbolNamesRule = defineRule({
   },
   createOnce(context) {
     const reportForbiddenSymbolName = (node: ESTree.Node & { name: string }) => {
-      if (!containsForbiddenSymbolName(node.name) || isBorrowedMemberName(node)) return;
+      if (
+        !containsForbiddenSymbolName(node.name) ||
+        isBorrowedMemberName(node) ||
+        isCssPropertyName(node)
+      ) {
+        return;
+      }
       context.report({
         node,
         messageId: "forbiddenSymbolName",

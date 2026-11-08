@@ -1,18 +1,17 @@
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Toast } from "@foldkit/ui";
 import type { ChildAttribute, Html } from "foldkit/html";
 
-import * as Predicate from "effect/Predicate";
 import { defineView, type View } from "foldkit/submodel";
 
 import {
   appendChildClass,
   partsOf,
+  staticPartsOf,
   type Layers,
   type PartStyle,
-  type PartValue,
+  type StatelessPart,
 } from "./internal/part.ts";
 import { sxClassName } from "./sx.ts";
 
@@ -22,36 +21,29 @@ export interface EntryState {
   readonly variant: Toast.Variant;
 }
 
-// Matches no function anyone writes. It is here so that a state function on `entry` names the fix.
-type EntryFunction = (
-  state: Readonly<{
-    "@foldkit/ui gives every entry one class, so entry takes no state. Style each variant on your own element inside entryToView, from entry.variant.": never;
-  }>,
-) => never;
-
 /** Styles for each part of a Toast stack. */
 export interface Styles {
   /** The stack. @foldkit/ui positions and spaces it inline; style each entry instead. */
-  readonly container?: PartValue;
+  readonly container?: StatelessPart;
   /**
    * Every entry gets this one class. Animate it with `':is([data-closed])'` and swipe with
    * `':is([data-swipe])'`; style variants on your own element inside `entryToView`.
    */
-  readonly entry?: PartValue | EntryFunction;
+  readonly entry?: StatelessPart<"@foldkit/ui gives every entry one class, so entry takes no state. Style each variant on your own element inside entryToView, from entry.variant.">;
   /** The element `entryToView` gives the `dismiss` bundle; it dismisses its entry. */
   readonly dismiss?: PartStyle<EntryState>;
 }
 
-type Owns = Readonly<{ container: Own.ToastContainer; entry: Own.ToastEntry }>;
-
 type Filled = FilledFromStyles<{ containerClassName: "container"; entryClassName: "entry" }>;
 
-// Everything this module reads from or fills in @foldkit/ui's Toast. `Supported` checks that the
-// installed @foldkit/ui still has them. The `ViewInputs` mirror below cannot: a view whose optional
-// input was renamed still accepts the mirror's inputs.
+// Everything this module reads from or fills in @foldkit/ui's Toast. `view` reads only through
+// these types, and `Supported` checks that the installed @foldkit/ui still has them. The
+// `UiViewInputs` mirror below cannot: a view whose optional input was renamed still accepts the
+// mirror's inputs.
 type Reads = Readonly<{
   EntryHandlers: Readonly<{ dismiss: ReadonlyArray<ChildAttribute> }>;
-  ViewInputs: ClassNames<Filled>;
+  ViewInputs: ClassNames<Filled> &
+    Readonly<{ entryToView: (entry: never, handlers: never) => void }>;
 }>;
 
 type Has = Readonly<{
@@ -59,11 +51,9 @@ type Has = Readonly<{
   ViewInputs: Parameters<ReturnType<typeof Toast.make<unknown, unknown>>["view"]>[1];
 }>;
 
-/**
- * The view inputs of a `Toast.make` module's `view`; @foldkit/ui exports no type for them (F13).
- * A required input @foldkit/ui adds fails the `view` call, because view parameters are contravariant.
- */
-export type ViewInputs<Entry> = Readonly<{
+// The view inputs of a `Toast.make` module's `view`, which @foldkit/ui exports no type for. A
+// required input @foldkit/ui adds fails the `view` call, because view parameters are contravariant.
+type UiViewInputs<Entry> = Readonly<{
   position: Toast.Position;
   entryToView: (entry: Entry, handlers: Toast.EntryHandlers) => Html;
   ariaLabel?: string;
@@ -71,8 +61,8 @@ export type ViewInputs<Entry> = Readonly<{
   entryClassName?: string;
 }>;
 
-/** `ViewInputs` without class names, which come from `styles`. */
-export type StyledViewInputs<Entry> = ViewInputs<Entry> & Filled;
+/** The view inputs of a `Toast.make` module's `view` without class names, which come from `styles`. */
+export type ViewInputs<Entry> = UiViewInputs<Entry> & Filled;
 
 /** A `Toast.make` module's `view` with each part's styles; pass it to `h.submodel` as `view`. */
 export const view = <
@@ -81,25 +71,26 @@ export const view = <
   Entry extends EntryState,
   const List extends ReadonlyArray<Styles>,
 >(
-  toastView: Supported<"Toast", Has, Reads, View<Model, Message, ViewInputs<Entry>>>,
-  ...layers: Layers<List, Owns>
-): View<Model, Message, StyledViewInputs<Entry>> =>
-  defineView<Model, Message, StyledViewInputs<Entry>>((model, inputs, h) =>
+  toastView: Supported<"Toast", Has, Reads, View<Model, Message, UiViewInputs<Entry>>>,
+  ...layers: Layers<List, Styles, "Toast">
+): View<Model, Message, ViewInputs<Entry>> =>
+  defineView<Model, Message, ViewInputs<Entry>>((model, inputs, h) =>
     toastView(
       model,
       {
         ...inputs,
-        containerClassName: sxClassName(layers.map((s) => s.container)),
-        entryClassName: sxClassName(
-          layers.map((s) => (Predicate.isFunction(s.entry) ? undefined : s.entry)),
-        ),
-        entryToView: (entry, handlers) =>
-          inputs.entryToView(entry, {
+        containerClassName: sxClassName(staticPartsOf(layers)((s) => s.container)),
+        entryClassName: sxClassName(staticPartsOf(layers)((s) => s.entry)),
+        entryToView: (entry, handlers) => {
+          const reads: Reads["EntryHandlers"] = handlers;
+
+          return inputs.entryToView(entry, {
             dismiss: appendChildClass(
-              handlers.dismiss,
+              reads.dismiss,
               partsOf(layers, { variant: entry.variant })((s) => s.dismiss),
             ),
-          }),
+          });
+        },
       },
       h,
     ),

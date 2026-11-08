@@ -7,8 +7,8 @@ const { open } = useGallery();
 // The theme's accent token, light-dark(#2563eb, #60a5fa), as Chromium computes it.
 const accent = { light: "rgb(37, 99, 235)", dark: "rgb(96, 165, 250)" } as const;
 
-// The theme's danger token, light-dark(#dc2626, #f87171).
-const danger = { light: "rgb(220, 38, 38)", dark: "rgb(248, 113, 113)" } as const;
+// The theme's danger token, light-dark(#b91c1c, #f87171).
+const danger = { light: "rgb(185, 28, 28)", dark: "rgb(248, 113, 113)" } as const;
 
 describe.each(schemes)("Meter in the %s scheme", (scheme) => {
   it("turns the themed fill to the danger color past the threshold farthest from optimum", async () => {

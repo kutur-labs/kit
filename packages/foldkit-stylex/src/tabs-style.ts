@@ -1,4 +1,3 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Tabs } from "@foldkit/ui";
 import type { ChildAttribute } from "foldkit/html";
@@ -34,6 +33,9 @@ export interface Styles {
   readonly panel?: PartStyle<TabState>;
 }
 
+// Everything this module reads from @foldkit/ui's Tabs. `stateOf`, `styledTab` and `view` read
+// only through these types, and `Supported` checks that the installed @foldkit/ui still has them.
+// Orientations are spelled out, so a renamed one fails `Supported` too.
 type Reads = Readonly<{
   RenderInfo: Readonly<{
     tablist: ReadonlyArray<ChildAttribute>;
@@ -47,15 +49,49 @@ type Reads = Readonly<{
       }>
     >;
   }>;
-  ViewInputs: Readonly<{ orientation?: Tabs.Orientation }>;
+  ViewInputs: Readonly<{
+    orientation?: "Horizontal" | "Vertical";
+    toView: (render: never) => void;
+  }>;
 }>;
 
 type Has = Readonly<{ RenderInfo: Tabs.RenderInfo; ViewInputs: Tabs.ViewInputs }>;
 
+const stateOf = (inputs: Reads["ViewInputs"]): State => ({
+  orientation: inputs.orientation ?? "Horizontal",
+});
+
+// A tab's and its panel's bundles, with their styles.
+const styledTab = (
+  layers: ReadonlyArray<Styles>,
+  state: State,
+  reads: Reads["RenderInfo"]["tabs"][number],
+) => {
+  const part = partsOf(layers, {
+    ...state,
+    isActive: reads.isActive,
+    isDisabled: reads.isDisabled,
+    index: reads.index,
+  } satisfies TabState);
+
+  return {
+    tab: appendChildClass(
+      reads.tab,
+      part((s) => s.tab),
+    ),
+    // After the app's styles: with panelMount "All", @foldkit/ui hides no panel.
+    panel: appendChildClass(
+      reads.panel,
+      part((s) => s.panel),
+      !reads.isActive && tabs.hidden,
+    ),
+  };
+};
+
 /** A `Tabs.create` view with each part's styles; pass it to `h.submodel` as `view`. */
 export const view = <Value extends string, const List extends ReadonlyArray<Styles>>(
   tabsView: Supported<"Tabs", Has, Reads, View<Tabs.Model, Tabs.Message, Tabs.ViewInputs<Value>>>,
-  ...layers: Layers<List, Own.None>
+  ...layers: Layers<List, Styles, "Tabs">
 ): View<Tabs.Model, Tabs.Message, Tabs.ViewInputs<Value>> =>
   defineView<Tabs.Model, Tabs.Message, Tabs.ViewInputs<Value>>((model, inputs, h) =>
     tabsView(
@@ -63,36 +99,16 @@ export const view = <Value extends string, const List extends ReadonlyArray<Styl
       {
         ...inputs,
         toView: (render) => {
-          const state: State = { orientation: inputs.orientation ?? "Horizontal" };
+          const reads: Reads["RenderInfo"] = render;
+          const state = stateOf(inputs);
 
           return inputs.toView({
             ...render,
             tablist: appendChildClass(
-              render.tablist,
+              reads.tablist,
               partsOf(layers, state)((s) => s.tablist),
             ),
-            tabs: render.tabs.map((info) => {
-              const part = partsOf(layers, {
-                ...state,
-                isActive: info.isActive,
-                isDisabled: info.isDisabled,
-                index: info.index,
-              } satisfies TabState);
-
-              return {
-                ...info,
-                tab: appendChildClass(
-                  info.tab,
-                  part((s) => s.tab),
-                ),
-                // After the app's styles: with panelMount "All", @foldkit/ui hides no panel.
-                panel: appendChildClass(
-                  info.panel,
-                  part((s) => s.panel),
-                  !info.isActive && tabs.hidden,
-                ),
-              };
-            }),
+            tabs: render.tabs.map((info) => ({ ...info, ...styledTab(layers, state, info) })),
           });
         },
       },

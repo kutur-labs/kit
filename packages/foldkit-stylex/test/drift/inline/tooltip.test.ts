@@ -8,7 +8,13 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Tooltip's panel owns, and nothing on its trigger", () => {
-  const panel = owns<Own.TooltipPanel>()("position", "margin", "visibility", "pointerEvents");
+  const panel = owns<Own.Owns["Tooltip"]["panel"]>()(
+    "position",
+    "margin",
+    "visibility",
+    "pointerEvents",
+  );
+
   const seen = { trigger: new Set<string>(), panel: new Set<string>() };
 
   Scene.scene(

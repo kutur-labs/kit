@@ -116,14 +116,14 @@ describe("TooltipStyle.view", () => {
 });
 
 describe("@foldkit/ui defects TooltipStyle works around", () => {
-  it("F4: the panel has no z-index", () => {
+  it("the panel has no z-index", () => {
     Scene.scene(
       { update, view },
       Scene.given({ tooltip: shown, inputs: {} }),
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, "#save-panel"),
-          "@foldkit/ui now sets Tooltip's panel z-index inline (F4). Drop anchored.panel from tooltip-style.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex in the panel's owned family.",
+          "@foldkit/ui now sets Tooltip's panel z-index inline. Drop anchored.panel from tooltip-style.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex among the properties @foldkit/ui writes in the panel's family.",
         ).not.toHaveStyle("z-index");
       }),
       mount,

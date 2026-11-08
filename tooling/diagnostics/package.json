@@ -1,0 +1,25 @@
+{
+  "name": "@kutur-kit/diagnostics",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pins the compile errors a package's test/errors fixtures produce, shared by the workspace's tests.",
+  "type": "module",
+  "exports": {
+    "./vitest": "./src/vitest.ts"
+  },
+  "scripts": {
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "vitest": "catalog:testing"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "catalog:tooling",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@types/node": "catalog:tooling",
+    "tsrs": "catalog:tooling"
+  },
+  "engines": {
+    "node": "^26.13.0"
+  }
+}

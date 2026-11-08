@@ -12,7 +12,7 @@ it("@foldkit/ui renders the parts ToastStyle styles and declares the class names
   const parts = ["dismiss"] satisfies ReadonlyArray<keyof ToastStyle.Styles>;
 
   const filled = ["containerClassName", "entryClassName"] satisfies ReadonlyArray<
-    keyof ToastStyle.StyledViewInputs<unknown>
+    keyof ToastStyle.ViewInputs<unknown>
   >;
 
   const Toast = Ui.make(Schema.Struct({ text: Schema.String }));

@@ -248,33 +248,33 @@ describe("ListboxStyle.view", () => {
 });
 
 describe("@foldkit/ui defects ListboxStyle works around", () => {
-  it("F4: the backdrop has no inline cover and the items panel no z-index", () => {
+  it("the backdrop has no inline cover and the items panel no z-index", () => {
     Scene.scene(
       { update, view },
       Scene.given({ listbox: open, flags: unset }),
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, `.${classOf(styles.backdrop)}`),
-          "@foldkit/ui now covers the viewport with Listbox's backdrop inline (F4). Drop anchored.backdrop from internal/listbox.ts, and from functional-styles.ts once no module uses it; type Listbox's backdrop with an Inline family in owned.ts; update the README's What the package sets table.",
+          "@foldkit/ui now covers the viewport with Listbox's backdrop inline. Drop anchored.backdrop from internal/listbox.ts, and from functional-styles.ts once no module uses it; map Listbox's backdrop to an Inline family in Owns in src/internal/owned.ts; update the README's What the package sets table.",
         ).not.toHaveStyle("position");
 
         expect(
           Scene.find(simulation.html, "#language-items"),
-          "@foldkit/ui now sets Listbox's items z-index inline (F4). Drop anchored.panel from internal/listbox.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex in the items' owned family.",
+          "@foldkit/ui now sets Listbox's items z-index inline. Drop anchored.panel from internal/listbox.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex among the properties @foldkit/ui writes in the items' family.",
         ).not.toHaveStyle("z-index");
       }),
       ...mounts,
     );
   });
 
-  it("F5: the enter animation waits on an element Listbox does not render", () => {
+  it("the enter animation waits on an element Listbox does not render", () => {
     Scene.scene(
       { update, view },
       Scene.given({ listbox: at("EnterAnimating", true), flags: unset }),
       Scene.tap((simulation) => {
         expect(
           Option.isNone(Scene.find(simulation.html, `#${open.animation.id}`)),
-          "@foldkit/ui now waits on Listbox's items element for its enter animation (F5), so data-enter and data-transition last until the transition ends. Delete this test. Keep the README's advice to put transition* on the base style: every component's isClosed needs it, not only Listbox's.",
+          "@foldkit/ui now waits on Listbox's items element for its enter animation, so data-enter and data-transition last until the transition ends. Delete this test. Keep the README's advice to put transition* on the base style: every component's isClosed needs it, not only Listbox's.",
         ).toBe(true);
       }),
       ...mounts,

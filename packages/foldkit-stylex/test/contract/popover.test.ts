@@ -160,19 +160,19 @@ describe("PopoverStyle.view", () => {
 });
 
 describe("@foldkit/ui defects PopoverStyle works around", () => {
-  it("F4: the backdrop has no inline cover and the panel no z-index", () => {
+  it("the backdrop has no inline cover and the panel no z-index", () => {
     Scene.scene(
       { update, view },
       Scene.given({ popover: open, inputs: {} }),
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, "#backdrop"),
-          "@foldkit/ui now covers the viewport with Popover's backdrop inline (F4). Drop anchored.backdrop from popover-style.ts, and from functional-styles.ts once no module uses it; type Popover's backdrop with an Inline family in owned.ts; update the README's What the package sets table.",
+          "@foldkit/ui now covers the viewport with Popover's backdrop inline. Drop anchored.backdrop from popover-style.ts, and from functional-styles.ts once no module uses it; map Popover's backdrop to an Inline family in Owns in src/internal/owned.ts; update the README's What the package sets table.",
         ).not.toHaveStyle("position");
 
         expect(
           Scene.find(simulation.html, "#help-panel"),
-          "@foldkit/ui now sets Popover's panel z-index inline (F4). Drop anchored.panel from popover-style.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex in the panel's owned family.",
+          "@foldkit/ui now sets Popover's panel z-index inline. Drop anchored.panel from popover-style.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex among the properties @foldkit/ui writes in the panel's family.",
         ).not.toHaveStyle("z-index");
       }),
       ...mounts,

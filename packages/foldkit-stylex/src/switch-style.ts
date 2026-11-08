@@ -1,7 +1,6 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Switch } from "@foldkit/ui";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
 
@@ -26,15 +25,19 @@ export interface Styles {
   readonly thumb?: "Switch renders no thumb part: draw it inside the button with sx(...)";
 }
 
-// Everything this module reads from @foldkit/ui's Switch. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
-type Reads = Readonly<{
+// Everything this module reads from @foldkit/ui's Switch. `stateOf` and `view` read only
+// through these types, and `Supported` checks that the installed @foldkit/ui still has them. They
+// take the app's Message, so `view` reads each bundle with its own type.
+type Reads<Message = never> = Readonly<{
   Config: Readonly<{
     isChecked: boolean;
     isDisabled?: boolean;
     isReadOnly?: boolean;
+    toView: (attributes: never) => void;
   }>;
-  RenderInfo: Readonly<Record<"button" | "label" | "description", ReadonlyArray<unknown>>>;
+  RenderInfo: Readonly<
+    Record<"button" | "label" | "description", ReadonlyArray<Attribute<Message>>>
+  >;
 }>;
 
 type Has = Readonly<{
@@ -55,7 +58,7 @@ const stateOf = (config: Reads["Config"]): State => ({
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     switchView: Supported<"Switch", Has, Reads, typeof Switch.view>,
-    ...layers: Layers<List, Own.None>
+    ...layers: Layers<List, Styles, "Switch">
   ) =>
   <Message>(config: Switch.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));
@@ -63,22 +66,25 @@ export const view =
     return switchView(
       {
         ...config,
-        toView: (attributes) =>
-          config.toView({
+        toView: (attributes) => {
+          const reads: Reads<Message>["RenderInfo"] = attributes;
+
+          return config.toView({
             ...attributes,
             button: appendClass(
-              attributes.button,
+              reads.button,
               part((s) => s.button),
             ),
             label: appendClass(
-              attributes.label,
+              reads.label,
               part((s) => s.label),
             ),
             description: appendClass(
-              attributes.description,
+              reads.description,
               part((s) => s.description),
             ),
-          }),
+          });
+        },
       },
       h,
     );

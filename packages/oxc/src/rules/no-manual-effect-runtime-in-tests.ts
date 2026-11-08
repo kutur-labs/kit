@@ -2,7 +2,15 @@ import type { ESTree } from "@oxlint/plugins";
 
 import { defineRule } from "@oxlint/plugins";
 
-import { type Imported, type Imports, importsOf, resolve } from "./imports.ts";
+import {
+  effectMemberOf,
+  type Imported,
+  type Imports,
+  importsOf,
+  keyOf,
+  resolve,
+} from "./imports.ts";
+import { variableOf } from "./scope.ts";
 
 // The runners of Effect and of a ManagedRuntime. Effect's `<runner>With` forms take a Context.
 const runners = new Set([
@@ -14,22 +22,12 @@ const runners = new Set([
   "runSyncExit",
 ]);
 
-// The export `imported` names in an Effect module, read from the barrel (`Effect.runSync` from
-// "effect") or the module's own path (`runSync` from "effect/Effect").
-const memberOf = (imported: Imported | undefined, module: string) => {
-  if (imported?.source === `effect/${module}`) return imported.path;
-
-  return imported?.source === "effect" && imported.path.startsWith(`${module}.`)
-    ? imported.path.slice(module.length + 1)
-    : undefined;
-};
-
 const isEffectRunner = (imported: Imported | undefined) =>
-  runners.has(memberOf(imported, "Effect")?.replace(/With$/, "") ?? "");
+  runners.has(effectMemberOf(imported, "Effect")?.replace(/With$/, "") ?? "");
 
 const makesRuntime = (node: ESTree.Node | null, imports: Imports) =>
   node?.type === "CallExpression" &&
-  memberOf(resolve(node.callee, imports), "ManagedRuntime") === "make";
+  effectMemberOf(resolve(node.callee, imports), "ManagedRuntime") === "make";
 
 export const noManualEffectRuntimeInTests = defineRule({
   meta: {
@@ -38,13 +36,21 @@ export const noManualEffectRuntimeInTests = defineRule({
     schema: [],
     messages: {
       manualRuntime:
-        "Manual Effect runner `{{runner}}` in a test. It runs the effect on the real clock and outside the test's Layers and scope, so time-based code waits for real time and each test wires its services by hand. Fix: write the test with `it.effect` from `@effect/vitest`, provide services with Layers and control time with `TestClock`.",
+        "Manual Effect runner `{{runner}}` in a test. It runs the effect on the real clock and outside the test's Layers and scope, so time-based code waits for real time and each test wires its services by hand. Fix: write the test with `it.effect` from `@effect/vitest`, provide services with Layers and control time with `TestClock` from `effect/testing`.",
     },
   },
   createOnce(context) {
     let imports: Imports = new Map();
-    // Names bound to a `ManagedRuntime.make(...)` result in this file.
-    let runtimes = new Set<string>();
+
+    // `ManagedRuntime.make(...)`, or a variable it is assigned to, where it is declared or later, as
+    // in `beforeAll(() => { runtime = ManagedRuntime.make(layer); })`.
+    const isRuntime = (node: ESTree.Expression | null): boolean => {
+      if (node?.type !== "Identifier") return makesRuntime(node, imports);
+
+      const references = variableOf(context.sourceCode, node)?.references ?? [];
+
+      return references.some(({ writeExpr }) => makesRuntime(writeExpr, imports));
+    };
 
     const report = (node: ESTree.Node) =>
       context.report({
@@ -56,13 +62,19 @@ export const noManualEffectRuntimeInTests = defineRule({
     return {
       Program(program) {
         imports = importsOf(program);
-        runtimes = new Set();
       },
       ImportSpecifier(node) {
         if (isEffectRunner(imports.get(node.local.name))) report(node.imported);
       },
+      // `const { runPromise } = runtime`.
       VariableDeclarator({ id, init }) {
-        if (id.type === "Identifier" && makesRuntime(init, imports)) runtimes.add(id.name);
+        if (id.type !== "ObjectPattern" || !isRuntime(init)) return;
+
+        for (const property of id.properties) {
+          if (property.type === "Property" && runners.has(keyOf(property) ?? "")) {
+            report(property.key);
+          }
+        }
       },
       MemberExpression(node) {
         if (isEffectRunner(resolve(node, imports))) {
@@ -73,15 +85,11 @@ export const noManualEffectRuntimeInTests = defineRule({
 
         const { object, property } = node;
 
-        const isRuntime =
-          (object.type === "Identifier" && runtimes.has(object.name)) ||
-          makesRuntime(object, imports);
-
         if (
-          isRuntime &&
-          property.type === "Identifier" &&
           !node.computed &&
-          runners.has(property.name)
+          property.type === "Identifier" &&
+          runners.has(property.name) &&
+          isRuntime(object)
         ) {
           report(node);
         }

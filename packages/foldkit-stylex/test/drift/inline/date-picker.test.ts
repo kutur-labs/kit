@@ -10,10 +10,12 @@ import { expect, it } from "vitest";
 
 import { inline, owns, sorted } from "./inline-style.ts";
 
-it("@foldkit/ui writes inline what DatePicker's open trigger and panel own, and nothing else", () => {
-  const trigger = owns<Own.OpenTrigger>()("position", "zIndex");
-  const panel = owns<Own.AnchoredPanel>()("position", "margin", "visibility");
-  const none = owns<Own.None>()();
+it("@foldkit/ui writes inline what DatePicker's open trigger and panel own, and nothing on its wrapper and backdrop", () => {
+  const trigger = owns<Own.Owns["DatePicker"]["trigger"]>()("position", "zIndex");
+  const panel = owns<Own.Owns["DatePicker"]["panel"]>()("position", "margin", "visibility");
+  // This package sets what the wrapper and backdrop own.
+  const wrapper = owns<Own.Owns["DatePicker"]["wrapper"]>()();
+  const backdrop = owns<Own.Owns["DatePicker"]["backdrop"]>()();
 
   const seen = {
     wrapper: new Set<string>(),
@@ -53,8 +55,8 @@ it("@foldkit/ui writes inline what DatePicker's open trigger and panel own, and 
     ),
   );
 
-  expect(sorted(seen.wrapper)).toEqual(sorted(none));
+  expect(sorted(seen.wrapper)).toEqual(sorted(wrapper));
   expect(sorted(seen.trigger)).toEqual(sorted(trigger));
-  expect(sorted(seen.backdrop)).toEqual(sorted(none));
+  expect(sorted(seen.backdrop)).toEqual(sorted(backdrop));
   expect(sorted(seen.panel)).toEqual(sorted(panel));
 });

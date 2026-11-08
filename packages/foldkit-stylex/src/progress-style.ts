@@ -1,7 +1,6 @@
-import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Progress } from "@foldkit/ui";
-import type { Html, HtmlBuilder } from "foldkit/html";
+import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import * as Predicate from "effect/Predicate";
 
@@ -37,14 +36,18 @@ export interface Styles {
   readonly indicator?: PartStyle<State>;
 }
 
-type Owns = Readonly<{ indicator: Own.ValueFill }>;
-
-// Everything this module reads from @foldkit/ui's Progress. `stateOf` reads only these, and
-// `Supported` checks that the installed @foldkit/ui still has them.
-type Reads = Readonly<{
-  Config: Readonly<{ value?: number; min?: number; max?: number }>;
+// Everything this module reads from @foldkit/ui's Progress. `stateOf` and `view` read only
+// through these types, and `Supported` checks that the installed @foldkit/ui still has them. They
+// take the app's Message, so `view` reads each bundle with its own type.
+type Reads<Message = never> = Readonly<{
+  Config: Readonly<{
+    value?: number;
+    min?: number;
+    max?: number;
+    toView: (attributes: never) => void;
+  }>;
   RenderInfo: Readonly<
-    Record<"progress" | "label" | "track" | "indicator", ReadonlyArray<unknown>>
+    Record<"progress" | "label" | "track" | "indicator", ReadonlyArray<Attribute<Message>>>
   >;
 }>;
 
@@ -72,7 +75,7 @@ const stateOf = (config: Reads["Config"]): State => {
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     progressView: Supported<"Progress", Has, Reads, typeof Progress.view>,
-    ...layers: Layers<List, Owns>
+    ...layers: Layers<List, Styles, "Progress">
   ) =>
   <Message>(config: Progress.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));
@@ -80,26 +83,29 @@ export const view =
     return progressView(
       {
         ...config,
-        toView: (attributes) =>
-          config.toView({
+        toView: (attributes) => {
+          const reads: Reads<Message>["RenderInfo"] = attributes;
+
+          return config.toView({
             ...attributes,
             progress: appendClass(
-              attributes.progress,
+              reads.progress,
               part((s) => s.progress),
             ),
             label: appendClass(
-              attributes.label,
+              reads.label,
               part((s) => s.label),
             ),
             track: appendClass(
-              attributes.track,
+              reads.track,
               part((s) => s.track),
             ),
             indicator: appendClass(
-              attributes.indicator,
+              reads.indicator,
               part((s) => s.indicator),
             ),
-          }),
+          });
+        },
       },
       h,
     );

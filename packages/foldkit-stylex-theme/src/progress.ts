@@ -2,12 +2,14 @@ import type { ProgressStyle } from "@kutur-kit/foldkit-stylex";
 
 import * as stylex from "@stylexjs/stylex";
 
+import { base } from "./internal/base.ts";
 import { color, fontSize, motion } from "./tokens.stylex.ts";
 
-// From wholly before the track's start to wholly past its end, for an indicator 40% of its width.
+// From wholly before the track's inline start to wholly past its end, for an indicator 40% of its
+// width. A margin rather than translate, so it runs the other way in a right-to-left page.
 const sweep = stylex.keyframes({
-  from: { translate: "-100% 0" },
-  to: { translate: "250% 0" },
+  from: { marginInlineStart: "-40%" },
+  to: { marginInlineStart: "100%" },
 });
 
 const styles = stylex.create({
@@ -18,7 +20,6 @@ const styles = stylex.create({
     blockSize: "0.5rem",
     overflow: "hidden",
     borderRadius: 9999,
-    backgroundColor: color.border,
   },
   indicator: {
     borderRadius: 9999,
@@ -44,6 +45,6 @@ const styles = stylex.create({
  */
 export const progressTheme = {
   label: styles.label,
-  track: styles.track,
+  track: [styles.track, base.borderFill],
   indicator: (state) => [styles.indicator, state.isIndeterminate && styles.indeterminate],
 } satisfies ProgressStyle.Styles;

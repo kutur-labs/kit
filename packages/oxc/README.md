@@ -46,10 +46,10 @@ In test files (`*.test.*`, `*.spec.*`, `test/**` and `tests/**`), `/effect` also
 
 `/foldkit-stylex` checks what the types of `@kutur-kit/foldkit-stylex` cannot see:
 
-- a second Class on an element, or one that replaces a @foldkit/ui part's styles;
+- a second Class on an element, or a Class or Style that replaces a @foldkit/ui part's, on a bundle `toView` hands out or `DragAndDropStyle.draggable` returns, or in a `*Attributes` view input;
 - a @foldkit/ui view used without its `XStyle.view` wrapper;
-- StyleX condition keys that never match or that rank differently than written;
-- `createTheme`, theme overrides without `satisfies ThemeOverrides` and annotated styles objects;
+- StyleX condition keys that never match or that rank differently than written, such as `:focus-visible` or `:has(:focus-visible)` next to `:hover` or `:user-invalid`;
+- `createTheme`, `--fks-*` tokens set on an element, theme overrides without `satisfies ThemeOverrides`, styles objects annotated or cast with `as`, and arrays of them annotated, cast or typed as a parameter;
 - StyleX's own Vite plugin.
 
 It also turns on StyleX's ESLint rules. Each message names the fix. Add `@stylexjs/eslint-plugin` to your `devDependencies` beside Oxlint, then extend the preset in `oxlint.config.ts`:
@@ -73,7 +73,9 @@ Or in `.oxlintrc.json`, which extends configs by path:
 }
 ```
 
-The rules recognise `sx`, the `XStyle` namespaces, StyleX and @foldkit/ui by their imports, named, aliased or as a namespace, and read each file on its own. They miss a @foldkit/ui view or a `create()` result that reaches the file through another module, and a Class that a helper adds inside a bundle.
+The rules recognise `sx`, the `XStyle` namespaces, StyleX, Effect and @foldkit/ui by their imports, named, aliased or as a namespace, and read each file on its own. They recognise @foldkit/ui parts by the names `toView`, `entryToView`, `toCalendarView` and `*Attributes`, so an app's own Submodel that uses those names is checked as a @foldkit/ui part. They follow bundles through `map`, `flatMap` and `filter` written in place, as array methods, Effect `Array` functions or `pipe` steps.
+
+They miss a @foldkit/ui view, a `create()` result or a styled draggable that reaches the file through another module, a bundle kept in a variable or iterated another way, a Class that a helper adds to a bundle passed to it, and a `*Attributes` input whose `childAttributes([...])` call is not written in place.
 
 ### Suppression comments
 

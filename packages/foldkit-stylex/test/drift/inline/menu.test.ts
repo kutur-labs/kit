@@ -9,9 +9,20 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Menu's open trigger and items own, and nothing on its other parts", () => {
-  const button = owns<Own.OpenTrigger>()("position", "zIndex");
-  const items = owns<Own.AnchoredPanel>()("position", "margin", "visibility");
-  const seen = { button: new Set<string>(), items: new Set<string>(), rest: new Set<string>() };
+  const button = owns<Own.Owns["Menu"]["button"]>()("position", "zIndex");
+  const items = owns<Own.Owns["Menu"]["items"]>()("position", "margin", "visibility");
+  // This package sets what the wrapper and backdrop own.
+  const wrapper = owns<Own.Owns["Menu"]["wrapper"]>()();
+  const backdrop = owns<Own.Owns["Menu"]["backdrop"]>()();
+
+  const seen = {
+    button: new Set<string>(),
+    items: new Set<string>(),
+    wrapper: new Set<string>(),
+    backdrop: new Set<string>(),
+    rest: new Set<string>(),
+  };
+
   const Actions = Menu.create<"copy" | "paste">();
 
   const open = Actions.update(
@@ -20,7 +31,7 @@ it("@foldkit/ui writes inline what Menu's open trigger and items own, and nothin
   ).model;
 
   // Class names only to find each part; the styled view fills them from styles.
-  const rest = ["wrapper", "backdrop", "scroll", "item", "group", "heading", "separator"];
+  const rest = ["scroll", "item", "group", "heading", "separator"];
 
   Scene.scene(
     {
@@ -46,6 +57,8 @@ it("@foldkit/ui writes inline what Menu's open trigger and items own, and nothin
     Scene.given(open),
     inline("#actions-button", seen.button),
     inline("#actions-items", seen.items),
+    inline(".wrapper", seen.wrapper),
+    inline(".backdrop", seen.backdrop),
     ...rest.map((part) => inline(`.${part}`, seen.rest)),
     Scene.Mount.resolve(Menu.AnchorMenu, Menu.Message.CompletedAnchorMenu()),
     Scene.Mount.resolve(Menu.PortalMenuBackdrop, Menu.Message.CompletedPortalMenuBackdrop()),
@@ -53,5 +66,7 @@ it("@foldkit/ui writes inline what Menu's open trigger and items own, and nothin
 
   expect(sorted(seen.button)).toEqual(sorted(button));
   expect(sorted(seen.items)).toEqual(sorted(items));
+  expect(sorted(seen.wrapper)).toEqual(sorted(wrapper));
+  expect(sorted(seen.backdrop)).toEqual(sorted(backdrop));
   expect(sorted(seen.rest)).toEqual([]);
 });

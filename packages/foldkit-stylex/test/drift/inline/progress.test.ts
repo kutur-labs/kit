@@ -8,7 +8,7 @@ import { expect, it } from "vitest";
 import { inline, owns, sorted } from "./inline-style.ts";
 
 it("@foldkit/ui writes inline what Progress's indicator owns, with and without a value", () => {
-  const indicator = owns<Own.ValueFill>()("width");
+  const indicator = owns<Own.Owns["Progress"]["indicator"]>()("width");
   const seen = new Set<string>();
 
   for (const config of [{ value: 40 }, {}]) {

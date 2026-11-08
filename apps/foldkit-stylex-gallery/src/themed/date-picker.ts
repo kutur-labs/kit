@@ -58,8 +58,14 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
 const styles = stylex.create({
   // Room below the trigger for the panel.
   wrapper: { paddingBlockEnd: 440 },
-  // A token set on the panel reaches it in the portal root and the calendar inside it.
-  violet: { [color.accent]: "light-dark(#6d28d9, #c4b5fd)" },
+  // A token set on the panel reaches it in the portal root and the calendar inside it. Under forced
+  // colors it keeps the accent's Highlight.
+  violet: {
+    [color.accent]: {
+      default: "light-dark(#6d28d9, #c4b5fd)",
+      "@media (forced-colors: active)": "Highlight",
+    },
+  },
 });
 
 const datePickerView = DatePickerStyle.view(DatePicker.view, datePickerTheme, {

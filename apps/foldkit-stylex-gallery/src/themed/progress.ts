@@ -31,7 +31,10 @@ const styles = stylex.create({
   field: { display: "grid", gap: space.sm },
   buttons: { display: "flex", gap: space.sm },
   // A token set on one part: this indicator draws in the text color where the look reads the accent.
-  ink: { [color.accent]: color.text },
+  // The value replaces the accent's Highlight under forced colors too, so it brings its own.
+  ink: {
+    [color.accent]: { default: color.text, "@media (forced-colors: active)": "CanvasText" },
+  },
 });
 
 const progressView = ProgressStyle.view(Progress.view, progressTheme);

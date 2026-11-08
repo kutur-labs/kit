@@ -1,5 +1,5 @@
 import type { Callbacks, Has } from "./internal/items.ts";
-import type { Filled, ItemState, Owns, Reads, Styles } from "./internal/listbox.ts";
+import type { Filled, ItemState, Reads, Styles } from "./internal/listbox.ts";
 import type { Layers } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Listbox } from "@foldkit/ui";
@@ -33,7 +33,7 @@ export const view = <Item, Value extends string, const List extends ReadonlyArra
       h: HtmlBuilder<Listbox.Message>,
     ) => Html
   >,
-  ...layers: Layers<List, Owns>
+  ...layers: Layers<List, Styles, "Listbox">
 ): View<Listbox.Model, Listbox.Message, ViewInputs<Item, Value>> =>
   defineView<Listbox.Model, Listbox.Message, ViewInputs<Item, Value>>((model, inputs, h) =>
     listboxView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

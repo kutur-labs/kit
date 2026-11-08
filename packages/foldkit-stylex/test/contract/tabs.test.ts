@@ -132,14 +132,14 @@ describe("TabsStyle.view", () => {
 
 describe("@foldkit/ui defects TabsStyle works around", () => {
   // A hidden attribute alone would not do: an app's display beats the user agent's [hidden] rule.
-  it('F15: an inactive panel under panelMount "All" has no inline display', () => {
+  it('an inactive panel under panelMount "All" has no inline display', () => {
     Scene.scene(
       { update, view },
       Scene.given(unset),
       Scene.tap((simulation) => {
         expect(
           Scene.find(simulation.html, "#sections-panel-1"),
-          "@foldkit/ui now hides inactive tab panels inline under panelMount \"All\" (F15). Drop tabs.hidden from functional-styles.ts and its after-rule from tabs-style.ts; update the README's What the package sets table and Styles.panel's doc.",
+          "@foldkit/ui now hides inactive tab panels inline under panelMount \"All\". Drop tabs.hidden from functional-styles.ts and its after-rule from tabs-style.ts; update the README's What the package sets table and Styles.panel's doc.",
         ).not.toHaveStyle("display");
       }),
     );

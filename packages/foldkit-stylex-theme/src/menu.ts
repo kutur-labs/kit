@@ -4,16 +4,11 @@ import * as stylex from "@stylexjs/stylex";
 
 import { base } from "./internal/base.ts";
 import { list, listIndicator } from "./internal/list.ts";
-import { space } from "./tokens.stylex.ts";
 
 const styles = stylex.create({
-  // Focus stays on the panel while the active item moves, so the active item shows focus.
-  items: {
-    boxSizing: "border-box",
-    minInlineSize: "max(12rem, var(--button-width, 0px))",
-    padding: space.xs,
-    outlineStyle: "none",
-  },
+  // Focus stays on the panel while the active item moves, so the active item shows focus. A menu
+  // of actions may be wider than its button, never narrower than 12rem.
+  items: { minInlineSize: "max(12rem, var(--button-width, 0px))", outlineStyle: "none" },
 });
 
 /**
@@ -27,14 +22,20 @@ export const menuTheme = {
     state.isVisible && base.pressed,
     state.isButtonDisabled && base.disabled,
   ],
-  items: (state) => [base.panel, base.transition, styles.items, state.isClosed && base.closed],
+  items: (state) => [
+    base.panel,
+    base.transition,
+    list.items,
+    styles.items,
+    state.isClosed && base.closed,
+  ],
   item: (state) => [
     list.item,
     state.isActive && list.activeItem,
     state.isDisabled && base.disabled,
   ],
   heading: list.heading,
-  separator: list.separator,
+  separator: [list.separator, base.borderFill],
 } satisfies MenuStyle.Styles;
 
 /**
