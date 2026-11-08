@@ -8,3 +8,5 @@ Copied `src/` without upstream test files. Licenses, including the nested eslint
 Used by the `/anti-slop` preset. Vendored files are typechecked but excluded from linting and formatting. Keep `@oxlint/plugins` pinned to the Oxlint version.
 
 Local change: `shared/dictionary-types.ts` uses `?? null` for an indexed access to compile with `noUncheckedIndexedAccess`. Preserve this when updating.
+
+Local change: `rules/no-shape-in-symbol-names.ts` skips a property key or JSX attribute that names a CSS or SVG property, such as `shapeOutside` or `cornerShape`, because CSS owns those names. Preserve this when updating.

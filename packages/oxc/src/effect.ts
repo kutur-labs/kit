@@ -25,6 +25,12 @@ const effect: OxlintConfig = {
     // Effect's documented form for a service is a class that extends `Context.Service`.
     "effecttsgo/service-not-as-class": "warn",
   },
+  overrides: [
+    {
+      files: ["**/*.test.*", "**/*.spec.*", "**/test/**", "**/tests/**"],
+      rules: { "kit/no-manual-effect-runtime-in-tests": "error" },
+    },
+  ],
   options: { typeAware: true },
 };
 

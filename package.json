@@ -20,7 +20,7 @@
     "lint:repo": "effect-tsgo --tsrs-lint oxlint .",
     "lint:structure": "konsistent check --error-on-warnings",
     "prepare": "husky",
-    "release": "pnpm build && pnpm check && changeset publish",
+    "release": "pnpm build && pnpm check && turbo run test:browser test:packed && changeset publish",
     "release:version": "changeset version",
     "test": "turbo run test",
     "test:mutation": "turbo run test:mutation",

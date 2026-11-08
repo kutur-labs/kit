@@ -1,0 +1,23 @@
+name: Chromium
+description: Installs the Chromium headless shell that the gallery's Playwright drives, with its system libraries. Run it after the setup action.
+
+runs:
+  using: composite
+  steps:
+    # Each Playwright version drives its own browser build, so the version keys the cache.
+    - id: playwright
+      shell: bash
+      run: |
+        version=$(pnpm --filter @kutur-kit/foldkit-stylex-gallery exec playwright --version | cut -d ' ' -f 2)
+        echo "version=$version" >> "$GITHUB_OUTPUT"
+    - id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.version }}
+    - if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm --filter @kutur-kit/foldkit-stylex-gallery exec playwright install --only-shell chromium
+    # The cache holds the browser only; apt installs its libraries on every run.
+    - shell: bash
+      run: pnpm --filter @kutur-kit/foldkit-stylex-gallery exec playwright install-deps chromium

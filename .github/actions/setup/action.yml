@@ -13,14 +13,15 @@ runs:
         cache: pnpm
     - shell: bash
       run: pnpm install --frozen-lockfile
-    # A cache entry cannot be overwritten, so each commit saves its own and
-    # restores the latest one before it; Turbo then skips unchanged tasks.
-    # Pull requests read their base branch's entries but save only their own.
+    # A cache entry cannot be overwritten and jobs run different tasks, so each
+    # job saves its own entry per commit and restores its latest one before it;
+    # Turbo then skips unchanged tasks. github.job names the calling job. Pull
+    # requests read their base branch's entries but save only their own.
     - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.sha }}
-        restore-keys: turbo-${{ runner.os }}-${{ runner.arch }}-
+        key: turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.workflow }}-${{ github.job }}-${{ github.sha }}
+        restore-keys: turbo-${{ runner.os }}-${{ runner.arch }}-${{ github.workflow }}-${{ github.job }}-
     # Restored entries would otherwise accumulate from run to run.
     - shell: bash
       run: echo "TURBO_CACHE_MAX_AGE=7d" >> "$GITHUB_ENV"

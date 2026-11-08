@@ -1,0 +1,83 @@
+{
+  "name": "@kutur-kit/foldkit-stylex",
+  "version": "0.0.0",
+  "description": "StyleX for every @foldkit/ui component: typed styles per part and state, and the CSS each component needs to work.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kutur-labs/kit.git",
+    "directory": "packages/foldkit-stylex"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "./src/internal/compiled.ts",
+    "./dist/internal/compiled.js"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./vite": "./src/vite.ts"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./vite": {
+        "types": "./dist/vite.d.ts",
+        "default": "./dist/vite.js"
+      }
+    },
+    "access": "public"
+  },
+  "scripts": {
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsrs -p tsconfig.build.json",
+    "lint:package": "publint --pack pnpm --strict",
+    "prepack": "pnpm run build",
+    "test": "vitest run",
+    "test:contract": "vitest run test/contract",
+    "test:drift": "vitest run test/drift",
+    "test:mutation": "stryker run",
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@effect/platform-browser": "catalog:runtime",
+    "@effect/tsgo": "catalog:tooling",
+    "@foldkit/ui": "catalog:runtime",
+    "@kutur-kit/diagnostics": "workspace:*",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@stryker-mutator/core": "catalog:testing",
+    "@stryker-mutator/vitest-runner": "catalog:testing",
+    "@stylexjs/stylex": "catalog:runtime",
+    "@stylexjs/unplugin": "catalog:tooling",
+    "@types/node": "catalog:tooling",
+    "effect": "catalog:runtime",
+    "foldkit": "catalog:runtime",
+    "happy-dom": "catalog:testing",
+    "publint": "catalog:tooling",
+    "tsrs": "catalog:tooling",
+    "unplugin": "catalog:tooling",
+    "vite": "catalog:tooling",
+    "vitest": "catalog:testing"
+  },
+  "peerDependencies": {
+    "@foldkit/ui": "catalog:peers",
+    "@stylexjs/stylex": "catalog:peers",
+    "@stylexjs/unplugin": "catalog:peers",
+    "effect": "catalog:peers",
+    "foldkit": "catalog:peers",
+    "vite": "catalog:peers"
+  },
+  "peerDependenciesMeta": {
+    "@stylexjs/unplugin": {
+      "optional": true
+    },
+    "vite": {
+      "optional": true
+    }
+  }
+}

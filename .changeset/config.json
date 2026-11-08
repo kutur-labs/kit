@@ -1,7 +1,10 @@
 {
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [["@kutur-kit/access", "@kutur-kit/audit"]],
+  "fixed": [
+    ["@kutur-kit/access", "@kutur-kit/audit"],
+    ["@kutur-kit/foldkit-stylex", "@kutur-kit/foldkit-stylex-theme"]
+  ],
   "linked": [],
   "access": "public",
   "baseBranch": "main",

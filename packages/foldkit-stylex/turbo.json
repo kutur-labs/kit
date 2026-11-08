@@ -1,0 +1,13 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "test:contract": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test:drift": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    }
+  }
+}

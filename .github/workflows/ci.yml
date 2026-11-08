@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Pull requests reuse Turbo's cache and run only what their changes
+  # affect. Every other run executes all tasks, refreshing that cache.
+  TURBO_FORCE: ${{ github.event_name != 'pull_request' }}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -53,9 +58,6 @@ jobs:
       TEST_S3_ENDPOINT: http://localhost:9000
       TEST_S3_ACCESS_KEY_ID: kit
       TEST_S3_SECRET_ACCESS_KEY: kit-secret
-      # Pull requests reuse Turbo's cache and run only what their changes
-      # affect. Every other run executes all tasks, refreshing that cache.
-      TURBO_FORCE: ${{ github.event_name != 'pull_request' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -71,6 +73,20 @@ jobs:
         run: pnpm exec commitlint --strict --from "$BASE" --to "$HEAD"
       - run: pnpm build
       - run: pnpm check
+
+  browser:
+    # The gallery's browser tests drive its production build in Chromium; its
+    # packed tests install the packed core and theme into an app outside the
+    # workspace. `pnpm release` runs both before it publishes.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/chromium
+      - run: pnpm exec turbo run test:browser test:packed
 
   r2:
     # Deploys a Worker and R2 bucket with alchemy, runs the asset contracts on

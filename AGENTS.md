@@ -16,7 +16,7 @@
 | `testing` | Test-only tools in `devDependencies`                        |
 | `peers`   | Tested consumer compatibility ranges in `peerDependencies`  |
 
-Declare dependencies in the package that imports them. Put build and test tools in `devDependencies`. Libraries use peers for dependencies supplied by consumers, with pinned development copies for checks. Mark a peer optional only if core imports work without it. Apps install required peers themselves. Test compatibility before widening peer ranges.
+Declare dependencies in the package that imports them. Put build and test tools in `devDependencies`. Libraries use peers for dependencies supplied by consumers, with pinned development copies for checks. Mark a peer optional only if core imports work without it. Apps install required peers themselves. Test compatibility before widening peer ranges. A peer may be open below 1.0 when a scheduled job tests the latest version; the catalog comment names it.
 
 ## Workspace and checks
 
@@ -35,8 +35,9 @@ Declare dependencies in the package that imports them. Put build and test tools 
 
 - Versions and changelogs come from [Changesets](https://changesets.dev). Add a changeset with `pnpm changeset` in the change's pull request, for each public package it affects.
 - Packages are in alpha: `0.1.0-alpha.N`, published under the `alpha` npm tag (`.changeset/pre.json`). `@kutur-kit/strict` started at `0.1.0` without a changeset; its later changesets follow pre mode too. Move to beta with `pnpm changeset pre exit` and `pnpm changeset pre enter beta`; exit pre mode for a normal release.
-- `@kutur-kit/access` and `@kutur-kit/audit` always release together with the same version. `@kutur-kit/assets`, `@kutur-kit/oxc`, `@kutur-kit/strict` and `@kutur-kit/tsconfig` are versioned on their own. Private workspaces are never versioned.
-- To release, run `pnpm release:version`, review and commit the versions and changelogs, then run `pnpm release`. It builds, checks and publishes with pnpm. A package's first publish also becomes its `latest` tag; later prereleases move only `alpha`, so READMEs install with `@alpha`.
+- `@kutur-kit/access` and `@kutur-kit/audit` always release together with the same version, as do `@kutur-kit/foldkit-stylex` and `@kutur-kit/foldkit-stylex-theme`. `@kutur-kit/assets`, `@kutur-kit/oxc`, `@kutur-kit/strict` and `@kutur-kit/tsconfig` are versioned on their own. Private workspaces are never versioned.
+- To release, run `pnpm release:version`, review and commit the versions and changelogs, then run `pnpm release`. It builds, checks, runs `test:browser` and `test:packed` and publishes with pnpm. A package's first publish also becomes its `latest` tag; later prereleases move only `alpha`, so READMEs install with `@alpha`. A package first published as a placeholder needs `npm dist-tag add <name>@<version> latest` after its first alpha.
+- Deploy the docs with `pnpm --filter @kutur-kit/docs deploy:prod` after each release, with the user's approval.
 
 ## File names
 

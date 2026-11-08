@@ -1,0 +1,34 @@
+{
+  "name": "@kutur-kit/foldkit-stylex-gallery",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev",
+    "test": "vitest run",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "test:packed": "vitest run --config vitest.packed.config.ts",
+    "typecheck": "effect-tsgo tsrs -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform-browser": "catalog:runtime",
+    "@foldkit/ui": "catalog:runtime",
+    "@kutur-kit/foldkit-stylex": "workspace:*",
+    "@kutur-kit/foldkit-stylex-theme": "workspace:*",
+    "@stylexjs/stylex": "catalog:runtime",
+    "effect": "catalog:runtime",
+    "foldkit": "catalog:runtime"
+  },
+  "devDependencies": {
+    "@effect/tsgo": "catalog:tooling",
+    "@foldkit/vite-plugin": "catalog:tooling",
+    "@kutur-kit/tsconfig": "workspace:*",
+    "@stylexjs/unplugin": "catalog:tooling",
+    "@types/node": "catalog:tooling",
+    "playwright": "catalog:testing",
+    "tsrs": "catalog:tooling",
+    "unplugin": "catalog:tooling",
+    "vite": "catalog:tooling",
+    "vitest": "catalog:testing"
+  }
+}

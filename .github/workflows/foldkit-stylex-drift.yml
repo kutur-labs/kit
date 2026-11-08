@@ -1,0 +1,30 @@
+name: foldkit-stylex drift
+
+# Compares the components, parts and inline styles of the newest @foldkit/ui
+# with what @kutur-kit/foldkit-stylex covers. A failure names an addition the
+# package does not cover yet and can stay red until the next feature round; the
+# daily canary still reports breaks.
+on:
+  schedule:
+    - cron: "41 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: node scripts/pin-foldkit-stylex-canary.ts
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm exec turbo run test:drift --filter @kutur-kit/foldkit-stylex

@@ -1,0 +1,35 @@
+name: foldkit-stylex canary
+
+# Kit's catalogs pin the lowest foldkit, @foldkit/ui and StyleX that
+# @kutur-kit/foldkit-stylex's peer ranges accept; this tests the newest. It must
+# stay green: a failure means a release breaks something the package reads.
+# Fix it, raise the floor and release a patch.
+on:
+  schedule:
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  breaking:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: node scripts/pin-foldkit-stylex-canary.ts
+      - run: pnpm install --no-frozen-lockfile
+      - uses: ./.github/actions/chromium
+      - run: pnpm exec turbo run typecheck test:contract test:browser test:packed --filter "@kutur-kit/foldkit-stylex*"
+      # Lints its fixtures with the /foldkit-stylex preset, which loads the
+      # pinned @stylexjs/eslint-plugin. Only oxc's test: the core's test task
+      # also runs the drift suite, which the drift workflow owns.
+      - run: pnpm exec turbo run test --filter @kutur-kit/oxc
