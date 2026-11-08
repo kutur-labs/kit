@@ -1,7 +1,8 @@
 // Pins what the foldkit-stylex canary and drift workflows test, in the pnpm-workspace.yaml of the
 // working directory: the latest foldkit, @foldkit/ui and @foldkit/vite-plugin, the newest StyleX
 // within @kutur-kit/foldkit-stylex's peer range and the newest Effect that those Foldkit releases
-// and kit's peer range accept. pnpm adds an exact minimumReleaseAgeExclude entry for each release
+// and kit's peer range accept. A Foldkit peer range that leaves out the latest release also
+// accepts it here, so strict peers install it and the workflows test whether kit supports it. pnpm adds an exact minimumReleaseAgeExclude entry for each release
 // younger than its minimum age that it installs, so a pin from today installs too. Kit's own
 // catalogs pin the lowest versions the peer ranges promise, so the workflows run this in their
 // checkout only.
@@ -23,6 +24,28 @@ const view = (name: string, range: string, field: string) => {
 };
 
 const unquote = (text: string) => (text.startsWith('"') ? text.slice(1, -1) : text);
+
+// semver's CLI prints the versions every -r range accepts, lowest first; it exits with 1 and prints
+// nothing when there are none. --reporter=silent keeps the install progress that pnpm prints to
+// stderr on a cold dlx cache out of the failure check.
+const accepted = (ranges: ReadonlyArray<string>, versions: ReadonlyArray<string>) => {
+  const { status, stdout, stderr } = spawnSync(
+    "pnpm",
+    [
+      "--reporter=silent",
+      "dlx",
+      "semver@7.8.5",
+      ...ranges.flatMap((range) => ["-r", range]),
+      ...versions,
+    ],
+    { encoding: "utf8" },
+  );
+
+  if (status !== 0 && stderr.trim() !== "")
+    throw new Error(`pnpm dlx semver@7.8.5 failed:\n${stderr}`);
+
+  return status === 0 ? stdout.trim().split("\n") : [];
+};
 
 const isFoldkit = (name: string) => name === "foldkit" || name.startsWith("@foldkit/");
 
@@ -91,28 +114,13 @@ const effectRanges = [
 const published = JSON.parse(view("effect", "latest", "versions")) as ReadonlyArray<string>;
 
 // pnpm view returns the newest match of one range only, and for space-joined ranges that share no
-// version it returns one outside them. semver's CLI prints the versions every -r range accepts,
-// lowest first; it exits with 1 and prints nothing when there are none. --reporter=silent keeps
-// the install progress that pnpm prints to stderr on a cold dlx cache out of the failure check.
-const accepted = spawnSync(
-  "pnpm",
-  [
-    "--reporter=silent",
-    "dlx",
-    "semver@7.8.5",
-    ...effectRanges.flatMap(({ range }) => ["-r", range]),
-    ...published,
-  ],
-  { encoding: "utf8" },
-);
+// version it returns one outside them.
+const effect = accepted(
+  effectRanges.map(({ range }) => range),
+  published,
+).at(-1);
 
-if (accepted.status !== 0 && accepted.stderr.trim() !== "") {
-  throw new Error(`pnpm dlx semver@7.8.5 failed:\n${accepted.stderr}`);
-}
-
-const effect = accepted.stdout.trim().split("\n").at(-1);
-
-if (accepted.status !== 0 || effect === undefined) {
+if (effect === undefined) {
   throw new Error(
     [
       "No effect release satisfies every range:",
@@ -130,12 +138,23 @@ const bumps = pinned.flatMap((entry) => {
   return pin === undefined || pin === entry.value ? [] : [{ ...entry, pin }];
 });
 
-for (const { index, key, pin } of bumps) lines[index] = `    ${key}: ${pin}`;
+const widened = entries.flatMap((entry) => {
+  const pin = pins.get(entry.name);
+
+  return entry.catalog === "peers" &&
+    isFoldkit(entry.name) &&
+    pin !== undefined &&
+    accepted([entry.value], [pin]).length === 0
+    ? [{ ...entry, pin: `"${entry.value} || ${pin}"` }]
+    : [];
+});
+
+for (const { index, key, pin } of [...bumps, ...widened]) lines[index] = `    ${key}: ${pin}`;
 
 writeFileSync(file, lines.join("\n"));
 
 console.log(
-  bumps
+  [...bumps, ...widened]
     .map(({ catalog, name, value, pin }) => `${catalog}: ${name} ${value} -> ${pin}`)
     .join("\n") || "The catalogs already pin the newest versions.",
 );
