@@ -1,5 +1,17 @@
 # @kutur-kit/oxc
 
+## 0.1.0-alpha.5
+
+### Minor Changes
+
+- 14e769e: The new `/foldkit-stylex` preset lints apps that use `@kutur-kit/foldkit-stylex`, with StyleX's ESLint rules; `.oxlintrc.json` extends it as `dist/foldkit-stylex.json`. It needs `@stylexjs/eslint-plugin` 0.19, an optional peer.
+
+  `/effect` reports manual Effect runners in test files, module scope included, through the new `kit/no-manual-effect-runtime-in-tests` rule: `Effect.runPromise`, `Effect.runSync`, the other `run*` functions, their `*With` forms and the runners of a `ManagedRuntime`. When upgrading, write those tests with `it.effect` from `@effect/vitest`. Compute a value that a test file needs before its tests run, such as an environment flag, in `vitest.config.ts` and read it with `provide` and `inject`.
+
+### Patch Changes
+
+- 14e769e: `anti-slop/no-shape-in-symbol-names` no longer reports a property key or JSX attribute that names a CSS or SVG property, such as `shapeOutside` in a StyleX style or `shapeRendering` on an SVG element.
+
 ## 0.1.0-alpha.4
 
 ### Patch Changes
