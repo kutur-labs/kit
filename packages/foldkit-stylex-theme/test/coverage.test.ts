@@ -23,6 +23,20 @@ const components = [
 
 const present = components.filter(({ file }) => existsSync(path.join(src, file)));
 
+// Each module in src, imported while this file loads. Importing a look compiles it with StyleX, as
+// an app's build does, and the first import compiles the core and @foldkit/ui too, which can
+// outlast a test's timeout on a busy runner.
+const modules = new Map(
+  await Promise.all(
+    readdirSync(src)
+      .filter((file) => file.endsWith(".ts"))
+      .map(async (file): Promise<readonly [string, unknown]> => [
+        file,
+        await import(path.join(src, file)),
+      ]),
+  ),
+);
+
 const readme = readFileSync(path.join(src, "../README.md"), "utf8");
 
 const rows = [
@@ -90,8 +104,8 @@ describe("coverage", () => {
   // A user imports each named style from the module its row names, or the one after "from".
   it.each(rows.flatMap(childStylesIn))(
     "exports the README's $name with its keys from src/$file",
-    async ({ file, name, keys }) => {
-      const module: unknown = await import(path.join(src, file));
+    ({ file, name, keys }) => {
+      const module = modules.get(file);
 
       expect(
         module,
@@ -107,11 +121,7 @@ describe("coverage", () => {
     },
   );
 
-  // Importing a look compiles it with StyleX, as an app's build does.
-  it.each(present)("$file compiles and exports $look", async ({ file, look }) => {
-    await expect(
-      import(path.join(src, file)),
-      `Export ${look} from src/${file}.`,
-    ).resolves.toHaveProperty(look);
+  it.each(present)("$file compiles and exports $look", ({ file, look }) => {
+    expect(modules.get(file), `Export ${look} from src/${file}.`).toHaveProperty(look);
   });
 });

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 
+// Importing the examples compiles them with StyleX, while this file loads: the first import
+// compiles the core and @foldkit/ui too, which can outlast a test's timeout on a busy runner.
+import { invertedPopoverView } from "./app/customise.ts";
 import { overrides } from "./app/overrides.stylex.ts";
 
 describe("customising", () => {
@@ -14,9 +17,7 @@ describe("customising", () => {
   });
 
   // StyleX accepts the var keys, layers and spreads of the README's examples.
-  it("compiles the customising examples", async () => {
-    const examples = await import("./app/customise.ts");
-
-    expect(examples.invertedPopoverView).toBeTypeOf("function");
+  it("compiles the customising examples", () => {
+    expect(invertedPopoverView).toBeTypeOf("function");
   });
 });
