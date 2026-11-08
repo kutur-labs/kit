@@ -339,7 +339,8 @@ Scene.scene(
 
 ## Requirements
 
-- @foldkit/ui and foldkit 0.170 or later below 1.0, StyleX 0.19.1 or a later 0.19 release, Vite 8.3.6 or later below 9 and Effect 4.1.2 or a later 4.x release.
+- @foldkit/ui and foldkit 0.170. A daily job tests each later release, and the range widens once one passes.
+- StyleX 0.19.1 or a later 0.19 release, Vite 8.3.6 or later below 9 and Effect 4.1.2 or a later 4.x release.
 - `foldkitStylex()` in every Vite and Vitest config that loads the package.
 - StyleX's default `styleResolution`. The layer checks follow its precedence, so `foldkitStylex()` does not take the option.
 
