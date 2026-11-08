@@ -1,6 +1,6 @@
 {
   "name": "@kutur-kit/foldkit-stylex-theme",
-  "version": "0.0.0",
+  "version": "0.1.0-alpha.0",
   "description": "An optional look for @kutur-kit/foldkit-stylex: token-driven styles for every @foldkit/ui component, with light and dark schemes.",
   "license": "MIT",
   "repository": {
