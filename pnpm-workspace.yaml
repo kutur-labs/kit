@@ -67,6 +67,7 @@ catalogs:
     "@foldkit/vite-plugin": 0.29.0
     "@stylexjs/unplugin": 0.19.1
     unplugin: 2.3.11
+    "@stylexjs/eslint-plugin": 0.19.1
     "@types/mdx": 2.0.14
     "@types/react": 19.3.0
     "@types/react-dom": 19.3.0
@@ -98,6 +99,7 @@ catalogs:
     "@stryker-mutator/vitest-runner": 10.1.1
     vitest: 5.1.0
     happy-dom: 21.0.4
+    playwright: 1.65.0
     "@alchemy.run/test": 2.0.0-beta.85
   peers:
     "@distilled.cloud/aws": 1.0.0-rc.18
@@ -105,10 +107,13 @@ catalogs:
     "@alchemy.run/cloudflare": 2.0.0-beta.85
     drizzle-orm: 1.0.0-rc.5
     effect: ^4.1.2
+    # Open below 1.0: .github/workflows/foldkit-stylex-canary.yml tests the
+    # latest release every day.
     foldkit: ">=0.170.0 <1.0.0"
     "@foldkit/ui": ">=0.170.0 <1.0.0"
     "@stylexjs/stylex": ~0.19.1
     "@stylexjs/unplugin": ~0.19.1
+    "@stylexjs/eslint-plugin": ~0.19.1
     vite: ">=8.3.6 <9.0.0"
     "@effect/tsgo": ~0.67.4
     oxlint: ~1.91.0

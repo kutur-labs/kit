@@ -1,4 +1,4 @@
-import type { FilledFromStyles } from "./internal/filled.ts";
+import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
 import type * as Own from "./internal/owned.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Toast } from "@foldkit/ui";
@@ -18,6 +18,7 @@ import { sxClassName } from "./sx.ts";
 
 /** An entry's state, as `entryToView` gets it. */
 export interface EntryState {
+  /** The entry's variant, which @foldkit/ui also sets as `data-variant` on the entry. */
   readonly variant: Toast.Variant;
 }
 
@@ -37,14 +38,26 @@ export interface Styles {
    * `':is([data-swipe])'`; style variants on your own element inside `entryToView`.
    */
   readonly entry?: PartValue | EntryFunction;
+  /** The element `entryToView` gives the `dismiss` bundle; it dismisses its entry. */
   readonly dismiss?: PartStyle<EntryState>;
 }
 
 type Owns = Readonly<{ container: Own.ToastContainer; entry: Own.ToastEntry }>;
 
-type Reads = Readonly<{ EntryHandlers: Readonly<{ dismiss: ReadonlyArray<ChildAttribute> }> }>;
+type Filled = FilledFromStyles<{ containerClassName: "container"; entryClassName: "entry" }>;
 
-type Has = Readonly<{ EntryHandlers: Toast.EntryHandlers }>;
+// Everything this module reads from or fills in @foldkit/ui's Toast. `Supported` checks that the
+// installed @foldkit/ui still has them. The `ViewInputs` mirror below cannot: a view whose optional
+// input was renamed still accepts the mirror's inputs.
+type Reads = Readonly<{
+  EntryHandlers: Readonly<{ dismiss: ReadonlyArray<ChildAttribute> }>;
+  ViewInputs: ClassNames<Filled>;
+}>;
+
+type Has = Readonly<{
+  EntryHandlers: Toast.EntryHandlers;
+  ViewInputs: Parameters<ReturnType<typeof Toast.make<unknown, unknown>>["view"]>[1];
+}>;
 
 /**
  * The view inputs of a `Toast.make` module's `view`; @foldkit/ui exports no type for them (F13).
@@ -59,8 +72,7 @@ export type ViewInputs<Entry> = Readonly<{
 }>;
 
 /** `ViewInputs` without class names, which come from `styles`. */
-export type StyledViewInputs<Entry> = ViewInputs<Entry> &
-  FilledFromStyles<{ containerClassName: "container"; entryClassName: "entry" }>;
+export type StyledViewInputs<Entry> = ViewInputs<Entry> & Filled;
 
 /** A `Toast.make` module's `view` with each part's styles; pass it to `h.submodel` as `view`. */
 export const view = <

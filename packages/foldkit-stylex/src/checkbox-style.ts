@@ -11,14 +11,19 @@ export interface State {
   readonly isChecked: boolean;
   /** Where @foldkit/ui sets `data-indeterminate`, whether or not `isChecked` is set in the config. */
   readonly isIndeterminate: boolean;
+  /** The `isDisabled` config; @foldkit/ui sets `aria-disabled` and `data-disabled`, not `disabled`. */
   readonly isDisabled: boolean;
+  /** The `isReadOnly` config; @foldkit/ui sets `aria-readonly` and `data-readonly`. */
   readonly isReadOnly: boolean;
 }
 
 /** Styles for each part of a Checkbox. Render the tick inside `checkbox` with `sx(...)`. */
 export interface Styles {
+  /** The `<button>` that takes the `checkbox` bundle, with `role="checkbox"`; it toggles on click. */
   readonly checkbox?: PartStyle<State>;
+  /** The label that names the checkbox through `aria-labelledby`. */
   readonly label?: PartStyle<State>;
+  /** Text that describes the checkbox; @foldkit/ui links it only when `hasDescription` is set. */
   readonly description?: PartStyle<State>;
 }
 

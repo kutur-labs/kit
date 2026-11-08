@@ -8,6 +8,8 @@ const packages = [
   { name: "access", group: "libraries" },
   { name: "assets", group: "libraries" },
   { name: "audit", group: "libraries" },
+  { name: "foldkit-stylex", group: "libraries" },
+  { name: "foldkit-stylex-theme", group: "libraries" },
   { name: "oxc", group: "tools" },
   { name: "strict", group: "tools" },
   { name: "tsconfig", group: "tools" },

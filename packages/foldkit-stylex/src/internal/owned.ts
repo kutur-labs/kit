@@ -2,8 +2,9 @@
 // style beats any class) or because this package sets them for the component to work. Each family
 // lists every property that sets one of the same longhands, shorthands and logical aliases
 // included: an inline style beats an app's class for each longhand, and StyleX lets an app's
-// longhand beat this package's shorthand. test/drift/inline checks the families of the properties
-// @foldkit/ui writes inline. A component module maps its parts to these families in its `Owns` type.
+// longhand beat this package's shorthand. test/owned.test.ts checks that each family is complete,
+// and test/drift/inline that it covers what @foldkit/ui writes inline. A component module maps its
+// parts to these families in its `Owns` type.
 
 type Inline<P extends string, Fix extends string> = Readonly<{
   [K in P]: `@foldkit/ui sets ${K} inline on this part. ${Fix}`;
@@ -21,6 +22,9 @@ type Inset =
   | "insetInline"
   | "insetInlineStart"
   | "insetInlineEnd"
+  // StyleX's legacy names for insetInlineStart and insetInlineEnd.
+  | "start"
+  | "end"
   | "top"
   | "right"
   | "bottom"
@@ -63,41 +67,13 @@ type Size =
   | "maxBlockSize";
 
 type Border =
-  | "border"
-  | "borderWidth"
-  | "borderStyle"
-  | "borderColor"
-  | "borderBlock"
-  | "borderBlockWidth"
-  | "borderBlockStyle"
-  | "borderBlockColor"
-  | "borderInline"
-  | "borderInlineWidth"
-  | "borderInlineStyle"
-  | "borderInlineColor"
-  | "borderTop"
-  | "borderTopWidth"
-  | "borderTopStyle"
-  | "borderTopColor"
-  | "borderRight"
-  | "borderRightWidth"
-  | "borderRightStyle"
-  | "borderRightColor"
-  | "borderBottom"
-  | "borderBottomWidth"
-  | "borderBottomStyle"
-  | "borderBottomColor"
-  | "borderLeft"
-  | "borderLeftWidth"
-  | "borderLeftStyle"
-  | "borderLeftColor"
+  | `border${"" | "Block" | "BlockStart" | "BlockEnd" | "Inline" | "InlineStart" | "InlineEnd" | "Top" | "Right" | "Bottom" | "Left"}${"" | "Width" | "Style" | "Color"}`
   // The border shorthand also resets border-image.
-  | "borderImage"
-  | "borderImageSource"
-  | "borderImageSlice"
-  | "borderImageWidth"
-  | "borderImageOutset"
-  | "borderImageRepeat";
+  | `borderImage${"" | "Source" | "Slice" | "Width" | "Outset" | "Repeat"}`;
+
+type Overflow = "overflow" | "overflowX" | "overflowY" | "overflowBlock" | "overflowInline";
+
+type Gap = "gap" | "rowGap" | "columnGap" | "gridGap" | "gridRowGap" | "gridColumnGap";
 
 type Background =
   | "background"
@@ -123,12 +99,9 @@ export type AnchoredPanel = Inline<
   | Margin
   | "maxHeight"
   | "maxBlockSize"
-  | "overflow"
-  | "overflowY"
-  | "overflowBlock"
-  | "overscrollBehavior"
-  | "overscrollBehaviorY"
-  | "overscrollBehaviorBlock",
+  | Overflow
+  // Floating UI sets the shorthand, so it owns both axes.
+  | `overscrollBehavior${"" | "X" | "Y" | "Block" | "Inline"}`,
   "Floating UI positions the panel and caps its height; size and scroll an element inside it."
 >;
 
@@ -173,9 +146,8 @@ export type ToastContainer = Inline<
   | "display"
   | "flexDirection"
   | "flexFlow"
-  | "gap"
-  | "rowGap"
-  | "columnGap"
+  | "flexWrap"
+  | Gap
   | Padding
   | "pointerEvents"
   | "zIndex"
@@ -209,11 +181,7 @@ export type ValueFill = Inline<
 
 /** VirtualList's container, which scrolls and measures its rows. */
 export type VirtualListContainer = Inline<
-  | "overflow"
-  | "overflowX"
-  | "overflowY"
-  | "overflowBlock"
-  | "overflowInline"
+  | Overflow
   | "overflowAnchor"
   | "listStyle"
   | "listStyleType"

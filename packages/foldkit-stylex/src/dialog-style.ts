@@ -26,9 +26,13 @@ export interface Styles {
   readonly dialog?: PartStyle<State>;
   /** Covers the viewport; a click on it closes the dialog. Style its color and opacity. */
   readonly backdrop?: PartStyle<State>;
+  /** The box inside the `<dialog>` that holds its content; @foldkit/ui waits for its animation. */
   readonly panel?: PartStyle<State>;
+  /** The heading that names the dialog through `aria-labelledby`. */
   readonly title?: PartStyle<State>;
+  /** Text that describes the dialog; @foldkit/ui links it only when `hasDescription` is set. */
   readonly description?: PartStyle<State>;
+  /** A button that closes the dialog; it ignores clicks while the dialog leaves. */
   readonly closeButton?: PartStyle<State>;
 }
 

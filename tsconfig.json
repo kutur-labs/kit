@@ -11,5 +11,5 @@
     ],
     "types": ["node"]
   },
-  "include": ["*.config.ts"]
+  "include": ["*.config.ts", "scripts/*.ts"]
 }

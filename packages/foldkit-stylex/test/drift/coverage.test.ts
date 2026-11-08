@@ -8,31 +8,6 @@ import { describe, expect, it } from "vitest";
 
 import * as Kit from "../../src/index.ts";
 
-// Components without a namespace yet. Remove a name in the change that adds its namespace.
-const pending = [
-  "Animation",
-  "Button",
-  "Calendar",
-  "Combobox",
-  "DatePicker",
-  "Disclosure",
-  "DragAndDrop",
-  "Fieldset",
-  "FileDrop",
-  "HoverIntent",
-  "Input",
-  "Menu",
-  "Meter",
-  "Nav",
-  "Progress",
-  "RadioGroup",
-  "Select",
-  "Switch",
-  "Textarea",
-  "Tooltip",
-  "VirtualList",
-];
-
 const missing = (name: string) =>
   `@foldkit/ui exports ${name}; add ${name}Style with Styles and State, contract, drift and type tests, a README row and a gallery demo.`;
 
@@ -42,7 +17,7 @@ describe("coverage", () => {
       (name) => name !== "Anchor" && !(`${name}Style` in Kit),
     );
 
-    expect(uncovered.map(missing)).toEqual(pending.map(missing));
+    expect(uncovered.map(missing)).toEqual([]);
   });
 
   it("lists each namespace in the README's components table", () => {

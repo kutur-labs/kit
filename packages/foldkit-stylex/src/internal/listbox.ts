@@ -21,8 +21,14 @@ export interface State {
    * and the leave animation. Put `transition*` on the base style and the closed values here.
    */
   readonly isClosed: boolean;
+  /**
+   * The `isDisabled` input. On `button` it is also true for `isButtonDisabled`, as @foldkit/ui sets
+   * the button's `data-disabled` from either.
+   */
   readonly isDisabled: boolean;
+  /** The `isReadOnly` input; @foldkit/ui sets `data-readonly`. */
   readonly isReadOnly: boolean;
+  /** The `isInvalid` input; @foldkit/ui sets `data-invalid`. */
   readonly isInvalid: boolean;
 }
 
@@ -30,8 +36,11 @@ export interface State {
 export interface ItemState {
   /** The highlighted item, which @foldkit/ui marks with `data-active`. */
   readonly isActive: boolean;
+  /** From `isItemDisabled`; @foldkit/ui sets `aria-disabled` and `data-disabled`. */
   readonly isDisabled: boolean;
+  /** The listbox's `isReadOnly` input, the same for every item; @foldkit/ui sets `data-readonly`. */
   readonly isReadOnly: boolean;
+  /** The item's value is selected; @foldkit/ui sets `data-selected`. */
   readonly isSelected: boolean;
 }
 
@@ -50,7 +59,9 @@ export interface Styles {
   readonly items?: PartStyle<State>;
   /** A scroll container inside the panel; @foldkit/ui renders it only when this part is styled. */
   readonly itemsScroll?: PartStyle<State>;
+  /** Each option, styled from its own `ItemState`. */
   readonly item?: PartStyle<ItemState>;
+  /** The element around each group of items when `itemGroupKey` is set. */
   readonly group?: PartStyle<State>;
   /** The heading `groupToHeading` returns content for. */
   readonly heading?: PartStyle<State>;
@@ -84,6 +95,7 @@ export type Reads = Readonly<{
   ViewInputs: ClassNames<Filled> &
     Readonly<{
       isDisabled?: boolean;
+      isButtonDisabled?: boolean;
       isReadOnly?: boolean;
       isInvalid?: boolean;
       groupToHeading?: GroupToHeading;
@@ -106,12 +118,18 @@ export const styledInputs = <Item>(
 
   const part = partsOf(layers, state);
 
+  // `isButtonDisabled` disables the button alone.
+  const buttonPart = partsOf(layers, {
+    ...state,
+    isDisabled: state.isDisabled || (inputs.isButtonDisabled ?? false),
+  });
+
   return {
     className: sxClassName(
       anchored.wrapper,
       part((s) => s.wrapper),
     ),
-    buttonClassName: sxClassName(part((s) => s.button)),
+    buttonClassName: sxClassName(buttonPart((s) => s.button)),
     backdropClassName: sxClassName(
       anchored.backdrop,
       part((s) => s.backdrop),

@@ -10,19 +10,25 @@ import { appendChildClass, partsOf, type Layers, type PartStyle } from "./intern
 
 /** The tab list's state, from its view inputs. */
 export interface State {
+  /** The `orientation` input, `"Horizontal"` unless set; @foldkit/ui sets `aria-orientation`. */
   readonly orientation: Tabs.Orientation;
 }
 
 /** A tab's or panel's state. Style focus with `':focus-visible'`. */
 export interface TabState extends State {
+  /** The selected tab and its panel, where @foldkit/ui sets `data-selected`. */
   readonly isActive: boolean;
+  /** From `isTabDisabled`; @foldkit/ui sets `disabled` and `data-disabled` on the tab. */
   readonly isDisabled: boolean;
+  /** The tab's position in `tabs`, from 0. */
   readonly index: number;
 }
 
 /** Styles for each part of Tabs. */
 export interface Styles {
+  /** The element around the tabs, with `role="tablist"`. */
   readonly tablist?: PartStyle<State>;
+  /** Each tab button. */
   readonly tab?: PartStyle<TabState>;
   /** With `panelMount: "All"`, this package hides each inactive panel after these styles. */
   readonly panel?: PartStyle<TabState>;

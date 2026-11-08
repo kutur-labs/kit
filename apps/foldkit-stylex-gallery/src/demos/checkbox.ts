@@ -1,8 +1,26 @@
+import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
 import { Checkbox } from "@foldkit/ui";
 import { CheckboxStyle, sx } from "@kutur-kit/foldkit-stylex";
 import * as stylex from "@stylexjs/stylex";
+import { Schema } from "effect";
+import { defineMessageUnion } from "foldkit/message";
+
+export const Model = Schema.Struct({ isChecked: Schema.Boolean });
+
+export type Model = typeof Model.Type;
+
+export const Message = defineMessageUnion({ ToggledTerms: { isChecked: Schema.Boolean } });
+
+export type Message = typeof Message.Type;
+
+export const init = (): Update.Return<Model, Message> => ({ model: { isChecked: false } });
+
+export const update = (_model: Model, message: Message): Update.Return<Model, Message> =>
+  Message.match<Update.Return<Model, Message>>(message, {
+    ToggledTerms: ({ isChecked }) => ({ model: { isChecked } }),
+  });
 
 const styles = stylex.create({
   row: { display: "flex", alignItems: "center", gap: 8 },
@@ -18,11 +36,10 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     color: "inherit",
   },
-  checked: { backgroundColor: "currentColor" },
+  checked: { backgroundColor: { default: "black", ":hover": "dimgray" }, color: "white" },
   disabled: { opacity: 0.5 },
-  tick: { opacity: 0, color: "Canvas" },
+  tick: { opacity: 0 },
   ticked: { opacity: 1 },
-  label: { minBlockSize: 44, display: "flex", alignItems: "center" },
 });
 
 const checkboxView = CheckboxStyle.view(Checkbox.view, {
@@ -31,25 +48,22 @@ const checkboxView = CheckboxStyle.view(Checkbox.view, {
     state.isChecked && styles.checked,
     state.isDisabled && styles.disabled,
   ],
-  label: styles.label,
 });
 
-/** A checkbox whose tick shows while checked. */
-export const terms = <Message>(
-  isChecked: boolean,
-  onToggle: (isChecked: boolean) => Message,
-  h: HtmlBuilder<Message>,
-): Html =>
+export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   checkboxView(
     {
       id: "terms",
-      isChecked,
-      onToggle,
+      isChecked: model.isChecked,
+      onToggle: (isChecked) => Message.ToggledTerms({ isChecked }),
       toView: ({ checkbox, label }) =>
         h.div(
           [sx(styles.row)],
           [
-            h.button([...checkbox], [h.span([sx(styles.tick, isChecked && styles.ticked)], ["✓"])]),
+            h.button(
+              [...checkbox],
+              [h.span([sx(styles.tick, model.isChecked && styles.ticked)], ["✓"])],
+            ),
             h.label([...label], ["I accept the terms"]),
           ],
         ),

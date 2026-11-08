@@ -24,6 +24,7 @@ const styles = stylex.create({
   scroll: { overflowY: "auto" },
   heading: { fontSize: 12 },
   wrapper: { display: "inline-block" },
+  wrapperDisabled: { outlineStyle: "dashed" },
   backdrop: { backgroundColor: "black" },
   group: { paddingBlock: 4 },
   separator: { blockSize: 1 },
@@ -40,7 +41,10 @@ const listStyles = {
   items: (state: ListboxStyle.State) => state.isClosed && styles.isClosed,
   itemsScroll: styles.scroll,
   heading: styles.heading,
-  wrapper: styles.wrapper,
+  wrapper: (state: ListboxStyle.State) => [
+    styles.wrapper,
+    state.isDisabled && styles.wrapperDisabled,
+  ],
   backdrop: styles.backdrop,
   group: styles.group,
   separator: styles.separator,
@@ -58,7 +62,12 @@ const Languages = Listbox.create<Language>();
 
 const languagesView = ListboxStyle.view(Languages.view, listStyles);
 
-type Flags = Readonly<{ isDisabled: boolean; isReadOnly: boolean; isInvalid: boolean }>;
+type Flags = Readonly<{
+  isDisabled: boolean;
+  isButtonDisabled: boolean;
+  isReadOnly: boolean;
+  isInvalid: boolean;
+}>;
 
 type Model = Readonly<{ listbox: Listbox.Model; flags: Flags }>;
 
@@ -85,7 +94,12 @@ const update = (model: Model, message: Listbox.Message) => ({
   model: { ...model, listbox: Languages.update(model.listbox, message).model },
 });
 
-const unset: Flags = { isDisabled: false, isReadOnly: false, isInvalid: false };
+const unset: Flags = {
+  isDisabled: false,
+  isButtonDisabled: false,
+  isReadOnly: false,
+  isInvalid: false,
+};
 
 const closed = Listbox.init({ id: "language", isAnimated: true });
 
@@ -110,6 +124,8 @@ const mounts = [
 ];
 
 const button = Scene.selector("#language-button");
+
+const wrapper = Scene.selector(`.${classOf(styles.wrapper)}`);
 
 const items = Scene.selector("#language-items");
 
@@ -151,6 +167,7 @@ describe("ListboxStyle.view", () => {
   for (const flags of [
     unset,
     { ...unset, isDisabled: true },
+    { ...unset, isButtonDisabled: true },
     { ...unset, isReadOnly: true },
     { ...unset, isInvalid: true },
   ]) {
@@ -158,7 +175,13 @@ describe("ListboxStyle.view", () => {
       Scene.scene(
         { update, view },
         Scene.given({ listbox: closed, flags }),
-        ...agrees(button, "data-disabled", styles.isDisabled, flags.isDisabled),
+        ...agrees(wrapper, "data-disabled", styles.wrapperDisabled, flags.isDisabled),
+        ...agrees(
+          button,
+          "data-disabled",
+          styles.isDisabled,
+          flags.isDisabled || flags.isButtonDisabled,
+        ),
         ...agrees(button, "data-readonly", styles.isReadOnly, flags.isReadOnly),
         ...agrees(button, "data-invalid", styles.isInvalid, flags.isInvalid),
       );
@@ -239,6 +262,20 @@ describe("@foldkit/ui defects ListboxStyle works around", () => {
           Scene.find(simulation.html, "#language-items"),
           "@foldkit/ui now sets Listbox's items z-index inline (F4). Drop anchored.panel from internal/listbox.ts, and from functional-styles.ts once no module uses it; update the README's What the package sets table. The inline drift test then asks for zIndex in the items' owned family.",
         ).not.toHaveStyle("z-index");
+      }),
+      ...mounts,
+    );
+  });
+
+  it("F5: the enter animation waits on an element Listbox does not render", () => {
+    Scene.scene(
+      { update, view },
+      Scene.given({ listbox: at("EnterAnimating", true), flags: unset }),
+      Scene.tap((simulation) => {
+        expect(
+          Option.isNone(Scene.find(simulation.html, `#${open.animation.id}`)),
+          "@foldkit/ui now waits on Listbox's items element for its enter animation (F5), so data-enter and data-transition last until the transition ends. Delete this test. Keep the README's advice to put transition* on the base style: every component's isClosed needs it, not only Listbox's.",
+        ).toBe(true);
       }),
       ...mounts,
     );

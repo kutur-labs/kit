@@ -10,18 +10,25 @@ import { appendChildClass, partsOf, type Layers, type PartStyle } from "./intern
 
 /** A slider's state, the same for each of its parts. */
 export interface State {
+  /** The thumb is being dragged; @foldkit/ui sets `data-dragging` on the root. */
   readonly isDragging: boolean;
+  /** The `isDisabled` input; @foldkit/ui sets `data-disabled` on the root. */
   readonly isDisabled: boolean;
+  /** The `isReadOnly` input; @foldkit/ui sets `data-readonly` on the root. */
   readonly isReadOnly: boolean;
+  /** The `orientation` input, `"Horizontal"` unless set; @foldkit/ui sets `data-orientation`. */
   readonly orientation: Slider.Orientation;
 }
 
 /** Styles for each part of a Slider. */
 export interface Styles {
+  /** The element around the label and track, which carries the state hooks. */
   readonly root?: PartStyle<State>;
+  /** The label that names the thumb unless `ariaLabel` or `ariaLabelledBy` is set. */
   readonly label?: PartStyle<State>;
   /** @foldkit/ui makes it `position: relative`; centre the thumb with `display: flex; align-items: center`. */
   readonly track?: PartStyle<State>;
+  /** The track from its start to the value; @foldkit/ui sizes it inline, so style its color. */
   readonly filledTrack?: PartStyle<State>;
   /** @foldkit/ui positions it with an inline transform; use `scale` for press feedback. */
   readonly thumb?: PartStyle<State>;

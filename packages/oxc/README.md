@@ -1,13 +1,14 @@
 # @kutur-kit/oxc
 
-Oxlint and Oxfmt presets for TypeScript, with optional Effect rules.
+Oxlint and Oxfmt presets for TypeScript, with optional Effect and `@kutur-kit/foldkit-stylex` rules.
 
-| Export       | Required tools                                 |
-| ------------ | ---------------------------------------------- |
-| `/base`      | `oxlint`, a type-aware backend                 |
-| `/effect`    | `oxlint`, `@effect/tsgo`, a type-aware backend |
-| `/format`    | `oxfmt`                                        |
-| `/anti-slop` | `oxlint`                                       |
+| Export            | Required tools                                 |
+| ----------------- | ---------------------------------------------- |
+| `/base`           | `oxlint`, a type-aware backend                 |
+| `/effect`         | `oxlint`, `@effect/tsgo`, a type-aware backend |
+| `/format`         | `oxfmt`                                        |
+| `/anti-slop`      | `oxlint`                                       |
+| `/foldkit-stylex` | `oxlint`, `@stylexjs/eslint-plugin`            |
 
 The type-aware backend is [tsrs](https://github.com/oxc-project/tsrs) or `oxlint-tsgolint`.
 
@@ -37,7 +38,42 @@ Install the required tools in `devDependencies` and include linted files in your
 
 `/effect` also warns where code uses a runtime global that has an Effect service, such as `console`, `Date` or `process.env`. Its rules warn, so set `maxWarnings: 0` to fail on them. Turn a rule off with `overrides` only for files where the global is the point, such as a script that prints its result.
 
+In test files (`*.test.*`, `*.spec.*`, `test/**` and `tests/**`), `/effect` also reports manual Effect runners: `Effect.runPromise`, `Effect.runSync` and the other `run*` functions, their `*With` forms and the runners of a `ManagedRuntime` made in the same file. Run effects in tests with `it.effect` from `@effect/vitest`, which provides `TestClock`, and provide services with Layers. The rule also reports runners at module scope: compute a value that a test file needs before its tests run, such as an environment flag, in `vitest.config.ts` and read it with Vitest's `provide` and `inject`.
+
 `/anti-slop` is optional and includes the generic and Effect rules from [anti-slop](https://github.com/dmmulroy/anti-slop), and `kit/comment-prose` (see [Prose](#prose)).
+
+### @kutur-kit/foldkit-stylex
+
+`/foldkit-stylex` checks what the types of `@kutur-kit/foldkit-stylex` cannot see:
+
+- a second Class on an element, or one that replaces a @foldkit/ui part's styles;
+- a @foldkit/ui view used without its `XStyle.view` wrapper;
+- StyleX condition keys that never match or that rank differently than written;
+- `createTheme`, theme overrides without `satisfies ThemeOverrides` and annotated styles objects;
+- StyleX's own Vite plugin.
+
+It also turns on StyleX's ESLint rules. Each message names the fix. Add `@stylexjs/eslint-plugin` to your `devDependencies` beside Oxlint, then extend the preset in `oxlint.config.ts`:
+
+```ts
+import effect from "@kutur-kit/oxc/effect";
+import foldkitStylex from "@kutur-kit/oxc/foldkit-stylex";
+import { defineConfig } from "oxlint";
+
+export default defineConfig({
+  extends: [effect, foldkitStylex],
+  options: { typeAware: true, maxWarnings: 0 },
+});
+```
+
+Or in `.oxlintrc.json`, which extends configs by path:
+
+```json
+{
+  "extends": ["./node_modules/@kutur-kit/oxc/dist/foldkit-stylex.json"]
+}
+```
+
+The rules recognise `sx`, the `XStyle` namespaces, StyleX and @foldkit/ui by their imports, named, aliased or as a namespace, and read each file on its own. They miss a @foldkit/ui view or a `create()` result that reaches the file through another module, and a Class that a helper adds inside a bundle.
 
 ### Suppression comments
 

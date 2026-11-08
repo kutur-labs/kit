@@ -8,5 +8,7 @@ export const s = stylex.create({
   raised: { zIndex: 5 },
   tall: { maxHeight: 400 },
   pressed: { transform: "scale(1.2)" },
+  clickable: { pointerEvents: "auto" },
+  full: { width: "100%" },
   tilt: (deg: number) => ({ rotate: `${deg}deg` }),
 });

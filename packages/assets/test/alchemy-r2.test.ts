@@ -1,9 +1,9 @@
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Test from "@alchemy.run/test/Vitest";
 import * as Alchemy from "alchemy";
-import { Config, Data, Effect, Schedule, Schema } from "effect";
+import { Data, Effect, Schedule, Schema } from "effect";
 import { HttpClient, HttpClientRequest, type HttpClientResponse } from "effect/http";
-import { expect } from "vitest";
+import { expect, inject } from "vitest";
 
 import * as AssetSigning from "../src/AssetSigning.ts";
 import { AssetBucketContract, AssetSigningContract } from "../src/testing/index.ts";
@@ -13,8 +13,15 @@ import AssetsFixture from "./alchemy/worker.ts";
 // Locally by default: alchemy's local providers run the Worker in workerd
 // with an emulated bucket, without a Cloudflare account. `TEST_R2_LIVE=1`
 // deploys both to the account of the current alchemy profile, or of
-// `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in CI.
-const live = Effect.runSync(Config.Boolean("TEST_R2_LIVE").pipe(Config.withDefault(false)));
+// `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in CI. vitest.config.ts
+// reads it, because `Test.make` needs it before any test runs.
+declare module "vitest" {
+  export interface ProvidedContext {
+    readonly r2Live: boolean;
+  }
+}
+
+const live = inject("r2Live");
 
 const { test, beforeAll, afterAll, deploy, destroy } = Test.make({
   providers: Cloudflare.providers(),

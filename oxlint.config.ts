@@ -1,5 +1,6 @@
 import antiSlop from "@kutur-kit/oxc/anti-slop";
 import effect from "@kutur-kit/oxc/effect";
+import foldkitStylex from "@kutur-kit/oxc/foldkit-stylex";
 import { defineConfig } from "oxlint";
 
 const examples = {
@@ -14,6 +15,10 @@ const buildsNoElements =
 
 // The foldkit root re-exports foldkit/html as Html, inertHtml included.
 const foldkitHtml = { name: "foldkit", importNames: ["Html"], message: buildsNoElements };
+
+// The HtmlBuilder a view gets, which Foldkit's views and this package's wrappers name `h`. A wrapper
+// only passes it on to @foldkit/ui's view.
+const htmlBuilder = { object: "h", message: buildsNoElements };
 
 const uiTypesOnly = {
   name: "@foldkit/ui",
@@ -46,9 +51,10 @@ export default defineConfig({
   },
   overrides: [
     {
-      // The link check, the benches and `kit-prose` report by printing.
+      // The link check, the canary pins, the benches and `kit-prose` report by printing.
       files: [
         "apps/docs/scripts/**",
+        "scripts/*.ts",
         "integration-tests/**/*.bench.ts",
         "packages/oxc/src/prose/cli.ts",
       ],
@@ -78,7 +84,7 @@ export default defineConfig({
             ],
           },
         ],
-        "no-restricted-properties": ["error", ...styleDefinitions],
+        "no-restricted-properties": ["error", ...styleDefinitions, htmlBuilder],
       },
     },
     {
@@ -90,7 +96,7 @@ export default defineConfig({
         "packages/foldkit-stylex/src/internal/compiled.ts",
         "packages/foldkit-stylex-theme/src/**",
       ],
-      rules: { "no-restricted-properties": "off" },
+      rules: { "no-restricted-properties": ["error", htmlBuilder] },
     },
     {
       files: ["packages/foldkit-stylex/src/sx.ts"],
@@ -102,9 +108,17 @@ export default defineConfig({
         "no-restricted-properties": [
           "error",
           ...styleDefinitions,
+          htmlBuilder,
           { object: "inertHtml", allowProperties: ["Class"], message: buildsNoElements },
         ],
       },
+    },
+    {
+      // The gallery and the looks use @kutur-kit/foldkit-stylex as an app does, so they follow the
+      // preset an app extends. An override cannot extend, so it takes the preset's plugins and rules.
+      files: ["apps/foldkit-stylex-gallery/src/**", "packages/foldkit-stylex-theme/src/**"],
+      jsPlugins: foldkitStylex.jsPlugins,
+      rules: foldkitStylex.rules,
     },
   ],
   ignorePatterns: [

@@ -1,0 +1,23 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/foldkit-stylex/README.md",
+        "$TURBO_ROOT$/packages/foldkit-stylex-theme/README.md"
+      ],
+      "outputs": []
+    },
+    "test:browser": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:packed": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "outputs": []
+    }
+  }
+}

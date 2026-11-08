@@ -1,7 +1,7 @@
 {
   "name": "@kutur-kit/oxc",
   "version": "0.1.0-alpha.4",
-  "description": "Oxlint and Oxfmt presets for TypeScript, with optional Effect rules and a prose check for Markdown.",
+  "description": "Oxlint and Oxfmt presets for TypeScript, with optional Effect and @kutur-kit/foldkit-stylex rules and a prose check for Markdown.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,7 +20,8 @@
     "./base": "./src/base.ts",
     "./effect": "./src/effect.ts",
     "./format": "./src/format.ts",
-    "./anti-slop": "./src/anti-slop.ts"
+    "./anti-slop": "./src/anti-slop.ts",
+    "./foldkit-stylex": "./src/foldkit-stylex.ts"
   },
   "publishConfig": {
     "bin": {
@@ -42,12 +43,16 @@
       "./anti-slop": {
         "types": "./dist/anti-slop.d.ts",
         "default": "./dist/anti-slop.js"
+      },
+      "./foldkit-stylex": {
+        "types": "./dist/foldkit-stylex.d.ts",
+        "default": "./dist/foldkit-stylex.js"
       }
     },
     "access": "public"
   },
   "scripts": {
-    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsrs -p tsconfig.build.json",
+    "build": "node --input-type=module -e 'import { rmSync } from \"node:fs\"; rmSync(\"dist\", { recursive: true, force: true });' && tsrs -p tsconfig.build.json && node scripts/write-json-preset.ts",
     "lint:package": "publint --pack pnpm --strict",
     "prepack": "pnpm run build",
     "test": "node --test test/*.test.ts",
@@ -60,7 +65,9 @@
   },
   "devDependencies": {
     "@effect/tsgo": "catalog:tooling",
+    "@kutur-kit/foldkit-stylex": "workspace:*",
     "@kutur-kit/tsconfig": "workspace:*",
+    "@stylexjs/eslint-plugin": "catalog:tooling",
     "@types/node": "catalog:tooling",
     "oxfmt": "catalog:tooling",
     "oxlint": "catalog:tooling",
@@ -69,6 +76,7 @@
   },
   "peerDependencies": {
     "@effect/tsgo": "catalog:peers",
+    "@stylexjs/eslint-plugin": "catalog:peers",
     "oxfmt": "catalog:peers",
     "oxlint": "catalog:peers"
   },
@@ -76,10 +84,13 @@
     "@effect/tsgo": {
       "optional": true
     },
-    "oxlint": {
+    "@stylexjs/eslint-plugin": {
       "optional": true
     },
     "oxfmt": {
+      "optional": true
+    },
+    "oxlint": {
       "optional": true
     }
   }

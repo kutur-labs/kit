@@ -20,6 +20,7 @@ export interface State {
    * leave animation. Put `transition*` on the base style and the closed values here.
    */
   readonly isClosed: boolean;
+  /** The `isDisabled` input; @foldkit/ui sets `aria-disabled` and `data-disabled` on the button. */
   readonly isDisabled: boolean;
 }
 
