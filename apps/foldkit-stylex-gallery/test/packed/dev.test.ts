@@ -78,14 +78,13 @@ describe("vite dev in an app that installed the packed packages", () => {
     }
   });
 
-  it("answers 500 with the theme's guard when StyleX's own plugin replaces foldkitStylex()", async () => {
+  // Each theme namespace imports the core before its tokens, so the core's guard reports first.
+  it("shows the core's guard in the browser of an app with the theme when StyleX's own plugin replaces foldkitStylex()", async () => {
     const server = await startVite(vite, ["--config", "vite.stylex-themed.config.ts"], consumer);
 
     try {
-      const response = await get(server.url);
-
-      expect(response.status()).toBe(500);
-      expect(await response.text()).toContain(guard("@kutur-kit/foldkit-stylex-theme"));
+      expect((await get(server.url)).status()).toBe(200);
+      expect((await errorsOn(server)).join("\n")).toContain(guard("@kutur-kit/foldkit-stylex"));
     } finally {
       await server.stop();
     }

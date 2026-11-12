@@ -1,11 +1,15 @@
 import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Progress } from "@foldkit/ui";
-import { ProgressStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Button } from "@kutur-kit/foldkit-stylex-theme/button";
+import { Progress } from "@kutur-kit/foldkit-stylex-theme/progress";
+import { color, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Shows how far a task has come, or that it is still running.";
 
 export const Model = Schema.Struct({ uploaded: Schema.Int });
 
@@ -23,52 +27,21 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     ClickedReset: () => ({ model: { uploaded: 0 } }),
   });
 
-// From wholly before the track's inline start to wholly past its end. A logical margin, so it
-// runs the other way in a right-to-left page.
-const sweep = stylex.keyframes({
-  from: { marginInlineStart: "-25%" },
-  to: { marginInlineStart: "100%" },
-});
-
 const styles = stylex.create({
-  root: { display: "grid", gap: 8, maxInlineSize: 320 },
-  buttons: { display: "flex", gap: 8 },
-  button: { minBlockSize: 44, paddingInline: 16, font: "inherit" },
-  // A row, so the indicator takes the width @foldkit/ui gives it, or its minimum while it sweeps.
-  track: {
-    display: "flex",
-    blockSize: 8,
-    borderRadius: 4,
-    backgroundColor: "gainsboro",
-    overflow: "hidden",
-  },
-  indicator: { blockSize: "100%", backgroundColor: "black" },
-  // @foldkit/ui sets no width while indeterminate, so the styles give it one.
-  sweeping: {
-    minInlineSize: "25%",
-    animationName: sweep,
-    animationDuration: { default: "1.2s", "@media (prefers-reduced-motion: reduce)": "0s" },
-    animationIterationCount: "infinite",
-  },
-  complete: { backgroundColor: "seagreen" },
-});
-
-const progressView = ProgressStyle.view(Progress.view, {
-  track: styles.track,
-  indicator: (state) => [
-    styles.indicator,
-    state.isIndeterminate && styles.sweeping,
-    state.isComplete && styles.complete,
-  ],
+  root: { display: "grid", gap: space.lg, inlineSize: "100%", maxInlineSize: "20rem" },
+  field: { display: "grid", gap: space.sm },
+  value: { color: color.muted },
+  buttons: { display: "flex", gap: space.sm },
 });
 
 const field =
-  (h: HtmlBuilder<Message>, text: string) =>
+  (h: HtmlBuilder<Message>, text: string, value: string) =>
   ({ progress, label, track, indicator }: Progress.ProgressAttributes<Message>): Html =>
     h.div(
-      [sx(styles.root)],
+      [sx(styles.field)],
       [
-        h.span([...label], [text]),
+        // The bar announces the value, so the label's copy of it is hidden from the name.
+        h.span([...label], [text, h.span([h.AriaHidden(true), sx(styles.value)], [value])]),
         h.div([...progress], [h.div([...track], [h.div([...indicator])])]),
       ],
     );
@@ -77,24 +50,34 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [sx(styles.root)],
     [
-      progressView(
-        { id: "upload", value: model.uploaded, toView: field(h, `Upload: ${model.uploaded}%`) },
+      Progress.view(
+        {
+          id: "upload",
+          value: model.uploaded,
+          toView: field(h, "Uploading poems.zip", `${model.uploaded}%`),
+        },
         h,
       ),
+      // Without a value, the bar is indeterminate.
+      Progress.view({ id: "sync", toView: field(h, "Syncing library", "Checking for changes") }, h),
       h.div(
         [sx(styles.buttons)],
         [
-          h.button(
-            [h.Type("button"), h.OnClick(Message.ClickedAdvance()), sx(styles.button)],
-            ["Advance"],
+          Button.view(
+            {
+              onClick: Message.ClickedAdvance(),
+              toView: ({ button }) => h.button([...button], ["Advance"]),
+            },
+            h,
           ),
-          h.button(
-            [h.Type("button"), h.OnClick(Message.ClickedReset()), sx(styles.button)],
-            ["Reset"],
+          Button.view(
+            {
+              onClick: Message.ClickedReset(),
+              toView: ({ button }) => h.button([...button], ["Reset"]),
+            },
+            h,
           ),
         ],
       ),
-      // Without a value, the bar is indeterminate.
-      progressView({ id: "sync", toView: field(h, "Syncing") }, h),
     ],
   );

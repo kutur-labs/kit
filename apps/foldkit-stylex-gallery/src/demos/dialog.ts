@@ -1,11 +1,17 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Dialog } from "@foldkit/ui";
-import { DialogStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Button } from "@kutur-kit/foldkit-stylex-theme/button";
+import { Dialog } from "@kutur-kit/foldkit-stylex-theme/dialog";
+import { space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+import { dangerView } from "./button.ts";
+
+export const summary = "A modal panel that keeps the rest of the page inert until it closes.";
 
 export const Model = Schema.Struct({ dialog: Dialog.Model });
 
@@ -13,6 +19,8 @@ export type Model = typeof Model.Type;
 
 export const Message = defineMessageUnion({
   ClickedOpen: {},
+  ClickedKeep: {},
+  ClickedDelete: {},
   GotDialogMessage: { message: Dialog.Message },
 });
 
@@ -32,60 +40,37 @@ const lifted = (
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match<Update.Return<Model, Message>>(message, {
     ClickedOpen: () => lifted(Dialog.open(model.dialog)),
+    // The demo has no draft to delete, so both answers close the dialog.
+    ClickedKeep: () => lifted(Dialog.close(model.dialog)),
+    ClickedDelete: () => lifted(Dialog.close(model.dialog)),
     GotDialogMessage: ({ message }) => lifted(Dialog.update(model.dialog, message)),
   });
 
 const styles = stylex.create({
-  trigger: { minBlockSize: 44, font: "inherit" },
-  // A bottom sheet on narrow screens, centred from 40rem. The package hides it while closed.
-  dialog: {
-    display: "grid",
-    placeItems: { default: "end center", "@media (min-width: 40rem)": "center" },
+  actions: {
+    display: "flex",
+    flexWrap: "wrap",
+    justifyContent: "flex-end",
+    gap: space.sm,
+    marginBlockStart: space.md,
   },
-  backdrop: {
-    backgroundColor: "rgb(0 0 0 / 0.4)",
-    transitionProperty: "opacity",
-    transitionDuration: { default: "200ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  backdropClosed: { opacity: 0 },
-  panel: {
-    inlineSize: "min(28rem, 100%)",
-    padding: 24,
-    backgroundColor: "white",
-    color: "black",
-    transitionProperty: "opacity, translate",
-    transitionDuration: { default: "200ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  panelClosed: { opacity: 0, translate: "0 2rem" },
-  title: { marginBlock: 0, fontSize: "1.25rem" },
-  close: { minBlockSize: 44, font: "inherit" },
-});
-
-const dialogView = DialogStyle.view(Dialog.view, {
-  dialog: styles.dialog,
-  backdrop: (state) => [styles.backdrop, state.isClosed && styles.backdropClosed],
-  panel: (state) => [styles.panel, state.isClosed && styles.panelClosed],
-  title: styles.title,
-  closeButton: styles.close,
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [],
     [
-      h.button(
-        [
-          h.Id("confirm-trigger"),
-          h.Type("button"),
-          h.OnClick(Message.ClickedOpen()),
-          sx(styles.trigger),
-        ],
-        ["Delete draft"],
+      Button.view(
+        {
+          onClick: Message.ClickedOpen(),
+          toView: ({ button }) => h.button([...button, h.Id("confirm-trigger")], ["Delete draft"]),
+        },
+        h,
       ),
       h.submodel({
         slotId: "confirm",
         model: model.dialog,
-        view: dialogView,
+        view: Dialog.view,
         viewInputs: {
           hasDescription: true,
           toView: ({ dialog, backdrop, panel, title, description, closeButton, isVisible }) =>
@@ -98,8 +83,30 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
                       [...panel],
                       [
                         h.h2([...title], ["Delete this draft?"]),
-                        h.p([...description], ["The draft and its notes go for good."]),
-                        h.button([...closeButton], ["Keep it"]),
+                        h.p(
+                          [...description],
+                          ["“Spring notes” and its 12 comments are deleted for good."],
+                        ),
+                        h.div(
+                          [sx(styles.actions)],
+                          [
+                            Button.view(
+                              {
+                                onClick: Message.ClickedKeep(),
+                                toView: ({ button }) => h.button([...button], ["Keep it"]),
+                              },
+                              h,
+                            ),
+                            dangerView(
+                              {
+                                onClick: Message.ClickedDelete(),
+                                toView: ({ button }) => h.button([...button], ["Delete"]),
+                              },
+                              h,
+                            ),
+                          ],
+                        ),
+                        h.button([...closeButton, h.AriaLabel("Close")], [Dialog.closeIcon()]),
                       ],
                     ),
                   ]

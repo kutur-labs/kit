@@ -1,6 +1,7 @@
-// A README code block marked `<!-- demo: src/demos/x.ts -->` shows that file of the gallery
-// verbatim, so the code users copy is code the gallery builds, renders and tests. Its install
-// lines give each peer the range kit tests, so apps with strict peers can copy them too.
+// A README code block marked `<!-- demo: apps/foldkit-stylex-gallery/src/demos/x.ts -->` shows that
+// file verbatim, so the code users copy is code kit type-checks: a gallery demo, which the gallery
+// also renders and tests, or the core's own example in its test app. Its install lines give each
+// peer the range kit tests, so apps with strict peers can copy them too.
 import { globSync, readFileSync } from "node:fs";
 
 import { Schema } from "effect";
@@ -10,7 +11,9 @@ import { readCatalogs } from "./catalogs.ts";
 
 const gallery = new URL("../", import.meta.url);
 
-const packages = new URL("../../../packages/", import.meta.url);
+const repository = new URL("../../../", import.meta.url);
+
+const packages = new URL("packages/", repository);
 
 const readmes = globSync("foldkit-stylex*/README.md", { cwd: packages }).sort();
 
@@ -87,12 +90,15 @@ describe.each(readmes)("packages/%s", (readme) => {
   });
 
   it.each(blocksIn(readme))("shows $path verbatim", ({ path, code }) => {
-    expect(path, "A demo marker names a file under the gallery's src/.").toMatch(
-      /^src\/[a-z/-]+\.ts$/,
+    expect(
+      path,
+      "A demo marker names, from the repository's root, a file under the gallery's src/ or the core's test/app/.",
+    ).toMatch(
+      /^(apps\/foldkit-stylex-gallery\/src|packages\/foldkit-stylex\/test\/app)\/[a-z/-]+\.ts$/,
     );
     expect(
       code,
-      `Copy apps/foldkit-stylex-gallery/${path} into the block after its marker, or change the demo and copy it back.`,
-    ).toBe(readFileSync(new URL(path, gallery), "utf8"));
+      `Copy ${path} into the block after its marker, or change the file and copy it back.`,
+    ).toBe(readFileSync(new URL(path, repository), "utf8"));
   });
 });

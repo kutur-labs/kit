@@ -15,6 +15,16 @@ describe("Vitest in an app that installed the packed packages", () => {
     expect(code, output).toBe(0);
   });
 
+  it("audits the README's checkbox as styled in browser mode, with foldkitStylex() alone", async () => {
+    const { code, output } = await run(
+      process.execPath,
+      [vitest, "run", "--config", "vitest.browser.config.ts"],
+      consumer,
+    );
+
+    expect(code, output).toBe(0);
+  });
+
   it("fails with the guard's message, which names the fix, without foldkitStylex()", async () => {
     const { code, output } = await run(
       process.execPath,

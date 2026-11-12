@@ -1,11 +1,14 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { FileDrop } from "@foldkit/ui";
-import { FileDropStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { FileDrop } from "@kutur-kit/foldkit-stylex-theme/file-drop";
+import { fontSize, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Predicate, Schema } from "effect";
 import { Command, File, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Takes files dropped on it or chosen in the file picker.";
 
 export const Model = Schema.Struct({
   fileDrop: FileDrop.Model,
@@ -41,29 +44,8 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
   });
 
 const styles = stylex.create({
-  root: { display: "grid", gap: 8, maxInlineSize: 360 },
-  // Positioned and centring its items, so the visually hidden input sits in the middle of the zone.
-  zone: {
-    position: "relative",
-    display: "grid",
-    placeItems: "center",
-    paddingBlock: 32,
-    paddingInline: 16,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: "gray",
-    cursor: "pointer",
-    // The input inside takes keyboard focus, so the zone shows it.
-    outlineStyle: { default: "none", ":has(:focus-visible)": "solid" },
-    outlineWidth: 2,
-    outlineOffset: 2,
-  },
-  over: { borderStyle: "solid", borderColor: "black", backgroundColor: "whitesmoke" },
-  text: { margin: 0 },
-});
-
-const fileDropView = FileDropStyle.view(FileDrop.view, {
-  root: (state) => [styles.zone, state.isDragOver && styles.over],
+  root: { display: "grid", gap: space.sm, inlineSize: "100%", maxInlineSize: "24rem" },
+  files: { margin: 0, paddingInlineStart: space.lg, fontSize: fontSize.sm },
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
@@ -73,19 +55,24 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
       h.submodel({
         slotId: "attachments",
         model: model.fileDrop,
-        view: fileDropView,
+        view: FileDrop.view,
         viewInputs: {
           multiple: true,
+          accept: ["image/*", ".pdf"],
           toView: ({ root, input }) =>
             h.label(
               [...root],
-              [h.p([sx(styles.text)], ["Drop files or choose them"]), h.input([...input])],
+              [
+                h.p([sx(FileDrop.text.title)], ["Drop scans here or choose them"]),
+                h.p([sx(FileDrop.text.hint)], ["Images or PDF"]),
+                h.input([...input]),
+              ],
             ),
         },
         toParentMessage: (message) => Message.GotFileDropMessage({ message }),
       }),
       h.ul(
-        [],
+        [sx(styles.files)],
         model.fileNames.map((name) => h.li([], [name])),
       ),
     ],

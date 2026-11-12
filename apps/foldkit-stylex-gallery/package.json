@@ -13,6 +13,7 @@
   "dependencies": {
     "@effect/platform-browser": "catalog:runtime",
     "@foldkit/ui": "catalog:runtime",
+    "@fontsource-variable/inter": "catalog:runtime",
     "@kutur-kit/foldkit-stylex": "workspace:*",
     "@kutur-kit/foldkit-stylex-theme": "workspace:*",
     "@stylexjs/stylex": "catalog:runtime",
@@ -20,12 +21,15 @@
     "foldkit": "catalog:runtime"
   },
   "devDependencies": {
+    "@axe-core/playwright": "catalog:testing",
     "@effect/tsgo": "catalog:tooling",
     "@foldkit/vite-plugin": "catalog:tooling",
     "@kutur-kit/tsconfig": "workspace:*",
     "@stylexjs/unplugin": "catalog:tooling",
     "@types/node": "catalog:tooling",
+    "@vitest/browser-playwright": "catalog:testing",
     "playwright": "catalog:testing",
+    "playwright-core": "catalog:testing",
     "tsrs": "catalog:tooling",
     "unplugin": "catalog:tooling",
     "vite": "catalog:tooling",

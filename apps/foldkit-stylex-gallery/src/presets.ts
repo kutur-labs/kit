@@ -8,18 +8,19 @@ export const Preset = Schema.Literals(["Kit", "Ember", "Paper"]);
 
 export type Preset = typeof Preset.Type;
 
-// Kit keeps the theme's defaults. Colors are light-dark() pairs, so dark mode keeps working.
+// Kit keeps the theme's defaults. Colors are light-dark() pairs, so dark mode keeps working. Ember
+// adds a hue; Paper changes surface and text, and the greys mixed from them follow. The panel radius
+// is the control radius plus 0.25rem unless a preset sets it, as Paper does for square corners.
 const presets = {
   Kit: {},
   Ember: {
-    "--fks-color-accent": "light-dark(#c2410c, #fb923c)",
+    "--fks-color-accent": "light-dark(#b45600, #fb923c)",
     "--fks-radius-control": "2px",
-    "--fks-radius-panel": "4px",
   },
   Paper: {
     "--fks-color-surface": "light-dark(#fffbeb, #1c1917)",
     "--fks-color-text": "light-dark(#1c1917, #fafaf9)",
-    "--fks-color-accent": "light-dark(#15803d, #4ade80)",
+    "--fks-color-accent": "light-dark(#15803d, #6fc884)",
     "--fks-radius-control": "0px",
     "--fks-radius-panel": "0px",
   },

@@ -13,30 +13,28 @@ const slugsIn = (directory: string) =>
     .map((file) => file.slice(0, -".ts".length))
     .sort();
 
-// The functions `Demo` names, which `import.meta.glob` cannot check a module against.
+// The members `Demo` requires, which `import.meta.glob` cannot check a module against.
 const DemoExports = Schema.Struct({
+  summary: Schema.String,
   init: Schema.declare(Predicate.isFunction),
   update: Schema.declare(Predicate.isFunction),
   view: Schema.declare(Predicate.isFunction),
 });
 
 describe("the gallery's pages", () => {
-  it("has one page per core demo, showing the themed demo of the same name", () => {
-    expect(pages.map(({ slug }) => slug)).toEqual(slugsIn("demos"));
-    expect(pages.filter(({ themed }) => Option.isSome(themed)).map(({ slug }) => slug)).toEqual(
-      slugsIn("themed"),
-    );
+  it("has one page per demo, each in exactly one group of src/pages.ts", () => {
+    expect(
+      pages.map(({ slug }) => slug).sort(),
+      "Put each demo's slug in one group of `layout` in src/pages.ts.",
+    ).toEqual(slugsIn("demos"));
   });
 
-  it("finds init, update and view in every demo module", () => {
-    const modules = pages.flatMap(({ slug, core, themed }) => [
-      [`src/demos/${slug}.ts`, core] as const,
-      ...Option.toArray(themed).map((demo) => [`src/themed/${slug}.ts`, demo] as const),
-    ]);
-
+  it("finds summary, init, update and view in every demo module", () => {
     expect(
-      modules.flatMap(([file, demo]) => (Schema.is(DemoExports)(demo) ? [] : [file])),
-      "Export init, update and view from each of these, as `Demo` in src/demo.ts names them.",
+      pages.flatMap(({ slug, demo }) =>
+        Schema.is(DemoExports)(demo) ? [] : [`src/demos/${slug}.ts`],
+      ),
+      "Export summary, init, update and view from each of these, as `Demo` in src/demo.ts names them.",
     ).toEqual([]);
   });
 

@@ -24,12 +24,11 @@ const contentTypes = new Map([
   [".js", "text/javascript"],
 ]);
 
-const client = new URL("../dist/client/", import.meta.url);
-
 const Listening = Schema.Struct({ port: Schema.Int });
 
 const respond = async (
   handler: FetchHandler,
+  client: URL,
   request: IncomingMessage,
   response: ServerResponse,
 ): Promise<void> => {
@@ -54,13 +53,14 @@ const respond = async (
 };
 
 /**
- * Serves the gallery's production build, as a host would: assets from dist/client, every other
- * path through the server entry. Resolves with the base URL once it listens on a free port.
+ * Serves a production build, as a host would: assets from the build's `client` directory, such as
+ * dist/client/, every other path through the server entry. Resolves with the base URL once it
+ * listens on a free port.
  */
-export const serve = (handler: FetchHandler) =>
+export const serve = (handler: FetchHandler, client: URL) =>
   new Promise<Readonly<{ url: string; close: () => Promise<void> }>>((resolve) => {
     const server = createServer((request, response) => {
-      void respond(handler, request, response);
+      void respond(handler, client, request, response);
     });
 
     server.listen(0, "127.0.0.1", () => {

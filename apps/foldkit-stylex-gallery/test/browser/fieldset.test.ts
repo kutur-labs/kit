@@ -4,11 +4,11 @@ import { schemes, useGallery } from "./gallery.ts";
 
 const { open } = useGallery();
 
-describe.each(schemes)("Fieldset in the %s scheme", (scheme) => {
-  it("dims a control in the themed disabled fieldset once, not once per level", async () => {
+describe.each(schemes)("Fieldset in the $colorScheme scheme", (scheme) => {
+  it("dims a control in a disabled fieldset once, not once per level", async () => {
     const { page } = await open("/fieldset", scheme);
 
-    const opacity = await page.locator("#themed-delivery-postcode").evaluate((element) => {
+    const opacity = await page.locator("#delivery-postcode").evaluate((element) => {
       const ancestry = (current: Element | null): ReadonlyArray<Element> =>
         current === null ? [] : [current, ...ancestry(current.parentElement)];
 

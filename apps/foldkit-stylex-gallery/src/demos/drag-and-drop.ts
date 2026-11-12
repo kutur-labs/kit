@@ -1,11 +1,14 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { DragAndDrop } from "@foldkit/ui";
-import { DragAndDropStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { DragAndDrop } from "@kutur-kit/foldkit-stylex-theme/drag-and-drop";
+import { color, fontSize, fontWeight, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Array, Option, Predicate, Schema } from "effect";
 import { Command, Subscription, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Reorders items within and between lists, by pointer or keyboard.";
 
 const Item = Schema.Struct({ id: Schema.String, label: Schema.String });
 
@@ -141,65 +144,48 @@ const slotsOf = (list: List, model: Model): ReadonlyArray<Option.Option<Item>> =
 };
 
 const styles = stylex.create({
-  board: { display: "grid", gridTemplateColumns: "repeat(2, 200px)", gap: 16 },
-  heading: { margin: 0, fontSize: 14 },
-  list: {
-    display: "grid",
-    alignContent: "start",
-    gap: 4,
-    minBlockSize: 160,
-    marginBlockStart: 8,
-    padding: 4,
-    borderWidth: 1,
-    borderStyle: "dashed",
-    borderColor: "gray",
-  },
-  target: { borderStyle: "solid", borderColor: "black" },
-  card: {
+  board: { display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 14rem))", gap: space.md },
+  heading: {
     display: "flex",
-    alignItems: "center",
-    minBlockSize: 44,
-    paddingInline: 8,
-    borderWidth: 1,
-    borderStyle: "solid",
-    backgroundColor: "white",
-    color: "black",
-    cursor: "grab",
+    gap: space.sm,
+    margin: 0,
+    paddingInline: space.xs,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+    lineHeight: "1.125rem",
   },
-  // Moved by keyboard: the item shows where a drop would put it.
-  dragged: { fontWeight: 700 },
-  placeholder: { minBlockSize: 44, backgroundColor: "gainsboro" },
-  // DragAndDrop.ghostStyle places it; this draws it.
-  ghost: { inlineSize: 200, boxShadow: "0 4px 16px rgb(0 0 0 / 0.25)" },
-});
-
-const draggable = DragAndDropStyle.draggable(DragAndDrop.draggable, {
-  draggable: (state) => [styles.card, state.isDragged && styles.dragged],
+  // Its digits keep one width as items move in and out.
+  count: { color: color.muted, fontVariantNumeric: "tabular-nums" },
+  list: { marginBlockStart: space.sm },
 });
 
 const listView = (list: List, model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [],
     [
-      h.h3([sx(styles.heading)], [list.label]),
+      h.h2(
+        [sx(styles.heading)],
+        [list.label, h.span([sx(styles.count)], [String(list.items.length)])],
+      ),
       h.div(
         [
           ...DragAndDrop.droppable(list.id, list.label),
           sx(
+            DragAndDrop.list.body,
             styles.list,
             Option.exists(
               DragAndDrop.maybeDropTarget(model.dragAndDrop),
               ({ containerId }) => containerId === list.id,
-            ) && styles.target,
+            ) && DragAndDrop.list.target,
           ),
         ],
         slotsOf(list, model).map((slot, index) =>
           Option.match(slot, {
-            onNone: () => h.keyed("div")("placeholder", [sx(styles.placeholder)], []),
+            onNone: () => h.keyed("div")("placeholder", [sx(DragAndDrop.list.placeholder)], []),
             onSome: (item) =>
               h.keyed("div")(
                 item.id,
-                draggable(
+                DragAndDrop.draggable(
                   {
                     model: model.dragAndDrop,
                     toParentMessage: (message) => Message.GotDragAndDropMessage({ message }),
@@ -223,7 +209,7 @@ const ghostView = (model: Model, h: HtmlBuilder<Message>): Html =>
     {
       onNone: () => h.empty,
       onSome: ({ style, item }) =>
-        h.div([h.Style(style), sx(styles.card, styles.ghost)], [item.label]),
+        h.div([h.Style(style), sx(DragAndDrop.list.ghost)], [item.label]),
     },
   );
 

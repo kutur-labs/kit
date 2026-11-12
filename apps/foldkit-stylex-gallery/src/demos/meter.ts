@@ -1,11 +1,15 @@
 import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Meter } from "@foldkit/ui";
-import { MeterStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Button } from "@kutur-kit/foldkit-stylex-theme/button";
+import { Meter } from "@kutur-kit/foldkit-stylex-theme/meter";
+import { color, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Shows a value within a known range, such as storage in use.";
 
 export const Model = Schema.Struct({ used: Schema.Int });
 
@@ -17,6 +21,8 @@ export type Message = typeof Message.Type;
 
 const capacity = 10;
 
+const battery = 15;
+
 export const init = (): Update.Return<Model, Message> => ({ model: { used: 4 } });
 
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
@@ -26,25 +32,18 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
   });
 
 const styles = stylex.create({
-  root: { display: "grid", gap: 8, maxInlineSize: 320 },
-  buttons: { display: "flex", gap: 8 },
-  button: { minBlockSize: 44, paddingInline: 16, font: "inherit" },
-  meter: { blockSize: 8, borderRadius: 4, backgroundColor: "gainsboro", overflow: "hidden" },
-  fill: { blockSize: "100%", backgroundColor: "seagreen" },
-  high: { backgroundColor: "firebrick" },
-});
-
-// @foldkit/ui works out no region from the thresholds, so the styles compare the value with them.
-const meterView = MeterStyle.view(Meter.view, {
-  meter: styles.meter,
-  fill: (state) => [styles.fill, state.value > (state.high ?? Infinity) && styles.high],
+  root: { display: "grid", gap: space.lg, inlineSize: "100%", maxInlineSize: "20rem" },
+  field: { display: "grid", gap: space.sm },
+  value: { color: color.muted },
+  buttons: { display: "flex", gap: space.sm },
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [sx(styles.root)],
     [
-      meterView(
+      // The best storage is empty: past `high` the look turns the fill to the danger color.
+      Meter.view(
         {
           id: "storage",
           value: model.used,
@@ -55,9 +54,42 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
           valueText: (value, max) => `${value} of ${max} GB`,
           toView: ({ meter, label, fill }) =>
             h.div(
-              [sx(styles.root)],
+              [sx(styles.field)],
               [
-                h.span([...label], [`Storage: ${model.used} of ${capacity} GB used`]),
+                // The meter announces the value, so the label's copy of it is hidden from the name.
+                h.span(
+                  [...label],
+                  [
+                    "Storage",
+                    h.span(
+                      [h.AriaHidden(true), sx(styles.value)],
+                      [`${model.used} of ${capacity} GB used`],
+                    ),
+                  ],
+                ),
+                h.div([...meter], [h.div([...fill])]),
+              ],
+            ),
+        },
+        h,
+      ),
+      // The best battery is full, so a low charge is the worst region.
+      Meter.view(
+        {
+          id: "battery",
+          value: battery,
+          low: 20,
+          high: 80,
+          optimum: 100,
+          valueText: (value) => `${value}%`,
+          toView: ({ meter, label, fill }) =>
+            h.div(
+              [sx(styles.field)],
+              [
+                h.span(
+                  [...label],
+                  ["Battery", h.span([h.AriaHidden(true), sx(styles.value)], [`${battery}%`])],
+                ),
                 h.div([...meter], [h.div([...fill])]),
               ],
             ),
@@ -67,13 +99,19 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
       h.div(
         [sx(styles.buttons)],
         [
-          h.button(
-            [h.Type("button"), h.OnClick(Message.ClickedUse()), sx(styles.button)],
-            ["Use 2 GB"],
+          Button.view(
+            {
+              onClick: Message.ClickedUse(),
+              toView: ({ button }) => h.button([...button], ["Use 2 GB"]),
+            },
+            h,
           ),
-          h.button(
-            [h.Type("button"), h.OnClick(Message.ClickedFree()), sx(styles.button)],
-            ["Free 2 GB"],
+          Button.view(
+            {
+              onClick: Message.ClickedFree(),
+              toView: ({ button }) => h.button([...button], ["Free 2 GB"]),
+            },
+            h,
           ),
         ],
       ),

@@ -28,12 +28,12 @@ const gridOf = (positions: ReadonlyArray<Readonly<{ x: number; y: number }>>, co
   return { xs, ys, positions: ys.flatMap((y) => xs.map((x) => ({ x, y }))) };
 };
 
-describe.each(schemes)("Calendar in the %s scheme", (scheme) => {
+describe.each(schemes)("Calendar in the $colorScheme scheme", (scheme) => {
   // @foldkit/ui's up and down keys move the cursor by 7 days, or by 3 months or years, so the
   // look must lay the cells out in as many columns for the cursor to move straight up or down.
-  it("lays the themed days out in seven columns of six weeks", async () => {
+  it("lays the days out in seven columns of six weeks", async () => {
     const { page } = await open("/calendar", scheme);
-    const positions = await cellPositions(page.locator("#themed-deadline-grid"));
+    const positions = await cellPositions(page.locator("#deadline-grid"));
     const expected = gridOf(positions, 7);
 
     expect(new Set(expected.xs).size).toBe(7);
@@ -41,12 +41,12 @@ describe.each(schemes)("Calendar in the %s scheme", (scheme) => {
     expect(positions).toEqual(expected.positions);
   });
 
-  it("lays the themed months out in three columns of four", async () => {
+  it("lays the months out in three columns of four", async () => {
     const { page } = await open("/calendar", scheme);
-    const grid = page.locator("#themed-deadline-grid");
+    const grid = page.locator("#deadline-grid");
     await page
-      .locator("#themed-deadline")
-      .getByRole("button", { name: "Switch to month picker" })
+      .locator("#deadline")
+      .getByRole("button", { name: "November 2026, choose a month" })
       .click();
     await expect.poll(() => grid.getAttribute("aria-label")).toBe("Month picker, 2026");
     const positions = await cellPositions(grid);
@@ -57,9 +57,9 @@ describe.each(schemes)("Calendar in the %s scheme", (scheme) => {
     expect(positions).toEqual(expected.positions);
   });
 
-  it("rings the themed cursor cell while the grid has focus, as the grid draws none", async () => {
+  it("rings the cursor cell while the grid has focus, as the grid draws none", async () => {
     const { page } = await open("/calendar", scheme);
-    const grid = page.locator("#themed-deadline-grid");
+    const grid = page.locator("#deadline-grid");
 
     expect(await cursorIn(grid).count()).toBe(0);
     await grid.focus();
@@ -71,10 +71,10 @@ describe.each(schemes)("Calendar in the %s scheme", (scheme) => {
 
   it("selects the day a click picks in the styled grid", async () => {
     const { page } = await open("/calendar", scheme);
-    await page.locator("#themed-deadline-cell-2026-11-20 button").click();
+    await page.locator("#deadline-cell-2026-11-20 button").click();
 
     await expect
-      .poll(() => page.locator("#themed-demo p").textContent())
+      .poll(() => page.locator("#demo p").textContent())
       .toBe("Selected November 20, 2026.");
   });
 });

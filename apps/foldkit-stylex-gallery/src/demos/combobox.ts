@@ -1,11 +1,16 @@
-import type { Html, HtmlBuilder } from "foldkit/html";
-
-import { Combobox } from "@foldkit/ui";
-import { ComboboxStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Combobox } from "@kutur-kit/foldkit-stylex-theme/combobox";
+import { color, fontSize, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Array, Option, Schema } from "effect";
 import { Command, type Update } from "foldkit";
+import { childAttributes, type Html, type HtmlBuilder } from "foldkit/html";
 import { defineMessageUnion } from "foldkit/message";
+
+import { viewportPadding } from "../anchor.ts";
+import { field } from "../field.ts";
+
+export const summary = "A text field that filters a list of choices as you type.";
 
 // Listed by region, so each region's cities sit together under one heading.
 const City = Schema.Literals(["Gdańsk", "Szczecin", "Poznań", "Warszawa", "Kraków", "Wrocław"]);
@@ -22,6 +27,11 @@ const regionOf = (city: City) =>
 const Fair = Schema.Literals(["Comics", "Poetry", "Prints", "Zines"]);
 
 type Fair = typeof Fair.Type;
+
+const styles = stylex.create({
+  row: { display: "flex", flexWrap: "wrap", alignItems: "start", gap: space.md },
+  chosen: { margin: 0, color: color.muted, fontSize: fontSize.sm },
+});
 
 const Cities = Combobox.create<City>();
 
@@ -98,118 +108,63 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
 const matching = <Item extends string>(items: ReadonlyArray<Item>, typed: string) =>
   items.filter((item) => item.toLowerCase().includes(typed.trim().toLowerCase()));
 
-const styles = stylex.create({
-  row: { display: "flex", flexWrap: "wrap", alignItems: "start", gap: 16, paddingBlockEnd: 320 },
-  field: { display: "grid", gap: 8 },
-  // The toggle button lies over the input's end.
-  inputWrapper: { position: "relative", display: "inline-flex" },
-  input: { minBlockSize: 44, minInlineSize: 200, paddingInlineEnd: 44, font: "inherit" },
-  button: {
-    position: "absolute",
-    insetBlock: 0,
-    insetInlineEnd: 0,
-    inlineSize: 44,
-    borderStyle: "none",
-    backgroundColor: "transparent",
-    color: "inherit",
-    font: "inherit",
-  },
-  // The list renders outside this view, in Foldkit's portal root, so it sets its own color.
-  items: {
-    minInlineSize: "var(--button-width)",
-    padding: 4,
-    backgroundColor: "white",
-    color: "black",
-    boxShadow: "0 4px 16px rgb(0 0 0 / 0.25)",
-    transitionProperty: "opacity",
-    transitionDuration: { default: "150ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  itemsClosed: { opacity: 0 },
-  item: { display: "flex", alignItems: "center", minBlockSize: 44, paddingInline: 12 },
-  itemActive: { backgroundColor: "gainsboro" },
-  itemSelected: { fontWeight: 700 },
-  itemDisabled: { opacity: 0.5 },
-  heading: { paddingBlock: 4, paddingInline: 12, fontSize: 14, fontWeight: 700 },
-  // @foldkit/ui renders a separator between groups only when this part is styled.
-  separator: { blockSize: 1, marginBlock: 4, backgroundColor: "silver" },
-});
-
-const comboboxStyles = {
-  inputWrapper: styles.inputWrapper,
-  input: styles.input,
-  button: styles.button,
-  items: (state) => [styles.items, state.isClosed && styles.itemsClosed],
-  item: (state) => [
-    styles.item,
-    state.isActive && styles.itemActive,
-    state.isSelected && styles.itemSelected,
-    state.isDisabled && styles.itemDisabled,
-  ],
-  heading: styles.heading,
-  separator: styles.separator,
-} satisfies ComboboxStyle.Styles;
-
-const citiesView = ComboboxStyle.view(Cities.view, comboboxStyles);
-
-// Combobox.Multi takes the same styles through its own entry point.
-const fairsView = ComboboxStyle.Multi.view(Fairs.view, comboboxStyles);
-
-const item = (h: HtmlBuilder<Message>) => (value: string) => ({
-  content: h.span([], [value]),
+const itemToConfig = (value: string, state: Readonly<{ isSelected: boolean }>) => ({
+  content: Combobox.itemContent(value, state),
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [sx(styles.row)],
     [
-      h.submodel({
-        slotId: "city",
-        model: model.cities,
-        view: citiesView,
-        viewInputs: {
-          items: matching(City.literals, model.cities.inputValue),
-          maybeSelectedValue: model.city,
-          restingInputValue: Option.getOrElse(model.city, () => ""),
-          itemToValue: (city) => city,
-          itemToDisplayText: (city) => city,
-          isItemDisabled: (city) => city === "Szczecin",
-          itemGroupKey: regionOf,
-          groupToHeading: (region) => ({ content: h.span([], [region]) }),
-          ariaLabel: "City",
-          inputPlaceholder: "City",
-          buttonContent: h.span([], ["▾"]),
-          itemToConfig: item(h),
-        },
-        toParentMessage: (message) => Message.GotCitiesMessage({ message }),
-      }),
-      h.div(
-        [sx(styles.field)],
-        [
-          h.submodel({
-            slotId: "fairs",
-            model: model.fairs,
-            view: fairsView,
-            viewInputs: {
-              items: matching(Fair.literals, model.fairs.inputValue),
-              selectedValues: model.selectedFairs,
-              restingInputValue: "",
-              itemToValue: (fair) => fair,
-              itemToDisplayText: (fair) => fair,
-              ariaLabel: "Fairs",
-              inputPlaceholder: "Fairs",
-              itemToConfig: item(h),
-            },
-            toParentMessage: (message) => Message.GotFairsMessage({ message }),
-          }),
-          h.p(
-            [],
-            [
-              Array.isReadonlyArrayNonEmpty(model.selectedFairs)
-                ? model.selectedFairs.join(", ")
-                : "No fairs chosen",
-            ],
-          ),
-        ],
-      ),
+      field(h, { controlId: Combobox.inputId(model.cities.id), text: "City" }, [
+        h.submodel({
+          slotId: "city",
+          model: model.cities,
+          view: Cities.view,
+          viewInputs: {
+            items: matching(City.literals, model.cities.inputValue),
+            maybeSelectedValue: model.city,
+            restingInputValue: Option.getOrElse(model.city, () => ""),
+            itemToValue: (city) => city,
+            itemToDisplayText: (city) => city,
+            itemGroupKey: regionOf,
+            groupToHeading: (region) => ({ content: h.span([], [region]) }),
+            anchor: { gap: 4, padding: viewportPadding },
+            buttonContent: Combobox.buttonContent(model.cities),
+            // @foldkit/ui leaves the toggle, which shows only a chevron, without a name; as in
+            // WAI-ARIA's combobox pattern, it is named after its list.
+            buttonAttributes: childAttributes([h.AriaLabel("Cities")]),
+            itemToConfig,
+          },
+          toParentMessage: (message) => Message.GotCitiesMessage({ message }),
+        }),
+      ]),
+      field(h, { controlId: Combobox.inputId(model.fairs.id), text: "Fairs" }, [
+        h.submodel({
+          slotId: "fairs",
+          model: model.fairs,
+          view: Fairs.view,
+          viewInputs: {
+            items: matching(Fair.literals, model.fairs.inputValue),
+            selectedValues: model.selectedFairs,
+            restingInputValue: "",
+            itemToValue: (fair) => fair,
+            itemToDisplayText: (fair) => fair,
+            anchor: { gap: 4, padding: viewportPadding },
+            buttonContent: Combobox.buttonContent(model.fairs),
+            buttonAttributes: childAttributes([h.AriaLabel("Fairs")]),
+            itemToConfig,
+          },
+          toParentMessage: (message) => Message.GotFairsMessage({ message }),
+        }),
+        h.p(
+          [sx(styles.chosen)],
+          [
+            Array.isReadonlyArrayNonEmpty(model.selectedFairs)
+              ? model.selectedFairs.join(", ")
+              : "No fairs chosen",
+          ],
+        ),
+      ]),
     ],
   );

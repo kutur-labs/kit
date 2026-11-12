@@ -1,11 +1,15 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Animation } from "@foldkit/ui";
-import { AnimationStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Animation } from "@kutur-kit/foldkit-stylex-theme/animation";
+import { Button } from "@kutur-kit/foldkit-stylex-theme/button";
+import { color, fontSize, radius, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Predicate, Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Shows and hides content with a transition on the way in and out.";
 
 export const Model = Schema.Struct({ animation: Animation.Model });
 
@@ -37,8 +41,6 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     GotAnimationMessage: ({ message }) => {
       const next = Animation.update(model.animation, message);
 
-      // Animation hands the wait for its leave transition to the parent; the default waits for the
-      // element's own transitions.
       return lift(
         Predicate.isTagged(next.outMessage, "StartedLeaveAnimating")
           ? { ...next, commands: [Animation.defaultLeaveCommand(next.model)] }
@@ -48,48 +50,52 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
   });
 
 const styles = stylex.create({
-  root: { display: "grid", justifyItems: "start", gap: 12, maxInlineSize: 360 },
-  trigger: { minBlockSize: 44, paddingInline: 16, font: "inherit" },
-  // The element @foldkit/ui keeps in the page while hidden, as animateSize asks.
-  notes: {
-    padding: 16,
+  // At the top of the canvas, so the button stays put as the notes appear below it.
+  root: {
+    alignSelf: "start",
+    display: "grid",
+    justifyItems: "start",
+    gap: space.sm,
+    inlineSize: "100%",
+    maxInlineSize: "24rem",
+  },
+  // The app's card inside the element, which the theme only moves.
+  card: {
+    margin: 0,
+    padding: space.md,
     borderWidth: 1,
     borderStyle: "solid",
-    borderColor: "gray",
-    transitionProperty: "opacity, translate",
-    transitionDuration: { default: "200ms", "@media (prefers-reduced-motion: reduce)": "0s" },
+    borderColor: color.border,
+    borderRadius: radius.panel,
+    color: color.muted,
+    fontSize: fontSize.md,
+    lineHeight: "1.25rem",
   },
-  closed: { opacity: 0, translate: "0 -8px" },
-  text: { margin: 0 },
-});
-
-const animationView = AnimationStyle.view(Animation.view, {
-  element: (state) => [styles.notes, state.isClosed && styles.closed],
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [sx(styles.root)],
     [
-      h.button(
-        [
-          h.Type("button"),
-          h.AriaControls("notes"),
-          h.AriaExpanded(model.animation.isShowing),
-          h.OnClick(Message.ClickedToggle()),
-          sx(styles.trigger),
-        ],
-        [model.animation.isShowing ? "Hide notes" : "Show notes"],
+      Button.view(
+        {
+          onClick: Message.ClickedToggle(),
+          toView: ({ button }) =>
+            h.button(
+              [...button, h.AriaExpanded(model.animation.isShowing)],
+              [model.animation.isShowing ? "Hide notes" : "Show notes"],
+            ),
+        },
+        h,
       ),
       h.submodel({
         slotId: "notes",
         model: model.animation,
-        view: animationView,
+        view: Animation.view,
         viewInputs: {
-          animateSize: true,
           content: h.p(
-            [sx(styles.text)],
-            ["The element stays in the page while hidden, its height animated to zero."],
+            [sx(styles.card)],
+            ["The second stanza still reads flat; try ending on the image of the bridge."],
           ),
         },
         toParentMessage: (message) => Message.GotAnimationMessage({ message }),

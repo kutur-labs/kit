@@ -27,7 +27,7 @@ Type checks and type-aware lint run on [tsrs](https://github.com/oxc-project/tsr
 - [@kutur-kit/assets](./packages/assets/README.md): Typed file storage with signed uploads, for S3-compatible storage and R2.
 - [@kutur-kit/audit](./packages/audit/README.md): Typed audit events with PostgreSQL storage.
 - [@kutur-kit/foldkit-stylex](./packages/foldkit-stylex/README.md): Typed StyleX styles for @foldkit/ui components, with the CSS each component needs to work.
-- [@kutur-kit/foldkit-stylex-theme](./packages/foldkit-stylex-theme/README.md): An optional look for `@kutur-kit/foldkit-stylex`, with light and dark schemes.
+- [@kutur-kit/foldkit-stylex-theme](./packages/foldkit-stylex-theme/README.md): @foldkit/ui's components, styled with `@kutur-kit/foldkit-stylex`, with light and dark schemes.
 - [@kutur-kit/tsconfig](./packages/tsconfig/README.md): TypeScript and Effect presets.
 - [@kutur-kit/oxc](./packages/oxc/README.md): Oxlint rules and Oxfmt configuration.
 - [@kutur-kit/strict](./packages/strict/README.md): A pnpm hook that requires exact catalog versions, exact release-age exclusions and script names that no pnpm command takes.

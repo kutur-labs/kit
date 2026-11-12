@@ -1,11 +1,14 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Slider } from "@foldkit/ui";
-import { SliderStyle } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Slider } from "@kutur-kit/foldkit-stylex-theme/slider";
+import { color, size } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Option, Schema } from "effect";
 import { Command, Subscription, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Picks a number in a range by dragging or with the arrow keys.";
 
 export const Model = Schema.Struct({ slider: Slider.Model, volume: Schema.Finite });
 
@@ -33,7 +36,6 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     },
   });
 
-// Pointer moves and Escape while dragging happen outside the slider's elements.
 export const subscriptions = Subscription.lift({
   volumePointer: Slider.subscriptions.dragPointer,
   volumeEscape: Slider.subscriptions.dragEscape,
@@ -43,43 +45,38 @@ export const subscriptions = Subscription.lift({
 });
 
 const styles = stylex.create({
-  root: { display: "grid", gap: 8, maxInlineSize: 320, paddingBlock: 12 },
-  // The thumb sits inside the track; centring the track's cross axis keeps it on the line.
-  track: {
-    display: "flex",
-    alignItems: "center",
-    blockSize: 4,
-    borderRadius: 2,
-    backgroundColor: "gainsboro",
-  },
-  filledTrack: { borderRadius: 2, backgroundColor: "black" },
-  thumb: { inlineSize: 20, blockSize: 20, borderRadius: "50%", backgroundColor: "black" },
-  // @foldkit/ui moves the thumb with transform, so press feedback scales it.
-  dragging: { scale: 1.2 },
-});
-
-const sliderView = SliderStyle.view(Slider.view, {
-  root: styles.root,
-  track: styles.track,
-  filledTrack: styles.filledTrack,
-  thumb: (state) => [styles.thumb, state.isDragging && styles.dragging],
+  // The slider fills its container, so the container sets its width.
+  field: { inlineSize: "100%", maxInlineSize: "20rem" },
+  value: { color: color.muted },
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
-  h.submodel({
-    slotId: "volume",
-    model: model.slider,
-    view: sliderView,
-    viewInputs: {
-      value: model.volume,
-      toView: ({ root, label, track, filledTrack, thumb }) =>
-        h.div(
-          [...root],
-          [
-            h.span([...label], [`Volume ${model.volume}`]),
-            h.div([...track], [h.div([...filledTrack]), h.div([...thumb])]),
-          ],
-        ),
-    },
-    toParentMessage: (message) => Message.GotSliderMessage({ message }),
-  });
+  h.div(
+    [sx(styles.field)],
+    [
+      h.submodel({
+        slotId: "volume",
+        model: model.slider,
+        view: Slider.view,
+        viewInputs: {
+          value: model.volume,
+          // The thumb stays inside the track; @foldkit/ui insets its travel by the thumb's size.
+          thumbAlignment: "Edge",
+          thumbSize: size.mark,
+          toView: ({ root, label, track, filledTrack, thumb }) =>
+            h.div(
+              [...root],
+              [
+                h.span(
+                  [...label],
+                  // The thumb announces the value, so the label's copy is hidden from the name.
+                  ["Volume", h.span([h.AriaHidden(true), sx(styles.value)], [`${model.volume}%`])],
+                ),
+                h.div([...track], [h.div([...filledTrack]), h.div([...thumb])]),
+              ],
+            ),
+        },
+        toParentMessage: (message) => Message.GotSliderMessage({ message }),
+      }),
+    ],
+  );

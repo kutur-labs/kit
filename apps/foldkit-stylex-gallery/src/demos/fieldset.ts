@@ -1,93 +1,131 @@
 import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Fieldset, Input } from "@foldkit/ui";
-import { FieldsetStyle, InputStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Fieldset } from "@kutur-kit/foldkit-stylex-theme/fieldset";
+import { Input } from "@kutur-kit/foldkit-stylex-theme/input";
+import { Select } from "@kutur-kit/foldkit-stylex-theme/select";
+import { Textarea } from "@kutur-kit/foldkit-stylex-theme/textarea";
+import { space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
-export const Model = Schema.Struct({ isLocked: Schema.Boolean });
+export const summary = "Groups related fields under a legend, and can disable them together.";
+
+export const Model = Schema.Struct({ name: Schema.String, note: Schema.String });
 
 export type Model = typeof Model.Type;
 
-export const Message = defineMessageUnion({ ClickedLock: {} });
+export const Message = defineMessageUnion({
+  ChangedName: { value: Schema.String },
+  ChangedNote: { value: Schema.String },
+});
 
 export type Message = typeof Message.Type;
 
-export const init = (): Update.Return<Model, Message> => ({ model: { isLocked: false } });
+export const init = (): Update.Return<Model, Message> => ({ model: { name: "", note: "" } });
 
 export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match<Update.Return<Model, Message>>(message, {
-    ClickedLock: () => ({ model: { isLocked: !model.isLocked } }),
+    ChangedName: ({ value }) => ({ model: { ...model, name: value } }),
+    ChangedNote: ({ value }) => ({ model: { ...model, note: value } }),
   });
 
 const styles = stylex.create({
-  form: { display: "grid", justifyItems: "start", gap: 12, maxInlineSize: 360 },
-  fieldset: {
-    display: "grid",
-    gap: 8,
-    margin: 0,
-    padding: 12,
-    borderWidth: 2,
-    borderStyle: "solid",
-    borderColor: "currentColor",
-  },
-  legend: { fontWeight: 700 },
-  description: { margin: 0, fontSize: 14 },
-  disabled: { opacity: 0.5 },
-  input: {
-    padding: 8,
-    borderWidth: 2,
-    borderStyle: "solid",
-    borderColor: "currentColor",
-    backgroundColor: "transparent",
-    color: "inherit",
-    font: "inherit",
-  },
+  form: { display: "grid", gap: space.xl, inlineSize: "100%", maxInlineSize: "24rem" },
+  field: { display: "grid", gap: space.sm },
 });
 
-const fieldsetView = FieldsetStyle.view(Fieldset.view, {
-  fieldset: (state) => [styles.fieldset, state.isDisabled && styles.disabled],
-  legend: styles.legend,
-  description: styles.description,
-});
+const contact = (model: Model, h: HtmlBuilder<Message>): Html =>
+  Fieldset.view(
+    {
+      id: "contact",
+      hasDescription: true,
+      toView: ({ fieldset, legend, description }) =>
+        h.fieldset(
+          [...fieldset],
+          [
+            h.legend([...legend], ["Contact"]),
+            h.p([...description], ["How we answer your letter."]),
+            Input.view(
+              {
+                id: "contact-name",
+                value: model.name,
+                onInput: (value) => Message.ChangedName({ value }),
+                toView: ({ input, label }) =>
+                  h.div([sx(styles.field)], [h.label([...label], ["Name"]), h.input([...input])]),
+              },
+              h,
+            ),
+            Textarea.view(
+              {
+                id: "contact-note",
+                value: model.note,
+                rows: 3,
+                onInput: (value) => Message.ChangedNote({ value }),
+                toView: ({ textarea, label }) =>
+                  h.div(
+                    [sx(styles.field)],
+                    [h.label([...label], ["Note"]), h.textarea([...textarea])],
+                  ),
+              },
+              h,
+            ),
+          ],
+        ),
+    },
+    h,
+  );
 
-const inputView = InputStyle.view(Input.view, { input: styles.input });
+// The fieldset disables the native controls, but not each component's flag, which the looks
+// read: pass `isDisabled` to every control too.
+const delivery = (h: HtmlBuilder<Message>): Html =>
+  Fieldset.view(
+    {
+      id: "delivery",
+      isDisabled: true,
+      hasDescription: true,
+      toView: ({ fieldset, legend, description }) =>
+        h.fieldset(
+          [...fieldset],
+          [
+            h.legend([...legend], ["Delivery"]),
+            h.p([...description], ["Delivery opens with the spring edition."]),
+            Select.view(
+              {
+                id: "delivery-country",
+                isDisabled: true,
+                toView: ({ select, label }) =>
+                  h.div(
+                    [sx(styles.field)],
+                    [
+                      h.label([...label], ["Country"]),
+                      Select.field(h.select([...select], [h.option([h.Value("pl")], ["Polska"])]), {
+                        isDisabled: true,
+                      }),
+                    ],
+                  ),
+              },
+              h,
+            ),
+            Input.view(
+              {
+                id: "delivery-postcode",
+                isDisabled: true,
+                toView: ({ input, label }) =>
+                  h.div(
+                    [sx(styles.field)],
+                    [h.label([...label], ["Postcode"]), h.input([...input])],
+                  ),
+              },
+              h,
+            ),
+          ],
+        ),
+    },
+    h,
+  );
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
-  h.div(
-    [sx(styles.form)],
-    [
-      fieldsetView(
-        {
-          id: "delivery",
-          isDisabled: model.isLocked,
-          hasDescription: true,
-          toView: ({ fieldset, legend, description }) =>
-            h.fieldset(
-              [...fieldset],
-              [
-                h.legend([...legend], ["Delivery"]),
-                h.p([...description], ["Where we post the zine."]),
-                // The fieldset disables the native input, but not Input's flag: pass it too.
-                inputView(
-                  {
-                    id: "street",
-                    isDisabled: model.isLocked,
-                    toView: ({ input, label }) =>
-                      h.div([], [h.label([...label], ["Street"]), h.input([...input])]),
-                  },
-                  h,
-                ),
-              ],
-            ),
-        },
-        h,
-      ),
-      h.button(
-        [h.Type("button"), h.OnClick(Message.ClickedLock())],
-        [model.isLocked ? "Unlock" : "Lock"],
-      ),
-    ],
-  );
+  h.div([sx(styles.form)], [contact(model, h), delivery(h)]);
