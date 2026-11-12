@@ -57,7 +57,10 @@ describe.each(schemes)("DragAndDrop in the $colorScheme scheme", (scheme) => {
     // its text.
     const ghost = page.getByText("Write the brief", { exact: true });
 
-    await expect.poll(() => ghost.count()).toBe(1);
+    // Each pointer move renders in its own animation frame, so the ghost appears within milliseconds
+    // on an idle machine but can take over expect.poll's default second when CI runs the browser
+    // suites at once.
+    await expect.poll(() => ghost.count(), { timeout: 5_000 }).toBe(1);
     expect(await computed(ghost, "position")).toBe("fixed");
     expect(await computed(ghost, "pointer-events")).toBe("none");
     expect(await list(page, "done").locator(":scope > :not([role])").count()).toBe(1);
