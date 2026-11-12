@@ -9,6 +9,8 @@ import { unplugin } from "@stylexjs/unplugin";
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 
+import { devStylesheets } from "./internal/dev-stylesheets.ts";
+
 /**
  * StyleX's options without `styleResolution`: the views' layer checks (src/internal/precedence.ts)
  * follow StyleX's default, property-specificity, where a longhand beats its shorthand whatever the
@@ -85,8 +87,9 @@ const installedFrom = (root: string, names: ReadonlyArray<string>) => {
 /**
  * StyleX for a Foldkit app that uses @kutur-kit/foldkit-stylex, in dev, build and Vitest. Use it in
  * place of `@stylexjs/unplugin/vite`, in vite.config.ts and vitest.config.ts; it takes the same
- * options except `styleResolution`. Under Vitest, `runtimeInjection` defaults to `true`, so
- * browser tests see the styles.
+ * options except `styleResolution`. In dev, each document links the stylesheets its module scripts
+ * import, so pages paint styled before the scripts run. Under Vitest, `runtimeInjection` defaults
+ * to `true`, so browser tests see the styles.
  */
 // Vite takes a mutable array of plugins.
 export const foldkitStylex = (options: Options = {}): Array<Plugin> => {
@@ -130,6 +133,8 @@ export const foldkitStylex = (options: Options = {}): Array<Plugin> => {
       // theme has no foldkit peer, so Foldkit's plugin does not add it.
       config: () => ({ ssr: { noExternal: packages } }),
     },
+    // Vitest's documents run no app entry.
+    applied(devStylesheets, (config, env) => !inTests(config, env)),
     requireClientCss,
   ];
 };

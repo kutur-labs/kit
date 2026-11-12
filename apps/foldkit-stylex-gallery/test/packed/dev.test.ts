@@ -83,6 +83,42 @@ describe("vite dev in an app that installed the packed packages", () => {
     }
   });
 
+  // Vite's client adds a script's stylesheets only once the script runs, so without the link a
+  // server-rendered page first paints in the browser's default font.
+  it("links the client entry's stylesheet ahead of StyleX's, so the page paints styled before its scripts run", async () => {
+    if (browser === undefined) throw new Error("The browser did not start.");
+    const server = await startVite(vite, [], consumer);
+
+    try {
+      const head = (await (await get(server.url)).text()).split("</head>")[0] ?? "";
+
+      const stylesheets = Array.from(
+        head.matchAll(/<link rel="stylesheet" href="([^"]+)"/g),
+        ([, href]) => href,
+      );
+
+      expect(stylesheets).toEqual(["/src/styles.css", "/virtual:stylex.css"]);
+
+      const page = await browser.newPage();
+
+      try {
+        await page.route(/\.ts$/, (route) => route.abort());
+        await page.goto(server.url);
+
+        // The browser's default is a serif; src/styles.css sets the system font.
+        expect(
+          await page.evaluate(() => getComputedStyle(document.documentElement).fontFamily),
+        ).toBe("system-ui, sans-serif");
+      } finally {
+        await page.close();
+      }
+
+      expect(await errorsOn(server)).toEqual([]);
+    } finally {
+      await server.stop();
+    }
+  });
+
   it("shows the core's guard in the browser when StyleX's own plugin replaces foldkitStylex()", async () => {
     const server = await startVite(vite, ["--config", "vite.stylex-core.config.ts"], consumer);
 
