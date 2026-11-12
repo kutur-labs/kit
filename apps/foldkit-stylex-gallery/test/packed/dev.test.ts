@@ -32,7 +32,9 @@ const get = (url: string) => {
   return api.get(url, { failOnStatusCode: false });
 };
 
-// Loads the page and returns the errors it logged, once Foldkit hydrated it or failed to.
+// Loads the page and returns the errors it logged, once Foldkit hydrated it, which removes
+// data-foldkit-app, or a script threw. Network idleness would not do: on a slow CPU the network
+// goes quiet while the browser still evaluates the module graph.
 const errorsOn = async (server: DevServer) => {
   if (browser === undefined) throw new Error("The browser did not start.");
   const page = await browser.newPage();
@@ -40,9 +42,23 @@ const errorsOn = async (server: DevServer) => {
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
-  page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto(server.url, { waitUntil: "networkidle" });
-  await page.close();
+
+  const threw = new Promise<void>((resolve) => {
+    page.on("pageerror", (error) => {
+      errors.push(error.message);
+      resolve();
+    });
+  });
+
+  try {
+    await page.goto(server.url);
+    await Promise.race([
+      threw,
+      page.waitForFunction(() => document.querySelector("[data-foldkit-app]") === null),
+    ]);
+  } finally {
+    await page.close();
+  }
 
   return errors;
 };
