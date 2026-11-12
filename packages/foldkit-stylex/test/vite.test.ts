@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
-import { build, resolveConfig } from "vite";
+import { build, createServer, resolveConfig } from "vite";
 import { describe, expect, it, onTestFinished } from "vitest";
 
 import { foldkitStylex, type Options } from "../src/vite.ts";
@@ -154,6 +154,63 @@ describe("foldkitStylex", () => {
 
     expect(config.optimizeDeps.exclude).toEqual(["@acme/tokens"]);
   });
+
+  // Vite's client adds a script's stylesheets only once the script runs. Foldkit writes its client
+  // entry without `base`, and Vite adds it to the document's URLs after the plugin runs.
+  for (const base of ["/", "/app/"]) {
+    it(`links the stylesheets a document's scripts import ahead of StyleX's in dev, under base ${base}`, async () => {
+      const root = await mkdtemp(join(tmpdir(), "foldkit-stylex-dev-"));
+      onTestFinished(() => rm(root, { recursive: true, force: true }));
+      await writeFile(
+        join(root, "entry.ts"),
+        'import "./first.css";\nimport inline from "./inline.css?inline";\nexport * from "./reexported.ts";\nconsole.log(inline);\n',
+      );
+      // A module that accepts updates imports Vite's client, which the walk must not follow.
+      await writeFile(
+        join(root, "reexported.ts"),
+        'import "./second.css";\nexport const a = 1;\nimport.meta.hot?.accept();\n',
+      );
+
+      // Vite refuses to transform a file in public/, which the browser loads as it is.
+      await mkdir(join(root, "public"));
+      await writeFile(join(root, "public/analytics.js"), "console.log(1);\n");
+
+      for (const name of ["first", "inline", "second"]) {
+        await writeFile(join(root, `${name}.css`), `.${name} { color: red; }\n`);
+      }
+
+      // The modules Vite transforms after the client below, the walk's included.
+      const transformed: Array<string> = [];
+
+      const server = await createServer({
+        configFile: false,
+        logLevel: "silent",
+        root,
+        base,
+        plugins: [
+          ...foldkitStylex(),
+          { name: "transformed", transform: (_code, id) => void transformed.push(id) },
+        ],
+        // Pre-transforms would transform the client's imports whatever the walk does.
+        server: { middlewareMode: true, ws: false, preTransformRequests: false },
+      });
+
+      onTestFinished(() => server.close());
+      // As a browser that loaded a page before does.
+      await server.transformRequest("/@vite/client");
+      transformed.length = 0;
+
+      const html = await server.transformIndexHtml(
+        "/",
+        '<!doctype html><html><head><script type="module" src="/analytics.js"></script></head><body><script type="module" src="/entry.ts"></script></body></html>',
+      );
+
+      expect(
+        Array.from(html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g), ([, href]) => href),
+      ).toEqual([`${base}first.css`, `${base}second.css`, `${base}virtual:stylex.css`]);
+      expect(transformed.filter((id) => id.includes("/vite/dist/client/"))).toEqual([]);
+    });
+  }
 
   // Chrome 80 has neither inset, oklch() nor light-dark(). Its targets expand inset; the app's
   // exclude keeps oklch() and the package's keeps light-dark().
