@@ -1,5 +1,12 @@
 # @kutur-kit/foldkit-stylex-theme
 
+## 0.1.0-alpha.3
+
+### Patch Changes
+
+- Updated dependencies [8fd9aeb]
+  - @kutur-kit/foldkit-stylex@0.1.0-alpha.3
+
 ## 0.1.0-alpha.2
 
 ### Minor Changes
