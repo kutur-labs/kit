@@ -2,7 +2,7 @@ import type { Supported } from "./internal/supported.ts";
 import type { Disclosure } from "@foldkit/ui";
 import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
-import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** A disclosure's state, as its config sets it; the same for each part. */
 export interface State {
@@ -18,8 +18,9 @@ export interface Styles {
   readonly button?: PartStyle<State>;
   /**
    * The element you spread the `panel` bundle onto. Inside `animatePanel` it sits in two wrappers
-   * with no hook: they animate the height for 200 ms and clip overflow, so the panel's shadow and
-   * outline do not show past its box. Leave `animatePanel` out to animate the panel yourself.
+   * with no hook: they animate the height for 200 ms with an inline transition, under reduced
+   * motion too, and clip overflow, so the panel's shadow and outline do not show past its box.
+   * Leave `animatePanel` out to animate the panel yourself.
    */
   readonly panel?: PartStyle<State>;
 }
@@ -47,13 +48,22 @@ const stateOf = (config: Reads["Config"]): State => ({
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Disclosure", Before>;
+
+/**
  * `Disclosure.view` with each part's styles on the attributes `toView` gets. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     disclosureView: Supported<"Disclosure", Has, Reads, typeof Disclosure.view>,
-    ...layers: Layers<List, Styles, "Disclosure">
+    ...layers: Layers<List>
   ) =>
   <Message>(config: Disclosure.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));

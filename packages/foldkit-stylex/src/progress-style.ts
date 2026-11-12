@@ -4,7 +4,7 @@ import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
 import * as Predicate from "effect/Predicate";
 
-import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 import { boundsOf, clamp } from "./internal/range.ts";
 
 /** A progress indicator's state as @foldkit/ui renders it, the same for each part. */
@@ -69,13 +69,22 @@ const stateOf = (config: Reads["Config"]): State => {
 };
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Progress", Before>;
+
+/**
  * `Progress.view` with each part's styles on the attributes `toView` gets. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     progressView: Supported<"Progress", Has, Reads, typeof Progress.view>,
-    ...layers: Layers<List, Styles, "Progress">
+    ...layers: Layers<List>
   ) =>
   <Message>(config: Progress.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));

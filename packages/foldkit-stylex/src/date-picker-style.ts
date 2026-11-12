@@ -7,7 +7,7 @@ import { defineView, type View } from "foldkit/submodel";
 
 import { styledAttributes } from "./internal/calendar.ts";
 import { anchored } from "./internal/functional-styles.ts";
-import { partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 import { visibilityOf, type TransitionState } from "./internal/transition.ts";
 import { sxClassName } from "./sx.ts";
 
@@ -94,12 +94,21 @@ const stateOf = (model: Reads["Model"], inputs: Reads["ViewInputs"]): State => (
 export type ViewInputs = DatePicker.ViewInputs & Filled;
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "DatePicker", Before>;
+
+/**
  * `DatePicker.view` with each part's styles, the calendar's included; pass it to `h.submodel` as
  * `view`. Pass several styles objects to layer them: later ones win property by property.
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   datePickerView: Supported<"DatePicker", Has, Reads, typeof DatePicker.view>,
-  ...layers: Layers<List, Styles, "DatePicker">
+  ...layers: Layers<List>
 ): View<DatePicker.Model, DatePicker.Message, ViewInputs> =>
   defineView<DatePicker.Model, DatePicker.Message, ViewInputs>((model, inputs, h) => {
     const part = partsOf(layers, stateOf(model, inputs));

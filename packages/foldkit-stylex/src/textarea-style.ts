@@ -2,7 +2,7 @@ import type { Supported } from "./internal/supported.ts";
 import type { Textarea } from "@foldkit/ui";
 import type { Attribute, Html, HtmlBuilder, TextareaAttribute } from "foldkit/html";
 
-import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /**
  * A textarea's state, as its config sets it; the same for each part. @foldkit/ui sets each hook on
@@ -59,13 +59,22 @@ const stateOf = (config: Reads["Config"]): State => ({
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Textarea", Before>;
+
+/**
  * `Textarea.view` with each part's styles on the attributes `toView` gets. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     textareaView: Supported<"Textarea", Has, Reads, typeof Textarea.view>,
-    ...layers: Layers<List, Styles, "Textarea">
+    ...layers: Layers<List>
   ) =>
   <Message>(config: Textarea.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));

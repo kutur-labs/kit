@@ -155,21 +155,24 @@ type LayersBefore<
     : never;
 
 /**
- * Styles objects applied in order, each checked against the component's `Styles`, the properties
- * its parts cannot set and the layers before it. `Component` names the component's entry in
- * `Owns`, which maps its parts to the families in `owned.ts`.
+ * Styles objects applied in order after the ones in `Before`, each checked against the component's
+ * `Styles`, the properties its parts cannot set and every layer before it, `Before`'s included.
+ * `Component` names the component's entry in `Owns`, which maps its parts to the families in
+ * `owned.ts`. Each namespace exports it as `Layers`, so a library that puts its own styles first
+ * keeps the checks on the layers an app adds.
  */
-export type Layers<
+export type CheckedLayers<
   List extends ReadonlyArray<object>,
   Styles,
   Component extends keyof Owns,
+  Before extends ReadonlyArray<object> = [],
 > = List &
   NoInfer<{
     readonly [Index in keyof List]: Checked<
       List[Index],
       Styles,
       Owns[Component],
-      LayersBefore<List, Index>,
+      LayersBefore<List, Index> | Before[number],
       number extends List["length"] ? false : true
     >;
   }>;

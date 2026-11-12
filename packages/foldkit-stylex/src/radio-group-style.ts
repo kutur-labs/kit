@@ -4,7 +4,7 @@ import type { ChildAttribute } from "foldkit/html";
 
 import { defineView, type View } from "foldkit/submodel";
 
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** The group's state, from its view inputs. */
 export interface State {
@@ -101,6 +101,15 @@ const styledOption = (
   };
 };
 
+/**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "RadioGroup", Before>;
+
 /** A `RadioGroup.create` view with each part's styles; pass it to `h.submodel` as `view`. */
 export const view = <Value extends string, const List extends ReadonlyArray<Styles>>(
   radioGroupView: Supported<
@@ -109,7 +118,7 @@ export const view = <Value extends string, const List extends ReadonlyArray<Styl
     Reads,
     View<RadioGroup.Model, RadioGroup.Message, RadioGroup.ViewInputs<Value>>
   >,
-  ...layers: Layers<List, Styles, "RadioGroup">
+  ...layers: Layers<List>
 ): View<RadioGroup.Model, RadioGroup.Message, RadioGroup.ViewInputs<Value>> =>
   defineView<RadioGroup.Model, RadioGroup.Message, RadioGroup.ViewInputs<Value>>(
     (model, inputs, h) =>

@@ -17,6 +17,7 @@ build/
 coverage/
 .nyc_output/
 test-results/
+.vitest/
 playwright-report/
 reports/
 .stryker-tmp/

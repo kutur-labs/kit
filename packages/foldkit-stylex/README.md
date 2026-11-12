@@ -1,6 +1,6 @@
 # @kutur-kit/foldkit-stylex
 
-StyleX for @foldkit/ui components. Wrap a component's view once with typed styles for each of its parts, written as functions of the part's state, and the package adds the CSS each component needs to work: the backdrop that covers the page, the panel's z-index, the hidden closed dialog and the like. It ships no colors, spacing or fonts; `@kutur-kit/foldkit-stylex-theme` is an optional look.
+StyleX for @foldkit/ui components. Most apps use [`@kutur-kit/foldkit-stylex-theme`](https://github.com/kutur-labs/kit/tree/main/packages/foldkit-stylex-theme), which styles every component through this package; use this package on its own for a look of your own. Wrap a component's view once with typed styles for each of its parts, written as functions of the part's state, and the package adds the CSS each component needs to work: the backdrop that covers the page, the panel's z-index, the hidden closed dialog and the like. It ships no colors, spacing or fonts.
 
 Tested with the lowest versions in `peerDependencies`; a daily job tests the latest @foldkit/ui.
 
@@ -75,7 +75,7 @@ The [lint preset](#lint) reports the first form.
 
 Wrap @foldkit/ui's view once, at module scope, and use the result where you used the view. Each key of the styles object is a part; its value is StyleX styles or a function of the part's state:
 
-<!-- demo: src/demos/checkbox.ts -->
+<!-- demo: packages/foldkit-stylex/test/app/checkbox.ts -->
 
 ```ts
 import type { Update } from "foldkit";
@@ -116,7 +116,13 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     color: "inherit",
   },
-  checked: { backgroundColor: { default: "black", ":hover": "dimgray" }, color: "white" },
+  checked: {
+    backgroundColor: {
+      default: "black",
+      ":hover": { default: null, "@media (hover: hover)": "dimgray" },
+    },
+    color: "white",
+  },
   disabled: { opacity: 0.5 },
   tick: { opacity: 0 },
   ticked: { opacity: 1 },
@@ -154,7 +160,19 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
 
 Submodel components such as Popover and Dialog take the wrapped view in `h.submodel({ view: popoverView, ... })`; `toView` gets bundles that already carry their styles. Components with class name inputs, such as Listbox, take their styles the same way, and their class name inputs and the `className` of `itemToConfig` no longer compile.
 
-More styles objects after the first layer on top of it, property by property: `PopoverStyle.view(Popover.view, popoverTheme, { panel: styles.wide })`. StyleX applies a longhand over its shorthand whatever the order, so a later `padding` over an earlier `paddingInline` fails to compile and names the longhand to set, except inside `::before` and other pseudo-elements (see [Limitations](#limitations)). [`@kutur-kit/foldkit-stylex-theme`](https://github.com/kutur-labs/kit/tree/main/packages/foldkit-stylex-theme#customise) lists the other ways to customise its looks.
+More styles objects after the first layer on top of it, property by property: `PopoverStyle.view(Popover.view, look, { panel: styles.wide })`. StyleX applies a longhand over its shorthand whatever the order, so a later `padding` over an earlier `paddingInline` fails to compile and names the longhand to set, except inside `::before` and other pseudo-elements (see [Limitations](#limitations)).
+
+A module that puts its own styles first and lets callers add more keeps these checks on the callers' styles with `XStyle.Layers<List, Before>`: it checks each styles object in `List` against those in `Before` and those before it in `List`. The theme's `restyle` is built this way:
+
+```ts
+const look = {
+  panel: (state) => [styles.panel, state.isClosed && styles.closed],
+} satisfies PopoverStyle.Styles;
+
+export const restyle = <const List extends ReadonlyArray<PopoverStyle.Styles>>(
+  ...layers: PopoverStyle.Layers<List, [typeof look]>
+) => PopoverStyle.view(Popover.view, look, ...layers);
+```
 
 ## State
 
@@ -164,7 +182,7 @@ A part's state is typed: autocomplete lists every flag and a misspelt one does n
 - `isClosed` is true where @foldkit/ui sets `data-closed`: the first frame of the enter animation and the leave animation. Put `transition*` on the base style and the closed values under `isClosed`; a fade on `!isVisible` never plays, because `isVisible` stays true while leaving.
 - `isDisabled` means disabled whether @foldkit/ui uses the native `disabled` attribute or `aria-disabled`, so do not style `:disabled`.
 
-Later entries win: in `[styles.box, state.isChecked && styles.checked, state.isDisabled && styles.disabled]` the disabled style wins over the checked one. Put pseudo-classes inside a variant: `checked: { backgroundColor: { default: "black", ":hover": "dimgray" } }`. Style focus with `":focus-visible"`.
+Later entries win: in `[styles.box, state.isChecked && styles.checked, state.isDisabled && styles.disabled]` the disabled style wins over the checked one. Put pseudo-classes inside a variant, and `:hover` under `@media (hover: hover)`, because touch browsers keep `:hover` after a tap: `checked: { backgroundColor: { default: "black", ":hover": { default: null, "@media (hover: hover)": "dimgray" } } }`. StyleX takes no condition under a chained key such as `":hover:not(:focus-visible)"` or a `stylex.when` key, so put that key under `"@media (hover: hover)"` instead. Style focus with `":focus-visible"`.
 
 Toast entries are the one exception: every entry shares one class, so style them with `":is([data-closed])"` and `":is([data-swipe])"`, and style variants on your own element inside `entryToView`.
 
@@ -222,7 +240,7 @@ Each message is the last line of the error.
 | A dynamic style on a part                                                                              | `"Pass a static style: a part takes classes only, because @foldkit/ui owns its inline style. For a runtime value, set a custom property with h.Style on your own element around the part and read it with var() in the part's styles; a portaled panel inherits from none of your elements, so set it on an element you render inside the panel and style that element."` |
 | A dynamic style in `sx`                                                                                | `"Pass static styles only. For a runtime value, set a custom property with h.Style({ '--x': value }) and read it with var(--x) in a static style."`                                                                                                                                                                                                                       |
 | `{ pannel: ... }`                                                                                      | `Did you mean to write 'panel'?`                                                                                                                                                                                                                                                                                                                                          |
-| `{ panel: ..., pannel: ... }` or `{ ...popoverTheme, pannel: ... }`                                    | `"pannel names no part, so its styles would reach no element. Write arrow, backdrop, button, panel or wrapper."`                                                                                                                                                                                                                                                          |
+| `{ panel: ..., pannel: ... }` or `{ ...look, pannel: ... }`                                            | `"pannel names no part, so its styles would reach no element. Write arrow, backdrop, button, panel or wrapper."`                                                                                                                                                                                                                                                          |
 | `calendar: { cell: ..., cellButon: ... }` on DatePicker                                                | `"cellButon names no part, so its styles would reach no element. Write cell, cellButton, columnHeader, grid, headerRow, headingButton, nextMonthButton, nextPageButton, previousMonthButton, previousPageButton, root or week."`                                                                                                                                          |
 | `{ panel: ... }` on Listbox                                                                            | `"Listbox calls its panel items: put these styles under items."`                                                                                                                                                                                                                                                                                                          |
 | `{ panel: ... }` on Menu                                                                               | `"Menu calls its panel items: put these styles under items."`                                                                                                                                                                                                                                                                                                             |
@@ -303,7 +321,7 @@ FileDrop hides its input visually, so style keyboard focus on `root` with `":has
 
 ## Lint
 
-The `/foldkit-stylex` preset of [`@kutur-kit/oxc`](https://github.com/kutur-labs/kit/tree/main/packages/oxc#kutur-kitfoldkit-stylex) reports what the types cannot see: a second Class on an element, a Class or Style on a part's bundle or in a `*Attributes` input, `sx(...)` before a spread, a @foldkit/ui view used without its wrapper, condition keys that never match or rank differently than written, styles objects and arrays of them annotated or cast with `as` instead of checked with `satisfies`, and StyleX's own Vite plugin. It also turns on StyleX's ESLint rules.
+The `/foldkit-stylex` preset of [`@kutur-kit/oxc`](https://github.com/kutur-labs/kit/tree/main/packages/oxc#kutur-kitfoldkit-stylex) reports what the types cannot see: a second Class on an element, a Class or Style on a part's bundle or in a `*Attributes` input, `sx(...)` before a spread, a @foldkit/ui view used without its wrapper, condition keys that never match or rank differently than written, `:hover` styles outside `@media (hover: hover)`, styles objects and arrays of them annotated or cast with `as` instead of checked with `satisfies`, and StyleX's own Vite plugin. It also turns on StyleX's ESLint rules.
 
 ```sh
 pnpm add -D @kutur-kit/oxc@alpha 'oxlint@~1.91.0' '@stylexjs/eslint-plugin@~0.19.1'
@@ -336,6 +354,80 @@ Scene.scene(
   Scene.expect(Scene.role("checkbox")).toHaveAttr("data-checked"),
 );
 ```
+
+### Check accessibility in a browser
+
+happy-dom computes no styles or layout, so these checks run in Chromium. `@kutur-kit/foldkit-stylex/testing` exports `audit`, which checks the page as it is, and `recordMotion`, which logs what moves for it. axe-core checks the rest: text contrast, names, roles and ARIA.
+
+| Rule         | Checks                                                                                                                                                                 | Cannot see                                                                                                                                                             |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `edge`       | A control's most contrasting border, fill or shown mark, and an icon button's mark, reach 3:1 (WCAG 1.4.11); a `hairline` field shows a fill                           | Image and gradient backdrops, reported as `unmeasured`; positioned siblings behind                                                                                     |
+| `focus`      | Keyboard focus shows, uncovered, as an outline or box-shadow ring of 3:1, at `kit` a 2px outline (2.4.7, 1.4.11, 2.4.11)                                               | The same backdrops                                                                                                                                                     |
+| `target`     | 24px targets, or at `AA` smaller ones whose 24px circles meet no other target; at `kit` 44px under a coarse pointer (2.5.8, 2.5.5); links in a line of text are exempt |                                                                                                                                                                        |
+| `reflow`     | No sideways scrolling, and no fixed box or its content past the viewport's edge (1.4.10)                                                                               | Content that an `overflow: hidden` ancestor cuts at the edge; text past the edge in a fixed box that holds it directly, such as a `nowrap` banner                      |
+| `clipped`    | No cut-off text, with or without 1.4.12's spacing                                                                                                                      |                                                                                                                                                                        |
+| `motion`     | No CSS transition or animation longer than a frame moves anything under reduced motion (2.3.3)                                                                         | `element.animate()` and smooth scrolling                                                                                                                               |
+| `state`      | States stay visible under forced colors (1.4.1)                                                                                                                        | A label that vanishes under forced colors once the browser replaces its fill, such as `color.onAccent` on `color.accent` in a part without `forcedColorAdjust: "none"` |
+| `unmeasured` | An edge, mark or focus ring over an image or gradient backdrop, which `audit` cannot measure: check its 3:1 by eye                                                     |                                                                                                                                                                        |
+
+`variations` holds one browser context per axis: light, dark, reduced motion, forced colors in each scheme, 320px wide and touch, a 320px phone whose coarse pointer raises the `target` rule to 44px. With `@vitest/browser-playwright`, make each a browser instance:
+
+```ts
+instances: variations.map(({ name, viewport, ...contextOptions }) => ({
+  browser: "chromium",
+  name,
+  viewport,
+  provider: playwright({ contextOptions }),
+})),
+```
+
+Call `recordMotion` before the app renders. Under Vitest, `foldkitStylex()` makes the compiled modules insert their CSS, so `audit` measures the app's look. The 24px checkbox above passes at WCAG 2.2 AA:
+
+<!-- demo: packages/foldkit-stylex/test/app/checkbox-audit.ts -->
+
+```ts
+import { audit, recordMotion } from "@kutur-kit/foldkit-stylex/testing";
+import { Runtime } from "foldkit";
+import { expect, onTestFinished, test } from "vitest";
+import { page } from "vitest/browser";
+
+import { Model, init, update, view } from "./checkbox.ts";
+
+recordMotion();
+
+test("the terms checkbox", async () => {
+  const container = document.body.appendChild(document.createElement("div"));
+  container.id = "terms-app";
+  const app = Runtime.embed(Runtime.makeElement({ Model, init, update, view, container }));
+  onTestFinished(app.dispose);
+  const checkbox = page.getByRole("checkbox", { name: "I accept the terms" });
+  await checkbox.click();
+
+  // The look the app ships has loaded, so audit measures it rather than bare markup.
+  expect(getComputedStyle(checkbox.element()).blockSize).toBe("24px");
+  expect(await audit({ level: "AA" })).toEqual([]);
+});
+```
+
+In Playwright Test, `projects: variations.map(({ name, ...use }) => ({ name, use }))`, then add `recordMotion` as an init script, which runs again on every navigation. `page.setContent` drops it: call `page.evaluate(recordMotion)` after it.
+
+```ts
+test.beforeEach(({ page }) => page.addInitScript(recordMotion));
+
+test("checkout", async ({ page }) => {
+  await page.goto("/checkout");
+  expect(await page.evaluate(audit, { exclude: "#payment-frame" })).toEqual([]);
+});
+```
+
+`audit` waits for animations to end, so call it before axe. It hides the focus events it causes from the app and restores focus and scroll. Options:
+
+- `root`: what to check, plus the panels it names in `aria-controls`. Default `body`.
+- `exclude`: subtrees to skip. They still cover what lies under them.
+- `level`: `"kit"` (default) adds 2px outlines, `motion`, a focus change other than an outline or box-shadow ring, which `audit` cannot measure, and 24px targets without 2.5.8's spacing exception, 44px under a finger (2.5.5); `"AA"` checks WCAG 2.2 AA.
+- `hairline`: a selector of text fields that rest at a faint edge on a fill of their own and turn the edge to 3:1 on hover, with a focus outline on focus, as many design systems draw text fields; it may also name read-only wells, which take no input and so no hover edge, marked by their fill alone. Below 3:1, `edge` then asks them only for a fill of at least 1.05:1 against what is behind it, since the fill is what marks them at rest. Under forced colors the fill turns to the background, so there they need a 3:1 edge again. `audit` cannot hover, so check the hover edge's color where you set it. Pass it only for such fields: it is a design exception, not a fix.
+
+A finding holds its `rule`, the element it is `at` and a `message` saying what to change; filter by `rule` to drop one. Filtering by `edge` or `focus` keeps the `unmeasured` findings, which name what `audit` could not check: check those by eye before you drop them.
 
 ## Requirements
 

@@ -5,7 +5,7 @@ import type { ChildAttribute } from "foldkit/html";
 import { defineView, type View } from "foldkit/submodel";
 
 import { anchored } from "./internal/functional-styles.ts";
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** A tooltip's state, the same for each of its parts. */
 export interface State {
@@ -45,12 +45,21 @@ const stateOf = (inputs: Reads["ViewInputs"], render: Reads["RenderInfo"]): Stat
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Tooltip", Before>;
+
+/**
  * `Tooltip.view` with each part's styles on the bundles `toView` gets. Pass several styles objects
  * to layer them: later ones win property by property.
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   tooltipView: Supported<"Tooltip", Has, Reads, typeof Tooltip.view>,
-  ...layers: Layers<List, Styles, "Tooltip">
+  ...layers: Layers<List>
 ): View<Tooltip.Model, Tooltip.Message, Tooltip.ViewInputs> =>
   defineView<Tooltip.Model, Tooltip.Message, Tooltip.ViewInputs>((model, inputs, h) =>
     tooltipView(

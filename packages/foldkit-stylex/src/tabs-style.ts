@@ -5,7 +5,7 @@ import type { ChildAttribute } from "foldkit/html";
 import { defineView, type View } from "foldkit/submodel";
 
 import { tabs } from "./internal/functional-styles.ts";
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** The tab list's state, from its view inputs. */
 export interface State {
@@ -88,10 +88,19 @@ const styledTab = (
   };
 };
 
+/**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Tabs", Before>;
+
 /** A `Tabs.create` view with each part's styles; pass it to `h.submodel` as `view`. */
 export const view = <Value extends string, const List extends ReadonlyArray<Styles>>(
   tabsView: Supported<"Tabs", Has, Reads, View<Tabs.Model, Tabs.Message, Tabs.ViewInputs<Value>>>,
-  ...layers: Layers<List, Styles, "Tabs">
+  ...layers: Layers<List>
 ): View<Tabs.Model, Tabs.Message, Tabs.ViewInputs<Value>> =>
   defineView<Tabs.Model, Tabs.Message, Tabs.ViewInputs<Value>>((model, inputs, h) =>
     tabsView(

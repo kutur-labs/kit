@@ -19,6 +19,7 @@
   ],
   "exports": {
     ".": "./src/index.ts",
+    "./testing": "./src/testing.ts",
     "./vite": "./src/vite.ts"
   },
   "publishConfig": {
@@ -26,6 +27,10 @@
       ".": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
+      },
+      "./testing": {
+        "types": "./dist/testing.d.ts",
+        "default": "./dist/testing.js"
       },
       "./vite": {
         "types": "./dist/vite.d.ts",
@@ -39,6 +44,7 @@
     "lint:package": "publint --pack pnpm --strict",
     "prepack": "pnpm run build",
     "test": "vitest run",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:contract": "vitest run test/contract",
     "test:drift": "vitest run test/drift",
     "test:mutation": "stryker run",
@@ -55,9 +61,11 @@
     "@stylexjs/stylex": "catalog:runtime",
     "@stylexjs/unplugin": "catalog:tooling",
     "@types/node": "catalog:tooling",
+    "@vitest/browser-playwright": "catalog:testing",
     "effect": "catalog:runtime",
     "foldkit": "catalog:runtime",
     "happy-dom": "catalog:testing",
+    "playwright": "catalog:testing",
     "publint": "catalog:tooling",
     "tsrs": "catalog:tooling",
     "unplugin": "catalog:tooling",

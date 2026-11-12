@@ -6,7 +6,7 @@ import {
   appendChildClass,
   partsOf,
   staticPartsOf,
-  type Layers,
+  type CheckedLayers,
   type PartStyle,
   type StatelessPart,
 } from "./internal/part.ts";
@@ -55,13 +55,22 @@ const styledLink = (
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Nav", Before>;
+
+/**
  * `Nav.view` with each part's styles on the bundles `toView` gets. It takes no `h`, as `Nav.view`
  * does. Pass several styles objects to layer them: later ones win property by property.
  */
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     navView: Supported<"Nav", Has, Reads, typeof Nav.view>,
-    ...layers: Layers<List, Styles, "Nav">
+    ...layers: Layers<List>
   ) =>
   <Value extends string>(inputs: Nav.ViewInputs<Value>): Html =>
     navView({

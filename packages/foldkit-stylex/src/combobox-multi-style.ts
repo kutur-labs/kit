@@ -1,6 +1,6 @@
 import type { Filled, ItemState, Reads, Styles } from "./internal/combobox.ts";
 import type { Callbacks, Has } from "./internal/items.ts";
-import type { Layers } from "./internal/part.ts";
+import type { CheckedLayers } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Combobox } from "@foldkit/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -26,7 +26,7 @@ export const view = <Item extends string, const List extends ReadonlyArray<Style
       h: HtmlBuilder<Combobox.Message>,
     ) => Html
   >,
-  ...layers: Layers<List, Styles, "Combobox">
+  ...layers: CheckedLayers<List, Styles, "Combobox">
 ): View<Combobox.Multi.Model, Combobox.Message, ViewInputs<Item>> =>
   defineView<Combobox.Multi.Model, Combobox.Message, ViewInputs<Item>>((model, inputs, h) =>
     comboboxView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

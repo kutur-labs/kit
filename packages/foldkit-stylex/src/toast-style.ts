@@ -9,7 +9,7 @@ import {
   appendChildClass,
   partsOf,
   staticPartsOf,
-  type Layers,
+  type CheckedLayers,
   type PartStyle,
   type StatelessPart,
 } from "./internal/part.ts";
@@ -64,6 +64,15 @@ type UiViewInputs<Entry> = Readonly<{
 /** The view inputs of a `Toast.make` module's `view` without class names, which come from `styles`. */
 export type ViewInputs<Entry> = UiViewInputs<Entry> & Filled;
 
+/**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Toast", Before>;
+
 /** A `Toast.make` module's `view` with each part's styles; pass it to `h.submodel` as `view`. */
 export const view = <
   Model,
@@ -72,7 +81,7 @@ export const view = <
   const List extends ReadonlyArray<Styles>,
 >(
   toastView: Supported<"Toast", Has, Reads, View<Model, Message, UiViewInputs<Entry>>>,
-  ...layers: Layers<List, Styles, "Toast">
+  ...layers: Layers<List>
 ): View<Model, Message, ViewInputs<Entry>> =>
   defineView<Model, Message, ViewInputs<Entry>>((model, inputs, h) =>
     toastView(

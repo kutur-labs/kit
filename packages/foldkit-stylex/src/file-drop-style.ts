@@ -5,7 +5,7 @@ import type { ChildAttribute } from "foldkit/html";
 import { defineView, type View } from "foldkit/submodel";
 
 import { fileDrop } from "./internal/functional-styles.ts";
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** A file drop zone's state. */
 export interface State {
@@ -48,12 +48,21 @@ const stateOf = (model: Reads["Model"], inputs: Reads["ViewInputs"]): State => (
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "FileDrop", Before>;
+
+/**
  * `FileDrop.view` with the root's styles on the bundle `toView` gets, and the input visually
  * hidden. Pass several styles objects to layer them: later ones win property by property.
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   fileDropView: Supported<"FileDrop", Has, Reads, typeof FileDrop.view>,
-  ...layers: Layers<List, Styles, "FileDrop">
+  ...layers: Layers<List>
 ): View<FileDrop.Model, FileDrop.Message, FileDrop.ViewInputs> =>
   defineView<FileDrop.Model, FileDrop.Message, FileDrop.ViewInputs>((model, inputs, h) =>
     fileDropView(

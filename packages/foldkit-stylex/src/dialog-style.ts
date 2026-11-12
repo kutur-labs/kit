@@ -5,7 +5,7 @@ import type { ChildAttribute } from "foldkit/html";
 import { defineView, type View } from "foldkit/submodel";
 
 import { dialog } from "./internal/functional-styles.ts";
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 import { isClosed, type TransitionState } from "./internal/transition.ts";
 
 /** A dialog's state, the same for each of its parts. */
@@ -57,10 +57,19 @@ const stateOf = (model: Reads["Model"], render: Reads["RenderInfo"]): State => (
   isClosed: isClosed(model.animation.transitionState),
 });
 
+/**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Dialog", Before>;
+
 /** `Dialog.view` with each part's styles on the bundles `toView` gets. */
 export const view = <const List extends ReadonlyArray<Styles>>(
   dialogView: Supported<"Dialog", Has, Reads, typeof Dialog.view>,
-  ...layers: Layers<List, Styles, "Dialog">
+  ...layers: Layers<List>
 ): View<Dialog.Model, Dialog.Message, Dialog.ViewInputs> =>
   defineView<Dialog.Model, Dialog.Message, Dialog.ViewInputs>((model, inputs, h) =>
     dialogView(
