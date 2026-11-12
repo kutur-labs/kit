@@ -10,25 +10,71 @@ const source = readFileSync(path.join(root, "src/tokens.stylex.ts"), "utf8");
 
 const kebab = (name: string) => name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-// Each token as `group.key`, the custom property it reads and its default.
-const tokens = [
-  ...source.matchAll(/export const (\w+) = stylex\.defineVars\(\{([\s\S]*?)\n\}/g),
-].flatMap(([, group = "", body = ""]) =>
-  [...body.matchAll(/(\w+):\s*(?:\{\s*default:\s*)?"var\((--fks-[\w-]+), (.+?)\)"/g)].map(
-    ([, key = "", name = "", value = ""]) => ({
-      token: `${group}.${key}`,
-      group,
-      key,
-      name,
-      value,
-    }),
+// The module's string consts, such as the surface and text roots that template literals read.
+const consts = new Map(
+  [...source.matchAll(/^const (\w+) = "(.+)";$/gm)].map(([, name = "", value = ""]) => [
+    name,
+    value,
+  ]),
+);
+
+const customProperty = (value: string) => /^var\((--fks-[\w-]+), (.+)\)$/.exec(value);
+
+// A template literal's `${name}` read as the const's value, or as `short` gives it.
+const substituted = (value: string, short: (value: string) => string) =>
+  value.replaceAll(/\$\{(\w+)\}/g, (_, name: string) => short(consts.get(name) ?? ""));
+
+// Each token as `group.key`, the custom property it reads, its default as written, and its default
+// with every const in place. A key alone, such as `surface,`, takes the const of its name.
+const groupPattern = /export const (\w+) = stylex\.defineVars\(\{([\s\S]*?)\n\}/g;
+
+const tokens = [...source.matchAll(groupPattern)].flatMap(([, group = "", body = ""]) =>
+  [...body.matchAll(/^ {2}(\w+)(?:,$|:\s*(?:\{\s*default:\s*)?(["`])(.+?)\2)/gm)].map(
+    ([, key = "", , literal]) => {
+      const [, name = "", fallback = ""] = customProperty(literal ?? consts.get(key) ?? "") ?? [];
+
+      return {
+        token: `${group}.${key}`,
+        group,
+        key,
+        name,
+        fallback,
+        value: substituted(fallback, (value) => value),
+      };
+    },
   ),
 );
 
 describe("tokens", () => {
-  it("reads every --fks-* property that the source names", () => {
+  // A token that varies by condition, such as size.control under a coarse pointer, reads its own
+  // property in each, so one override sets them all. A key alone, such as `surface,`, reads its
+  // const's.
+  it("reads its own --fks-* property in each condition, and no other", () => {
+    const entries = [...source.matchAll(groupPattern)].flatMap(([, group = "", body = ""]) =>
+      body
+        .split(/^ {2}(?=\w)/m)
+        .slice(1)
+        .map((entry) => {
+          const key = /^\w+/.exec(entry)?.[0] ?? "";
+          const read = `${consts.get(key) === undefined ? "" : `"${consts.get(key) ?? ""}"`}${entry}`;
+
+          return {
+            token: `${group}.${key}`,
+            names: [...read.matchAll(/["`]var\((--fks-[\w-]+),/g)].map(([, name]) => name),
+          };
+        }),
+    );
+
     expect(tokens.length).toBeGreaterThan(0);
-    expect(tokens.length).toBe(source.match(/"var\(--fks-/g)?.length);
+    expect(entries.map(({ token }) => token)).toEqual(tokens.map(({ token }) => token));
+    expect(entries.flatMap(({ names }) => names)).toHaveLength(
+      source.match(/["`]var\(--fks-/g)?.length ?? 0,
+    );
+    expect(
+      entries.filter(({ token, names }) =>
+        names.some((name) => name !== tokens.find((entry) => entry.token === token)?.name),
+      ),
+    ).toEqual([]);
   });
 
   it("lets ThemeOverrides name the properties of every group", () => {
@@ -39,6 +85,8 @@ describe("tokens", () => {
     ]);
   });
 
+  // Each value starts `var(--fks-<group>-<key>, `, the shape tokenContrast finds the colors by in a
+  // page's CSS, where StyleX has hashed the tokens' own names.
   it("names each property --fks-<group>-<key>, in kebab-case", () => {
     expect(
       tokens.filter(({ group, key, name }) => name !== `--fks-${kebab(group)}-${kebab(key)}`),
@@ -47,10 +95,11 @@ describe("tokens", () => {
 
   it("follows color-scheme with every color", () => {
     expect(
-      tokens.filter(({ group, value }) => group === "color" && !value.startsWith("light-dark(")),
+      tokens.filter(({ group, value }) => group === "color" && !value.includes("light-dark(")),
     ).toEqual([]);
   });
 
+  // The README writes a const as its custom property alone: `var(--fks-color-text)`.
   it("lists every token in the README, in source order", () => {
     const readme = readFileSync(path.join(root, "README.md"), "utf8");
 
@@ -60,60 +109,12 @@ describe("tokens", () => {
       ([, token, name, value]) => ({ token, name, value }),
     );
 
-    expect(rows).toEqual(tokens.map(({ token, name, value }) => ({ token, name, value })));
+    expect(rows).toEqual(
+      tokens.map(({ token, name, fallback }) => ({
+        token,
+        name,
+        value: substituted(fallback, (value) => `var(${customProperty(value)?.[1] ?? ""})`),
+      })),
+    );
   });
-});
-
-// WCAG 2.2 relative luminance and contrast ratio of two #rrggbb colors.
-const luminance = (hex: string) => {
-  const [r = 0, g = 0, b = 0] = [1, 3, 5].map((index) => {
-    const channel = Number.parseInt(hex.slice(index, index + 2), 16) / 255;
-
-    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
-  });
-
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-};
-
-const contrast = (a: string, b: string) => {
-  const [lighter = 0, darker = 0] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-
-  return (lighter + 0.05) / (darker + 0.05);
-};
-
-const schemes = Object.fromEntries(
-  tokens.flatMap(({ group, key, value }) => {
-    const pair = /^light-dark\((#[0-9a-f]{6}), (#[0-9a-f]{6})\)$/.exec(value);
-
-    return group === "color" && pair !== null ? [[key, { light: pair[1], dark: pair[2] }]] : [];
-  }),
-);
-
-// 4.5:1 for text (WCAG 1.4.3); 3:1 for a control's edge, a filled control and the focus ring
-// (WCAG 1.4.11).
-const pairs = [
-  { foreground: "text", background: "surface", minimum: 4.5 },
-  { foreground: "text", background: "hover", minimum: 4.5 },
-  { foreground: "muted", background: "surface", minimum: 4.5 },
-  { foreground: "muted", background: "hover", minimum: 4.5 },
-  { foreground: "danger", background: "surface", minimum: 4.5 },
-  { foreground: "danger", background: "hover", minimum: 4.5 },
-  { foreground: "onAccent", background: "accent", minimum: 4.5 },
-  { foreground: "control", background: "surface", minimum: 3 },
-  { foreground: "accent", background: "surface", minimum: 3 },
-  { foreground: "focus", background: "surface", minimum: 3 },
-].flatMap((pair) => (["light", "dark"] as const).map((scheme) => ({ ...pair, scheme })));
-
-describe("contrast of the default colors", () => {
-  it.each(pairs)(
-    "$foreground on $background, $scheme: at least $minimum:1",
-    ({ foreground, background, minimum, scheme }) => {
-      const fg = schemes[foreground]?.[scheme];
-      const bg = schemes[background]?.[scheme];
-
-      expect(fg, `color.${foreground} needs a light-dark() of two #rrggbb colors.`).toBeDefined();
-      expect(bg, `color.${background} needs a light-dark() of two #rrggbb colors.`).toBeDefined();
-      expect(contrast(fg ?? "", bg ?? "")).toBeGreaterThanOrEqual(minimum);
-    },
-  );
 });
