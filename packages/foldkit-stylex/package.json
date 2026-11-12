@@ -1,6 +1,6 @@
 {
   "name": "@kutur-kit/foldkit-stylex",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "StyleX for every @foldkit/ui component: typed styles per part and state, and the CSS each component needs to work.",
   "license": "MIT",
   "repository": {
