@@ -14,6 +14,7 @@ const foldkitStylex = {
   rules: {
     "kit/foldkit-stylex-attributes": "error",
     "kit/foldkit-stylex-condition-key": "error",
+    "kit/foldkit-stylex-hover-gate": "error",
     "kit/foldkit-stylex-styles": "error",
     "kit/foldkit-stylex-unstyled-view": "error",
     "kit/foldkit-stylex-vite": "error",

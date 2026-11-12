@@ -54,7 +54,7 @@ export const unstyledView = defineRule({
     },
     schema: [],
     messages: {
-      wrap: "Wrap {{view}} once at module scope with {{wrapper}}({{view}}, styles) from @kutur-kit/foldkit-stylex and use the result here. It styles every part and adds the CSS @foldkit/ui leaves to the app, such as a backdrop that covers the page and the hiding of a closed dialog.",
+      wrap: "Import {{name}} from @kutur-kit/foldkit-stylex-theme/{{module}} in place of @foldkit/ui's: the theme's {{name}} styles {{view}} by default. For a look of your own, wrap {{view}} once at module scope with {{wrapper}}({{view}}, styles) from @kutur-kit/foldkit-stylex and use the result here. Both style every part and add the CSS @foldkit/ui leaves to the app, such as a backdrop that covers the page and the hiding of a closed dialog.",
     },
   },
   createOnce(context) {
@@ -108,7 +108,12 @@ export const unstyledView = defineRule({
         context.report({
           node,
           messageId: "wrap",
-          data: { view, wrapper: [`${name}Style`, ...rest, viewOf(name)].join(".") },
+          data: {
+            name,
+            module: name.replace(/(?<=.)[A-Z]/g, (letter) => `-${letter}`).toLowerCase(),
+            view,
+            wrapper: [`${name}Style`, ...rest, viewOf(name)].join("."),
+          },
         });
       },
     };
