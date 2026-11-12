@@ -8,6 +8,10 @@
     "test:drift": {
       "dependsOn": ["^build"],
       "outputs": []
+    },
+    "test:browser": {
+      "dependsOn": ["^build"],
+      "outputs": []
     }
   }
 }

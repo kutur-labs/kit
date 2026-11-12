@@ -59,7 +59,7 @@ describe("vite build of an app that installed the packed packages", () => {
     );
   });
 
-  it("appends StyleX's rules to the stylesheet a single-page app links from index.html", async () => {
+  it("appends StyleX's rules to the stylesheet a single-page app without the theme links from index.html", async () => {
     await succeed(process.execPath, [vite, "build", "--config", "vite.spa.config.ts"], consumer);
 
     const css = stylesheetsOf(read("dist-spa/index.html")).map((href) =>
@@ -67,6 +67,8 @@ describe("vite build of an app that installed the packed packages", () => {
     );
 
     expect(css).toHaveLength(1);
-    expect(css[0]).toContain(functionalRule);
+    // The core README's checkbox, 24px square.
+    expect(css[0]).toContain("width:24px");
+    expect(css[0]).not.toContain("--fks-");
   });
 });

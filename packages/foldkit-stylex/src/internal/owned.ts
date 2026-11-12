@@ -298,9 +298,10 @@ export type Draggable = Inline<
 >;
 
 /**
- * Each component's parts that own a family, under the name its `view` passes to `Layers`; a part
- * left out owns nothing. Every component has an entry, so a view cannot skip the check, and
- * test/drift/inline reads each part's family here, so a mapping cannot go missing unnoticed.
+ * Each component's parts that own a family, under the name its namespace passes to
+ * `CheckedLayers`; a part left out owns nothing. Every component has an entry, so a view cannot
+ * skip the check, and test/drift/inline reads each part's family here, so a mapping cannot go
+ * missing unnoticed.
  */
 export interface Owns {
   readonly Animation: None;

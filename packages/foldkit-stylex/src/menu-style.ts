@@ -8,7 +8,7 @@ import { defineView, type View } from "foldkit/submodel";
 
 import { anchored } from "./internal/functional-styles.ts";
 import { styledCallbacks } from "./internal/items.ts";
-import { partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 import { visibilityOf, type TransitionState } from "./internal/transition.ts";
 import { sxClassName } from "./sx.ts";
 
@@ -127,6 +127,15 @@ const styledInputs = <Item>(
 };
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Menu", Before>;
+
+/**
  * A `Menu.create` view with each part's styles; pass it to `h.submodel` as `view`. Pass several
  * styles objects to layer them: later ones win property by property.
  */
@@ -137,7 +146,7 @@ export const view = <Item extends string, const List extends ReadonlyArray<Style
     Reads,
     (model: Menu.Model, inputs: Menu.ViewInputs<Item>, h: HtmlBuilder<Menu.Message>) => Html
   >,
-  ...layers: Layers<List, Styles, "Menu">
+  ...layers: Layers<List>
 ): View<Menu.Model, Menu.Message, ViewInputs<Item>> =>
   defineView<Menu.Model, Menu.Message, ViewInputs<Item>>((model, inputs, h) =>
     menuView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

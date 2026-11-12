@@ -1,9 +1,12 @@
-// Every component the core styles gets a look: src/<component>.ts exporting <component>Theme. The
-// core's barrel is read as text because importing it runs its compile guard.
+// Every component the core styles gets a namespace: src/<component>.ts exporting <Component>, with
+// its view themed and `restyle`. The core's barrel is read as text because importing it runs its
+// compile guard.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import * as Ui from "@foldkit/ui";
+import { Predicate, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 const src = path.join(import.meta.dirname, "../src");
@@ -15,17 +18,13 @@ const barrel = readFileSync(
 
 const components = [
   ...barrel.matchAll(/^export \* as (\w+)Style from "\.\/([\w-]+)-style\.ts";$/gm),
-].map(([, name = "", file = ""]) => ({
-  name,
-  file: `${file}.ts`,
-  look: `${name.charAt(0).toLowerCase()}${name.slice(1)}Theme`,
-}));
+].map(([, name = "", file = ""]) => ({ name, file: `${file}.ts` }));
 
 const present = components.filter(({ file }) => existsSync(path.join(src, file)));
 
-// Each module in src, imported while this file loads. Importing a look compiles it with StyleX, as
-// an app's build does, and the first import compiles the core and @foldkit/ui too, which can
-// outlast a test's timeout on a busy runner.
+// Each module in src, imported while this file loads. Importing a namespace compiles it with
+// StyleX, as an app's build does, and the first import compiles the core and @foldkit/ui too, which
+// can outlast a test's timeout on a busy runner.
 const modules = new Map(
   await Promise.all(
     readdirSync(src)
@@ -37,91 +36,132 @@ const modules = new Map(
   ),
 );
 
+// A module that exports only namespaces, such as @foldkit/ui's barrel or src/listbox.ts.
+const decodeNamespaces = Schema.decodeUnknownSync(
+  Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown)),
+);
+
 const readme = readFileSync(path.join(src, "../README.md"), "utf8");
 
+// The README's components table: Component | Module | Namespace | Helpers, each helper in backticks.
 const rows = [
   ...readme.matchAll(
     /^\| (\w+) +\| `@kutur-kit\/foldkit-stylex-theme\/([\w-]+)` +\| `(\w+)` +\|(.*)\|$/gm,
   ),
-].map(([, name = "", file = "", look = "", children = ""]) => ({
+].map(([, name = "", file = "", namespace = "", helpers = ""]) => ({
   name,
   file: `${file}.ts`,
-  look,
-  children,
+  namespace,
+  helpers: [...helpers.matchAll(/`(\w+)`/g)].map(([, helper = ""]) => helper),
 }));
 
-type ChildStyles = { file: string; name: string; keys: Array<string> };
+// The README's rule for the member each `restyle` returns: the namespaces it names return `create`,
+// Toast `make`, DragAndDrop `draggable` and the rest `view`.
+const [, creators = "", maker = "", dragger = ""] =
+  /`create` for the components built with `create\(\)` \(([^)]*)\), `make` for (\w+), `draggable` for (\w+) and `view` for the rest\./.exec(
+    readme,
+  ) ?? [];
 
-// The named styles a row's last cell lists: "`export`: `key`, `key` where", with later keys of the
-// same export after a "; ", or "`export` from `@kutur-kit/foldkit-stylex-theme/<module>`" for an
-// export of another module.
-const childStylesIn = ({ file, children }: (typeof rows)[number]) => {
-  const named: Array<ChildStyles> = [];
+const memberOf = (namespace: string) =>
+  creators.match(/\b[A-Z]\w*/g)?.includes(namespace)
+    ? "create"
+    : ({ [maker]: "make", [dragger]: "draggable" }[namespace] ?? "view");
 
-  for (const [, name = "", colon, module] of children.matchAll(
-    /`(\w+)`(:)?(?: from `@kutur-kit\/foldkit-stylex-theme\/([\w-]+)`)?/g,
-  )) {
-    const exported = colon !== undefined || module !== undefined;
-    const current = named.at(-1);
+const decodeRecord = Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Unknown));
 
-    if (exported) {
-      named.push({ file: module === undefined ? file : `${module}.ts`, name, keys: [] });
-    } else if (current === undefined) {
-      throw new Error(`The ${file} row names \`${name}\` before the export it belongs to.`);
-    } else {
-      current.keys.push(name);
-    }
-  }
+// Each `restyle` takes only its layers, as rest parameters, so it can be called with none, and
+// returns an object of the members it themes.
+const isRestyle = (input: unknown): input is () => object => Predicate.isFunction(input);
 
-  return named;
-};
+const decodeRestyle = Schema.decodeUnknownSync(
+  Schema.Struct({ restyle: Schema.declare(isRestyle) }),
+);
+
+// Each namespace and Multi variant with the keys its `restyle()` returns. Multi variants are looked
+// up as "Multi", the name the README gives them.
+const restyled = rows.flatMap(({ file, namespace }) => {
+  const exported = decodeNamespaces(modules.get(file))[namespace] ?? {};
+
+  const multi =
+    exported["Multi"] === undefined ? [] : [["Multi", decodeRecord(exported["Multi"])] as const];
+
+  return [[namespace, exported] as const, ...multi].map(([name, members]) => ({
+    label: name === "Multi" ? `${namespace}.Multi` : namespace,
+    member: memberOf(name),
+    keys: Object.keys(decodeRestyle(members).restyle()),
+  }));
+});
 
 describe("coverage", () => {
   it("reads the core's components", () => {
     expect(components.map(({ file }) => file)).toContain("checkbox.ts");
   });
 
-  it("has a look for every component of the core", () => {
-    const missing = components.flatMap(({ file, look }) =>
-      present.some((component) => component.file === file) ? [] : [`src/${file} exporting ${look}`],
+  it("has a namespace for every component of the core", () => {
+    const missing = components.flatMap(({ name, file }) =>
+      present.some((component) => component.file === file) ? [] : [`src/${file} exporting ${name}`],
     );
 
-    expect(missing, "Add each look listed below, one file per component.").toEqual([]);
+    expect(missing, "Add each namespace listed below, one module per component.").toEqual([]);
   });
 
-  it("has no look for a component the core does not export", () => {
-    const looks = readdirSync(src).filter(
-      (file) => file.endsWith(".ts") && file !== "tokens.stylex.ts",
+  it("has no namespace for a component the core does not export", () => {
+    const namespaces = readdirSync(src).filter(
+      (file) => file.endsWith(".ts") && !["tokens.stylex.ts", "testing.ts"].includes(file),
     );
 
-    expect(looks.filter((file) => !components.some((c) => c.file === file))).toEqual([]);
+    expect(namespaces.filter((file) => !components.some((c) => c.file === file))).toEqual([]);
   });
 
-  it("lists every look in the README, in the core's order", () => {
-    expect(rows.map(({ name, file, look }) => ({ name, file, look }))).toEqual(components);
+  it("lists every component in the README, in the core's order", () => {
+    expect(rows.map(({ name, file, namespace }) => ({ name, file, namespace }))).toEqual(
+      components.map(({ name, file }) => ({ name, file, namespace: name })),
+    );
   });
 
-  // A user imports each named style from the module its row names, or the one after "from".
-  it.each(rows.flatMap(childStylesIn))(
-    "exports the README's $name with its keys from src/$file",
-    ({ file, name, keys }) => {
-      const module = modules.get(file);
+  it.each(
+    rows.flatMap(({ file, namespace, helpers }) =>
+      helpers.map((helper) => ({ file, namespace, helper })),
+    ),
+  )("exports the README's $helper on $namespace from src/$file", ({ file, namespace, helper }) => {
+    expect(
+      modules.get(file),
+      `Export ${helper} from the ${namespace} namespace, or fix the README's row.`,
+    ).toHaveProperty([namespace, helper]);
+  });
 
-      expect(
-        module,
-        `Export ${name} from src/${file}, or name its module in the README.`,
-      ).toHaveProperty(name);
+  // A helper is what the namespace adds to @foldkit/ui's module, other than restyle and the Multi
+  // variants, which have their own section.
+  it.each(rows)(
+    "lists every helper $namespace exports in the README",
+    ({ file, namespace, helpers }) => {
+      const exported = Object.keys(decodeNamespaces(modules.get(file))[namespace] ?? {});
+      const core = Object.keys(decodeNamespaces(Ui)[namespace] ?? {});
 
-      for (const key of keys) {
-        expect(module, `Give ${name} the key ${key}, or fix the README's row.`).toHaveProperty([
-          name,
-          key,
-        ]);
-      }
+      const unlisted = exported.filter(
+        (key) =>
+          !core.includes(key) && !["restyle", "Multi"].includes(key) && !helpers.includes(key),
+      );
+
+      expect(unlisted, `Add each to the README's ${namespace} row.`).toEqual([]);
     },
   );
 
-  it.each(present)("$file compiles and exports $look", ({ file, look }) => {
-    expect(modules.get(file), `Export ${look} from src/${file}.`).toHaveProperty(look);
+  it("reads the README's restyle rule", () => {
+    expect([creators, maker, dragger]).not.toContain("");
+  });
+
+  it.each(restyled)(
+    "restyle on $label returns $member, as the README says",
+    ({ label, member, keys }) => {
+      expect(keys, `Fix the README's restyle rule for ${label}.`).toEqual([member]);
+    },
+  );
+
+  it.each(present)("$file compiles and exports $name with restyle", ({ file, name }) => {
+    expect(modules.get(file), `Export ${name} with restyle from src/${file}.`).toHaveProperty([
+      name,
+      "restyle",
+    ]);
   });
 });

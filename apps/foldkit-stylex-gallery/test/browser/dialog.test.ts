@@ -1,16 +1,15 @@
 import { describe, expect, it } from "vitest";
 
 import { computed, openPanel, schemes, useGallery } from "./gallery.ts";
-import { audit } from "./wcag.ts";
 
 const { open } = useGallery();
 
-describe.each(schemes)("Dialog in the %s scheme", (scheme) => {
-  // Both demos lay the dialog out with display: grid, which would show a closed <dialog>.
-  it.each(["confirm", "themed-confirm"])("hides the closed #%s dialog", async (id) => {
+describe.each(schemes)("Dialog in the $colorScheme scheme", (scheme) => {
+  // The theme lays the dialog out with display: grid, which would show a closed <dialog>.
+  it("hides the closed dialog", async () => {
     const { page } = await open("/dialog", scheme);
 
-    expect(await computed(page.locator(`#${id}`), "display")).toBe("none");
+    expect(await computed(page.locator("#confirm"), "display")).toBe("none");
   });
 
   it("covers the viewport with the backdrop, which closes the dialog and no click on the panel does", async () => {
@@ -22,8 +21,7 @@ describe.each(schemes)("Dialog in the %s scheme", (scheme) => {
     expect(await dialog.locator(":scope > div").first().boundingBox()).toEqual({
       x: 0,
       y: 0,
-      width: 1280,
-      height: 900,
+      ...scheme.viewport,
     });
     await panel.locator("p").click();
     expect(await panel.count()).toBe(1);
@@ -33,17 +31,20 @@ describe.each(schemes)("Dialog in the %s scheme", (scheme) => {
 
   it("gives the <dialog> the page's text color instead of the user agent's CanvasText", async () => {
     const { page } = await open("/dialog", scheme);
-    await openPanel(page.locator("#themed-confirm-trigger"), page.locator("#themed-confirm-panel"));
+    await openPanel(page.locator("#confirm-trigger"), page.locator("#confirm-panel"));
 
-    expect(await computed(page.locator("#themed-confirm"), "color")).toBe(
-      await computed(page.locator("#themed-demo"), "color"),
+    expect(await computed(page.locator("#confirm"), "color")).toBe(
+      await computed(page.locator("#demo"), "color"),
     );
   });
 
-  it("keeps the open themed dialog readable and its controls reachable", async () => {
+  it("fills Delete, which destroys the draft, in the danger color of the Button page", async () => {
     const { page } = await open("/dialog", scheme);
-    await openPanel(page.locator("#themed-confirm-trigger"), page.locator("#themed-confirm-panel"));
+    const panel = await openPanel(page.locator("#confirm-trigger"), page.locator("#confirm-panel"));
+    const { page: buttons } = await open("/button", scheme);
 
-    expect(await audit(page, "#themed-confirm-panel")).toEqual([]);
+    expect(await computed(panel.getByRole("button", { name: "Delete" }), "background-color")).toBe(
+      await computed(buttons.locator("#example-3 button"), "background-color"),
+    );
   });
 });

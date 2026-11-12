@@ -4,7 +4,7 @@ import type { Attribute, HtmlBuilder } from "foldkit/html";
 
 import * as Predicate from "effect/Predicate";
 
-import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /**
  * A draggable's state, from the DragAndDrop model in its config. @foldkit/ui sets no `data-*`
@@ -57,13 +57,22 @@ const stateOf = ({ itemId, model: { dragState } }: Reads["Config"]): DraggableSt
 };
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "DragAndDrop", Before>;
+
+/**
  * `DragAndDrop.draggable` with the draggable's styles as the last attribute. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const draggable =
   <const List extends ReadonlyArray<Styles>>(
     draggableAttributes: Supported<"DragAndDrop", Has, Reads, typeof DragAndDrop.draggable>,
-    ...layers: Layers<List, Styles, "DragAndDrop">
+    ...layers: Layers<List>
   ) =>
   <ParentMessage>(
     config: DragAndDrop.DraggableConfig<ParentMessage>,

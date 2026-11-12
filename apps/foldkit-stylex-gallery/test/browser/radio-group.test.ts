@@ -6,28 +6,26 @@ import { computed, schemes, useGallery } from "./gallery.ts";
 
 const { open } = useGallery();
 
-// The core demo marks the selection with a thicker border, the theme with a dot of the accent.
+// The theme draws the selection as a ring in the accent with a dot that fades in.
 const markOf = (radio: Locator) => {
-  const mark = radio.locator("span").first();
+  const ring = radio.locator("svg");
 
-  return Promise.all(
-    ["border-width", "background-color", "box-shadow"].map((property) => computed(mark, property)),
-  ).then((values) => values.join(" "));
+  return Promise.all([computed(ring, "color"), computed(ring.locator("circle").nth(1), "opacity")]);
 };
 
-describe.each(schemes)("RadioGroup in the %s scheme", (scheme) => {
-  it.each(["core", "themed"])(
-    "selects an option of the %s demo from a click on its description and moves the mark",
-    async (demo) => {
-      const { page } = await open("/radio-group", scheme);
-      const radios = page.locator(`#${demo}-demo`).getByRole("radio");
-      const [free, pro] = [radios.nth(0), radios.nth(1)];
-      const [selected, unselected] = await Promise.all([markOf(free), markOf(pro)]);
+describe.each(schemes)("RadioGroup in the $colorScheme scheme", (scheme) => {
+  it("selects an option from a click on its description and moves the mark", async () => {
+    const { page } = await open("/radio-group", scheme);
+    const radios = page.locator("#demo").getByRole("radio");
+    const [free, pro] = [radios.nth(0), radios.nth(1)];
+    const [selected, unselected] = await Promise.all([markOf(free), markOf(pro)]);
 
-      expect(selected).not.toBe(unselected);
-      await pro.getByText("Unlimited projects and drafts.").click();
-      await expect.poll(() => pro.getAttribute("aria-checked")).toBe("true");
-      expect(await Promise.all([markOf(free), markOf(pro)])).toEqual([unselected, selected]);
-    },
-  );
+    expect(selected).not.toEqual(unselected);
+    await pro.getByText("Unlimited projects and drafts.").click();
+    await expect.poll(() => pro.getAttribute("aria-checked")).toBe("true");
+    // The dots fade, under reduced motion too.
+    await expect
+      .poll(() => Promise.all([markOf(free), markOf(pro)]))
+      .toEqual([unselected, selected]);
+  });
 });

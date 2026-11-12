@@ -1,84 +1,86 @@
 import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Disclosure } from "@foldkit/ui";
-import { DisclosureStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Disclosure } from "@kutur-kit/foldkit-stylex-theme/disclosure";
+import { color, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
-export const Model = Schema.Struct({ isOpen: Schema.Boolean });
+export const summary = "Shows and hides a section under its button.";
+
+const Topic = Schema.Literals(["shipping", "returns"]);
+
+type Topic = typeof Topic.Type;
+
+export const Model = Schema.Struct({ shipping: Schema.Boolean, returns: Schema.Boolean });
 
 export type Model = typeof Model.Type;
 
-export const Message = defineMessageUnion({ ToggledShipping: { isOpen: Schema.Boolean } });
+export const Message = defineMessageUnion({
+  ToggledTopic: { topic: Topic, isOpen: Schema.Boolean },
+});
 
 export type Message = typeof Message.Type;
 
-export const init = (): Update.Return<Model, Message> => ({ model: { isOpen: false } });
+export const init = (): Update.Return<Model, Message> => ({
+  model: { shipping: false, returns: false },
+});
 
-export const update = (_model: Model, message: Message): Update.Return<Model, Message> =>
+export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match<Update.Return<Model, Message>>(message, {
-    ToggledShipping: ({ isOpen }) => ({ model: { isOpen } }),
+    ToggledTopic: ({ topic, isOpen }) => ({ model: { ...model, [topic]: isOpen } }),
   });
 
 const styles = stylex.create({
-  root: { maxInlineSize: 400 },
-  button: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    inlineSize: "100%",
-    minBlockSize: 44,
-    paddingInline: 12,
-    borderWidth: 0,
-    borderBlockEndWidth: 1,
-    borderStyle: "solid",
-    borderColor: "currentColor",
-    backgroundColor: "transparent",
-    color: "inherit",
-    font: "inherit",
-    cursor: "pointer",
+  list: { inlineSize: "100%", maxInlineSize: "28rem" },
+  // Hairlines between the topics, as a list of questions draws them.
+  topic: {
+    paddingBlock: space.xs,
+    borderBlockEndWidth: { default: 1, ":last-child": 0 },
+    borderBlockEndStyle: "solid",
+    borderBlockEndColor: color.border,
   },
-  open: { fontWeight: 700 },
-  // The chevron is the app's own element, turned from the model.
-  chevron: {
-    transitionProperty: "rotate",
-    transitionDuration: { default: "150ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  turned: { rotate: "180deg" },
-  // animatePanel clips the panel to its box, so it stays flat.
-  panel: { paddingBlock: 8, paddingInline: 12 },
 });
 
-const disclosureView = DisclosureStyle.view(Disclosure.view, {
-  button: (state) => [styles.button, state.isOpen && styles.open],
-  panel: styles.panel,
-});
+const topics = {
+  shipping: {
+    title: "When will my order ship?",
+    text: "Orders leave the shop within two working days, with tracking by email.",
+  },
+  returns: {
+    title: "Can I return a book?",
+    text: "Send anything back within 30 days for a full refund.",
+  },
+} satisfies Record<Topic, Readonly<{ title: string; text: string }>>;
 
-export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
-  disclosureView(
+const topic = (name: Topic, model: Model, h: HtmlBuilder<Message>): Html =>
+  Disclosure.view(
     {
-      id: "shipping",
-      isOpen: model.isOpen,
-      onToggle: (isOpen) => Message.ToggledShipping({ isOpen }),
-      toView: ({ button, panel, animatePanel }) =>
+      id: name,
+      isOpen: model[name],
+      onToggle: (isOpen) => Message.ToggledTopic({ topic: name, isOpen }),
+      // The panel appears at once rather than through `animatePanel`. Its wrappers take no class,
+      // so no StyleX style reaches their inline height transition to drop it under
+      // prefers-reduced-motion (WCAG 2.3.3); only a global `!important` rule on their markup could.
+      toView: ({ button, panel }) =>
         h.div(
-          [sx(styles.root)],
+          [sx(styles.topic)],
           [
             h.button(
               [...button],
-              [
-                "Shipping",
-                h.span(
-                  [h.AriaHidden(true), sx(styles.chevron, model.isOpen && styles.turned)],
-                  ["▾"],
-                ),
-              ],
+              [Disclosure.buttonContent(topics[name].title, { isOpen: model[name] })],
             ),
-            animatePanel(h.div([...panel], ["Orders leave the shop within two working days."])),
+            ...(model[name] ? [h.div([...panel], [topics[name].text])] : []),
           ],
         ),
     },
     h,
+  );
+
+export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [sx(styles.list)],
+    Topic.literals.map((name) => topic(name, model, h)),
   );

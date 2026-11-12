@@ -1,0 +1,5 @@
+---
+"@kutur-kit/foldkit-stylex-theme": minor
+---
+
+`@kutur-kit/foldkit-stylex-theme/testing` exports `tokenContrast`, which checks the theme's color pairs in a browser test: text, `color.muted` and `color.danger` at 4.5:1 on `color.surface` and `color.subtle`, `color.onAccent` at 4.5:1 on `color.accent`, and `color.control` and `color.accent` at 3:1 on both, in light and dark. It reads the tokens from the page's stylesheets, so app-wide overrides and presets count, and returns a `contrast` finding per failing pair that names the colors measured and the custom property to change. Translucent colors are measured over what they lie on, and a value that is no color gets one finding in place of its pairs. `{ preset }` measures a `ThemePreset` set on `<html>` for the call; `{ part }` measures under one element and reports a `derived` finding when that part sets `color.surface` or `color.text` but keeps the page's greys, `color.accent` or `color.onAccent`. Call it in Vitest browser mode or send it with Playwright's `page.evaluate`. `hairline` is the selector of the fields the theme rests at a hairline, for `audit`'s option of that name.

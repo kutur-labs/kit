@@ -44,7 +44,7 @@ const toPixels = (value: string, unit: string) => Number(value) * (unit === "px"
 // Parses `@media (min-width: 40rem) and (prefers-reduced-motion: reduce)`, with widths also in the
 // `(width >= 640px)` form. Returns `undefined` for a query with a media type, `or`, `not` or a
 // comma.
-const mediaQueryOf = (key: string): MediaQuery | undefined => {
+export const mediaQueryOf = (key: string): MediaQuery | undefined => {
   if (!key.startsWith("@media ")) return undefined;
 
   let range = unbounded;

@@ -1,13 +1,19 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Listbox } from "@foldkit/ui";
-import { ListboxStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Listbox } from "@kutur-kit/foldkit-stylex-theme/listbox";
+import { space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Array, Option, Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
 
-const Language = Schema.Literals(["Polski", "English", "Deutsch", "Klingon"]);
+import { viewportPadding } from "../anchor.ts";
+import { field, labelledBy } from "../field.ts";
+
+export const summary = "A button that opens a list to choose one value, or several.";
+
+const Language = Schema.Literals(["Polski", "English", "Deutsch", "Čeština"]);
 
 type Language = typeof Language.Type;
 
@@ -82,88 +88,59 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
   });
 
 const styles = stylex.create({
-  row: { display: "flex", flexWrap: "wrap", gap: 16, paddingBlockEnd: 200 },
-  button: { minBlockSize: 44, minInlineSize: 160, font: "inherit" },
-  buttonOpen: { outlineWidth: 2, outlineStyle: "solid" },
-  // The list renders outside this view, in Foldkit's portal root, so it sets its own color. As wide
-  // as the button, padding included.
-  items: {
-    boxSizing: "border-box",
-    minInlineSize: 160,
-    padding: 4,
-    backgroundColor: "white",
-    color: "black",
-    boxShadow: "0 4px 16px rgb(0 0 0 / 0.25)",
-    transitionProperty: "opacity",
-    transitionDuration: { default: "150ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  itemsClosed: { opacity: 0 },
-  // Floating UI caps the panel's height; this inner element scrolls.
-  scroll: { maxBlockSize: 240, overflowY: "auto" },
-  item: { display: "flex", alignItems: "center", minBlockSize: 44, paddingInline: 12 },
-  itemActive: { backgroundColor: "gainsboro" },
-  itemSelected: { fontWeight: 700 },
-  itemDisabled: { opacity: 0.5 },
+  row: { display: "flex", flexWrap: "wrap", gap: space.md },
 });
 
-const listStyles = {
-  button: (state) => [styles.button, state.isVisible && styles.buttonOpen],
-  items: (state) => [styles.items, state.isClosed && styles.itemsClosed],
-  itemsScroll: styles.scroll,
-  item: (state) => [
-    styles.item,
-    state.isActive && styles.itemActive,
-    state.isSelected && styles.itemSelected,
-    state.isDisabled && styles.itemDisabled,
-  ],
-} satisfies ListboxStyle.Styles;
-
-const languagesView = ListboxStyle.view(Languages.view, listStyles);
-
-// Listbox.Multi takes the same styles through its own entry point.
-const tagsView = ListboxStyle.Multi.view(Tags.view, listStyles);
-
-const item = (h: HtmlBuilder<Message>) => (value: string) => ({
-  content: h.span([], [value]),
+const itemToConfig = (value: string, state: Readonly<{ isSelected: boolean }>) => ({
+  content: Listbox.itemContent(value, state),
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
     [sx(styles.row)],
     [
-      h.submodel({
-        slotId: "language",
-        model: model.languages,
-        view: languagesView,
-        viewInputs: {
-          items: Language.literals,
-          maybeSelectedValue: model.language,
-          isItemDisabled: (language) => language === "Klingon",
-          ariaLabel: "Language",
-          buttonContent: h.span([], [Option.getOrElse(model.language, () => "Language")]),
-          itemToConfig: item(h),
-        },
-        toParentMessage: (message) => Message.GotLanguagesMessage({ message }),
-      }),
-      h.submodel({
-        slotId: "tags",
-        model: model.tags,
-        view: tagsView,
-        viewInputs: {
-          items: Tag.literals,
-          selectedValues: model.selectedTags,
-          ariaLabel: "Tags",
-          buttonContent: h.span(
-            [],
-            [
+      field(h, { controlId: Listbox.buttonId(model.languages.id), text: "Language" }, [
+        h.submodel({
+          slotId: "language",
+          model: model.languages,
+          view: Languages.view,
+          viewInputs: {
+            items: Language.literals,
+            maybeSelectedValue: model.language,
+            ariaLabelledBy: labelledBy(Listbox.buttonId(model.languages.id)),
+            anchor: { gap: 4, padding: viewportPadding },
+            buttonContent: Listbox.buttonContent(
+              Option.match(model.language, {
+                onNone: () => Listbox.placeholder("None"),
+                onSome: (language) => language,
+              }),
+              model.languages,
+            ),
+            itemToConfig,
+          },
+          toParentMessage: (message) => Message.GotLanguagesMessage({ message }),
+        }),
+      ]),
+      field(h, { controlId: Listbox.buttonId(model.tags.id), text: "Tags" }, [
+        h.submodel({
+          slotId: "tags",
+          model: model.tags,
+          view: Tags.view,
+          viewInputs: {
+            items: Tag.literals,
+            selectedValues: model.selectedTags,
+            ariaLabelledBy: labelledBy(Listbox.buttonId(model.tags.id)),
+            anchor: { gap: 4, padding: viewportPadding },
+            buttonContent: Listbox.buttonContent(
               Array.isReadonlyArrayNonEmpty(model.selectedTags)
                 ? model.selectedTags.join(", ")
-                : "Tags",
-            ],
-          ),
-          itemToConfig: item(h),
-        },
-        toParentMessage: (message) => Message.GotTagsMessage({ message }),
-      }),
+                : Listbox.placeholder("None"),
+              model.tags,
+            ),
+            itemToConfig,
+          },
+          toParentMessage: (message) => Message.GotTagsMessage({ message }),
+        }),
+      ]),
     ],
   );

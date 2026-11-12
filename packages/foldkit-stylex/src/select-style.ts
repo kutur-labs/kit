@@ -2,7 +2,7 @@ import type { Supported } from "./internal/supported.ts";
 import type { Select } from "@foldkit/ui";
 import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
-import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /**
  * A select's state, as its config sets it; the same for each part. @foldkit/ui sets each hook on
@@ -50,13 +50,22 @@ const stateOf = (config: Reads["Config"]): State => ({
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Select", Before>;
+
+/**
  * `Select.view` with each part's styles on the attributes `toView` gets. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     selectView: Supported<"Select", Has, Reads, typeof Select.view>,
-    ...layers: Layers<List, Styles, "Select">
+    ...layers: Layers<List>
   ) =>
   <Message>(config: Select.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));

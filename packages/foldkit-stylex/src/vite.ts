@@ -1,7 +1,9 @@
 import type { UserOptions } from "@stylexjs/unplugin";
 import type { ConfigEnv, Plugin, UserConfig } from "vite";
 
+import { existsSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
+import { join, resolve, sep } from "node:path";
 
 import { unplugin } from "@stylexjs/unplugin";
 import * as Predicate from "effect/Predicate";
@@ -63,19 +65,39 @@ const requireClientCss: Plugin = {
   },
 };
 
+// The packages that Node finds from `root` in a node_modules directory, which Vite pre-bundles. A
+// linked one, such as a workspace package, is a symlink to its source, which Vite serves as
+// source already; excluding it would hide its imports from the dependency scan, which then finds
+// them mid-run and reloads the tests. Directories, not exports: these packages export no
+// ./package.json, and an app's may have no `require` condition.
+const installedFrom = (root: string, names: ReadonlyArray<string>) => {
+  const fromRoot = createRequire(join(root, "package.json"));
+
+  return names.filter((name) => {
+    const directory = (fromRoot.resolve.paths(name) ?? [])
+      .map((modules) => join(modules, name))
+      .find(existsSync);
+
+    return directory !== undefined && realpathSync(directory).includes(`${sep}node_modules${sep}`);
+  });
+};
+
 /**
  * StyleX for a Foldkit app that uses @kutur-kit/foldkit-stylex, in dev, build and Vitest. Use it in
  * place of `@stylexjs/unplugin/vite`, in vite.config.ts and vitest.config.ts; it takes the same
- * options except `styleResolution`.
+ * options except `styleResolution`. Under Vitest, `runtimeInjection` defaults to `true`, so
+ * browser tests see the styles.
  */
 // Vite takes a mutable array of plugins.
 export const foldkitStylex = (options: Options = {}): Array<Plugin> => {
+  // StyleX finds packages to compile from node_modules only through the package.json nearest the
+  // working directory, and only those that export ./package.json. Alchemy's dev server runs from
+  // the repository root, and Vite then pre-bundles these packages uncompiled.
+  const externalPackages = [...packages, ...(options.externalPackages ?? [])];
+
   const configured: Options = {
     ...options,
-    // StyleX finds packages to compile from node_modules only through the package.json nearest
-    // the working directory, and only those that export ./package.json. Alchemy's dev server runs
-    // from the repository root, and Vite then pre-bundles these packages uncompiled.
-    externalPackages: [...packages, ...(options.externalPackages ?? [])],
+    externalPackages,
     lightningcssOptions: {
       ...options.lightningcssOptions,
       // Under default browser targets Lightningcss rewrites light-dark() into variables that only
@@ -86,7 +108,22 @@ export const foldkitStylex = (options: Options = {}): Array<Plugin> => {
 
   return [
     applied(vite(configured), (config, env) => !inTests(config, env)),
-    applied(rollup(configured), inTests),
+    // Vitest's dev server serves no stylesheet for StyleX to append to, so a browser test would
+    // measure bare markup. The compiled modules insert their CSS when they load instead.
+    applied(rollup({ runtimeInjection: true, ...configured }), inTests),
+    {
+      name: "@kutur-kit/foldkit-stylex:test-injection",
+      apply: inTests,
+      // Vite would otherwise find the module the injection imports mid-run, and reload the tests.
+      // StyleX's Rollup entry, unlike its Vite one, leaves the packages it compiles to
+      // pre-bundling, which would bundle an installed copy uncompiled.
+      config: (config) => ({
+        optimizeDeps: {
+          include: ["@stylexjs/stylex/lib/stylex-inject"],
+          exclude: installedFrom(resolve(config.root ?? ""), externalPackages),
+        },
+      }),
+    },
     {
       name: "@kutur-kit/foldkit-stylex:ssr",
       // Server rendering and Vitest must load them through Vite, which compiles their styles. The

@@ -7,7 +7,8 @@ import type { Locator, Page } from "playwright";
 
 import { describe, expect, it } from "vitest";
 
-import { useGallery } from "./gallery.ts";
+import { viewportPadding } from "../../src/anchor.ts";
+import { useGallery, variationNamed } from "./gallery.ts";
 
 const { open } = useGallery();
 
@@ -71,12 +72,12 @@ const anchored: ReadonlyArray<Anchored> = [
     title: "Popover, with an arrow",
     component: "Popover",
     path: "/popover",
-    show: click("#top-button"),
-    panel: "#top-panel",
+    show: click("#plain-button"),
+    panel: "#plain-panel",
     strategy: "absolute",
     parts: [
-      { part: "panel", family: "AnchoredPanel", element: "#top-panel", inline: placed },
-      { part: "arrow", family: "Arrow", element: "#top-arrow", inline: [] },
+      { part: "panel", family: "AnchoredPanel", element: "#plain-panel", inline: placed },
+      { part: "arrow", family: "Arrow", element: "#plain-arrow", inline: [] },
     ],
   },
   {
@@ -94,9 +95,8 @@ const anchored: ReadonlyArray<Anchored> = [
     title: "Listbox, its trigger in a position: fixed box",
     component: "Listbox",
     path: "/listbox",
-    // Raised over the themed demo, whose positioned wrappers would take the click otherwise.
     show: async (page) => {
-      await page.addStyleTag({ content: "#core-demo { position: fixed; z-index: 1 }" });
+      await page.addStyleTag({ content: "#demo { position: fixed }" });
       await page.locator("#language-button").click();
     },
     panel: "#language-items",
@@ -157,7 +157,7 @@ const anchored: ReadonlyArray<Anchored> = [
 
 describe("the properties inline on an anchored panel's parts once Floating UI places it", () => {
   it.each(anchored)("$title", async ({ component, path, show, panel, strategy, parts }) => {
-    const { page } = await open(path, "light");
+    const { page } = await open(path, variationNamed("light"));
     await show(page);
     await untilPlaced(page.locator(panel));
 
@@ -170,4 +170,44 @@ describe("the properties inline on an anchored panel's parts once Floating UI pl
       ).toEqual(inline);
     }
   });
+});
+
+// A phone on its side: short, and under a finger, so controls are 44px tall. The header's pickers
+// and the Components popover, which replaces the sidebar on a screen this narrow, open panels too.
+const landscape = { ...variationNamed("touch"), viewport: { width: 740, height: 360 } };
+
+const opened: ReadonlyArray<Pick<Anchored, "title" | "path" | "show" | "panel">> = [
+  ...anchored,
+  { title: "Scheme picker", path: "/", show: click("#scheme-button"), panel: "#scheme-items" },
+  { title: "Tokens picker", path: "/", show: click("#tokens-button"), panel: "#tokens-items" },
+  {
+    title: "Components popover",
+    path: "/",
+    show: click("#components-button"),
+    panel: "#components-panel",
+  },
+];
+
+describe("on a landscape phone", () => {
+  it.each(opened)(
+    "keeps the $title panel clear of the screen's edges",
+    async ({ path, show, panel }) => {
+      const { page } = await open(path, landscape);
+      await show(page);
+      await untilPlaced(page.locator(panel));
+      const box = await page.locator(panel).boundingBox();
+      const { width, height } = landscape.viewport;
+
+      const insets = {
+        left: box?.x ?? 0,
+        top: box?.y ?? 0,
+        right: width - (box?.x ?? 0) - (box?.width ?? 0),
+        bottom: height - (box?.y ?? 0) - (box?.height ?? 0),
+      };
+
+      expect(Math.min(...Object.values(insets)), JSON.stringify(insets)).toBeGreaterThanOrEqual(
+        viewportPadding,
+      );
+    },
+  );
 });

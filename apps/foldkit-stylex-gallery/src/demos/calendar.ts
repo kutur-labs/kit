@@ -1,12 +1,15 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Calendar } from "@foldkit/ui";
-import { CalendarStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Calendar } from "@kutur-kit/foldkit-stylex-theme/calendar";
+import { color, fontSize, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Match, Option, Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import * as Dates from "foldkit/calendar";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "A month grid for picking a date with the pointer or the keyboard.";
 
 export const Model = Schema.Struct({
   calendar: Calendar.Model,
@@ -24,7 +27,7 @@ const today = Dates.make(2026, 11, 8);
 
 export const init = (): Update.Return<Model, Message> => ({
   model: {
-    calendar: Calendar.init({ id: "deadline", today, disabledDaysOfWeek: ["Sunday"] }),
+    calendar: Calendar.init({ id: "deadline", today }),
     maybeSelectedDate: Option.some(Dates.make(2026, 11, 13)),
   },
 });
@@ -49,65 +52,14 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     },
   });
 
-const styles = stylex.create({
-  root: { display: "grid", gap: 8, inlineSize: "max-content" },
-  bar: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 4 },
-  button: { minInlineSize: 44, minBlockSize: 44, font: "inherit" },
-  grid: { display: "grid", gap: 2 },
-  // Months and years: three columns, the step @foldkit/ui's up and down keys move by.
-  threeColumns: { gridTemplateColumns: "repeat(3, 1fr)" },
-  row: { display: "grid", gridTemplateColumns: "repeat(7, 44px)", gap: 2 },
-  columnHeader: { fontSize: 12, textAlign: "center" },
-  cell: { display: "grid" },
-  cellButton: {
-    minBlockSize: 44,
-    borderWidth: 0,
-    backgroundColor: "transparent",
-    color: "inherit",
-    font: "inherit",
-    cursor: "pointer",
-  },
-  today: { fontWeight: 700 },
-  outside: { color: "GrayText" },
-  selected: { backgroundColor: "CanvasText", color: "Canvas" },
-  // The grid keeps DOM focus, so the cursor cell draws the ring from its state.
-  focused: { outlineWidth: 2, outlineStyle: "solid", outlineColor: "Highlight" },
-  disabled: { textDecorationLine: "line-through", cursor: "not-allowed" },
-});
-
-/** The calendar's styles, which src/demos/date-picker.ts gives its calendar too. */
-export const calendarStyles = {
-  root: styles.root,
-  previousMonthButton: styles.button,
-  nextMonthButton: styles.button,
-  previousPageButton: styles.button,
-  nextPageButton: styles.button,
-  headingButton: styles.button,
-  grid: (state) => [styles.grid, state.viewMode !== "Days" && styles.threeColumns],
-  headerRow: styles.row,
-  columnHeader: styles.columnHeader,
-  week: styles.row,
-  cell: styles.cell,
-  cellButton: (state) => [
-    styles.cellButton,
-    state.isToday && styles.today,
-    state.isOutsideMonth && styles.outside,
-    state.isSelected && styles.selected,
-    state.isFocused && styles.focused,
-    state.isDisabled && styles.disabled,
-  ],
-} satisfies CalendarStyle.Styles;
-
-const calendarView = CalendarStyle.view(Calendar.view, calendarStyles);
-
 const cellView =
   <M>(h: HtmlBuilder<M>) =>
   (cell: Calendar.DayCell | Calendar.MonthCell | Calendar.YearCell): Html =>
     h.div([...cell.cellAttributes], [h.button([...cell.buttonAttributes], [cell.label])]);
 
 /**
- * Lays out each grid from the attributes CalendarStyle styled. DatePicker's `toCalendarView`
- * takes the same function, so src/demos/date-picker.ts reuses it.
+ * Lays out each grid from the styled attributes, with the theme's `Calendar.header` and arrows.
+ * DatePicker's `toCalendarView` takes the same function, so src/demos/date-picker.ts reuses it.
  */
 export const toCalendarView =
   <M>(h: HtmlBuilder<M>) =>
@@ -118,14 +70,14 @@ export const toCalendarView =
           [...days.root],
           [
             h.div(
-              [sx(styles.bar)],
+              [sx(Calendar.header.bar)],
               [
-                h.button([...days.previousMonthButton], ["‹"]),
+                h.button([...days.previousMonthButton], [Calendar.previousIcon()]),
                 h.button(
                   [...days.headingButton],
                   [h.span([h.Id(days.heading.id)], [days.heading.text])],
                 ),
-                h.button([...days.nextMonthButton], ["›"]),
+                h.button([...days.nextMonthButton], [Calendar.nextIcon()]),
               ],
             ),
             h.div(
@@ -147,7 +99,7 @@ export const toCalendarView =
           [...months.root],
           [
             h.div(
-              [sx(styles.bar)],
+              [sx(Calendar.header.bar)],
               [
                 h.button(
                   [...months.headingButton],
@@ -155,7 +107,12 @@ export const toCalendarView =
                 ),
               ],
             ),
-            h.div([...months.grid], months.cells.map(cellView(h))),
+            // Short names: a full one such as "September" fills a third of the calendar's width.
+            // Each button's name still holds the full one.
+            h.div(
+              [...months.grid],
+              months.cells.map((cell) => cellView(h)({ ...cell, label: cell.shortLabel })),
+            ),
           ],
         ),
       Years: (years) =>
@@ -163,11 +120,11 @@ export const toCalendarView =
           [...years.root],
           [
             h.div(
-              [sx(styles.bar)],
+              [sx(Calendar.header.bar)],
               [
-                h.button([...years.previousPageButton], ["‹"]),
-                h.span([h.Id(years.heading.id)], [years.heading.text]),
-                h.button([...years.nextPageButton], ["›"]),
+                h.button([...years.previousPageButton], [Calendar.previousIcon()]),
+                h.span([h.Id(years.heading.id), sx(Calendar.header.title)], [years.heading.text]),
+                h.button([...years.nextPageButton], [Calendar.nextIcon()]),
               ],
             ),
             h.div([...years.grid], years.cells.map(cellView(h))),
@@ -175,22 +132,38 @@ export const toCalendarView =
         ),
     });
 
+/**
+ * Names for the heading buttons that start with the month or year they show. @foldkit/ui's
+ * defaults, such as "Switch to month picker", leave it out, but a control's name must hold the
+ * text people see, so that speech input can say it (WCAG 2.5.3). DatePicker takes the same names.
+ */
+export const headingLabels = ({ viewYear, viewMonth, locale }: Calendar.Model) => ({
+  daysHeadingButtonLabel: `${Dates.formatMonthYear(Dates.make(viewYear, viewMonth, 1), locale)}, choose a month`,
+  monthsHeadingButtonLabel: `${viewYear}, choose a year`,
+});
+
+const styles = stylex.create({
+  demo: { display: "grid", justifyItems: "center", gap: space.md },
+  status: { margin: 0, color: color.muted, fontSize: fontSize.sm },
+});
+
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.div(
-    [],
+    [sx(styles.demo)],
     [
       h.submodel({
         slotId: "deadline",
         model: model.calendar,
-        view: calendarView,
+        view: Calendar.view,
         viewInputs: {
           maybeSelectedDate: model.maybeSelectedDate,
           toView: toCalendarView(h),
+          ...headingLabels(model.calendar),
         },
         toParentMessage: (message) => Message.GotCalendarMessage({ message }),
       }),
       h.p(
-        [],
+        [sx(styles.status)],
         [
           Option.match(model.maybeSelectedDate, {
             onNone: () => "No date selected.",

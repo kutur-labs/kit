@@ -4,7 +4,7 @@ import type { ChildAttribute } from "foldkit/html";
 
 import { defineView, type View } from "foldkit/submodel";
 
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** HoverIntent's state, the same for each of its parts. */
 export interface State {
@@ -39,12 +39,21 @@ type Reads = Readonly<{
 type Has = Readonly<{ RenderInfo: HoverIntent.RenderInfo; ViewInputs: HoverIntent.ViewInputs }>;
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "HoverIntent", Before>;
+
+/**
  * `HoverIntent.view` with each part's styles on the bundles `toView` gets. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   hoverIntentView: Supported<"HoverIntent", Has, Reads, typeof HoverIntent.view>,
-  ...layers: Layers<List, Styles, "HoverIntent">
+  ...layers: Layers<List>
 ): View<HoverIntent.Model, HoverIntent.Message, HoverIntent.ViewInputs> =>
   defineView<HoverIntent.Model, HoverIntent.Message, HoverIntent.ViewInputs>((model, inputs, h) =>
     hoverIntentView(

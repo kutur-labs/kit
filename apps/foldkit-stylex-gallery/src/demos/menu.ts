@@ -1,15 +1,30 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Menu } from "@foldkit/ui";
-import { MenuStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Menu } from "@kutur-kit/foldkit-stylex-theme/menu";
+import { color, fontSize, space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Option, Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
 
+import { viewportPadding } from "../anchor.ts";
+
+export const summary = "A button that opens a list of actions.";
+
 const Action = Schema.Literals(["Rename", "Duplicate", "Print", "Archive", "Delete"]);
 
 type Action = typeof Action.Type;
+
+const styles = stylex.create({
+  // The status sits beside the button, where the panel opening below never covers it.
+  demo: { display: "flex", flexWrap: "wrap", alignItems: "center", gap: space.md },
+  status: { margin: 0, color: color.muted, fontSize: fontSize.sm },
+  // The one action that destroys something takes the danger color, so it stands out from the rest.
+  // Under forced colors it inherits the item's, HighlightText while active, which danger's
+  // CanvasText would hide on Highlight.
+  danger: { color: { default: color.danger, "@media (forced-colors: active)": null } },
+});
 
 const Actions = Menu.create<Action>();
 
@@ -42,41 +57,6 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     },
   });
 
-const styles = stylex.create({
-  demo: { display: "grid", justifyItems: "start", gap: 16, paddingBlockEnd: 320 },
-  button: { minBlockSize: 44, minInlineSize: 160, font: "inherit" },
-  buttonOpen: { outlineWidth: 2, outlineStyle: "solid" },
-  // The panel renders outside this view, in Foldkit's portal root, so it sets its own color.
-  items: {
-    minInlineSize: 200,
-    padding: 4,
-    backgroundColor: "white",
-    color: "black",
-    boxShadow: "0 4px 16px rgb(0 0 0 / 0.25)",
-    transitionProperty: "opacity",
-    transitionDuration: { default: "150ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  itemsClosed: { opacity: 0 },
-  item: { display: "flex", alignItems: "center", minBlockSize: 44, paddingInline: 12 },
-  itemActive: { backgroundColor: "gainsboro" },
-  itemDisabled: { opacity: 0.5 },
-  heading: { paddingBlock: 4, paddingInline: 12, fontSize: 14, fontWeight: 700 },
-  // @foldkit/ui renders a separator between groups only when this part is styled.
-  separator: { blockSize: 1, marginBlock: 4, backgroundColor: "silver" },
-});
-
-const actionsView = MenuStyle.view(Actions.view, {
-  button: (state) => [styles.button, state.isVisible && styles.buttonOpen],
-  items: (state) => [styles.items, state.isClosed && styles.itemsClosed],
-  item: (state) => [
-    styles.item,
-    state.isActive && styles.itemActive,
-    state.isDisabled && styles.itemDisabled,
-  ],
-  heading: styles.heading,
-  separator: styles.separator,
-});
-
 const groupOf = (action: Action) =>
   action === "Archive" || action === "Delete" ? "Manage" : "Document";
 
@@ -87,20 +67,21 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
       h.submodel({
         slotId: "actions",
         model: model.actions,
-        view: actionsView,
+        view: Actions.view,
         viewInputs: {
           items: Action.literals,
-          isItemDisabled: (action) => action === "Print",
           itemGroupKey: groupOf,
           groupToHeading: (group) => ({ content: h.span([], [group]) }),
-          anchor: { placement: "bottom-start", gap: 4 },
-          buttonContent: h.span([], ["Actions"]),
-          itemToConfig: (action) => ({ content: h.span([], [action]) }),
+          anchor: { placement: "bottom-start", gap: 4, padding: viewportPadding },
+          buttonContent: Menu.buttonContent("Actions", model.actions),
+          itemToConfig: (action) => ({
+            content: h.span([sx(action === "Delete" && styles.danger)], [action]),
+          }),
         },
         toParentMessage: (message) => Message.GotActionsMessage({ message }),
       }),
       h.p(
-        [],
+        [sx(styles.status)],
         [
           Option.match(model.lastAction, {
             onNone: () => "No action chosen yet.",

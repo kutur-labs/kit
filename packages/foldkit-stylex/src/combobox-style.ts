@@ -1,6 +1,6 @@
 import type { Filled, ItemState, Reads, Styles } from "./internal/combobox.ts";
 import type { Callbacks, Has } from "./internal/items.ts";
-import type { Layers } from "./internal/part.ts";
+import type { CheckedLayers } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Combobox } from "@foldkit/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -19,6 +19,15 @@ export type ViewInputs<Item extends string> = Combobox.ViewInputs<Item> &
   Filled;
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Combobox", Before>;
+
+/**
  * A `Combobox.create` view with each part's styles; pass it to `h.submodel` as `view`. Pass several
  * styles objects to layer them: later ones win property by property.
  */
@@ -33,7 +42,7 @@ export const view = <Item extends string, const List extends ReadonlyArray<Style
       h: HtmlBuilder<Combobox.Message>,
     ) => Html
   >,
-  ...layers: Layers<List, Styles, "Combobox">
+  ...layers: Layers<List>
 ): View<Combobox.Model, Combobox.Message, ViewInputs<Item>> =>
   defineView<Combobox.Model, Combobox.Message, ViewInputs<Item>>((model, inputs, h) =>
     comboboxView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

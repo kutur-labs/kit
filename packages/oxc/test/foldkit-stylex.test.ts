@@ -321,7 +321,9 @@ export const views = [
 `,
     errors: Array.from({ length: 7 }, () => "foldkit-stylex-unstyled-view/wrap"),
     messages: [
-      "Wrap Many.view once at module scope with ListboxStyle.Multi.view(Many.view, styles)",
+      "Import Listbox from @kutur-kit/foldkit-stylex-theme/listbox in place of @foldkit/ui's: the theme's Listbox styles Many.view by default.",
+      "wrap Many.view once at module scope with ListboxStyle.Multi.view(Many.view, styles)",
+      "Import DragAndDrop from @kutur-kit/foldkit-stylex-theme/drag-and-drop in place of",
       "with DragAndDropStyle.draggable(DragAndDrop.draggable, styles)",
     ],
   },
@@ -465,11 +467,11 @@ export const styles = stylex.create({
     file: "focus-rank-bad.ts",
     code: `${preamble}
 export const styles = stylex.create({
-  button: { backgroundColor: { default: "white", ":hover": "gray", ":focus-visible": "blue" } },
-  field: { borderColor: { default: "gray", ":focus-within": "blue", ":hover": "black" } },
+  button: { backgroundColor: { default: "white", ":hover": { default: null, "@media (hover: hover)": "gray" }, ":focus-visible": "blue" } },
+  field: { borderColor: { default: "gray", ":focus-within": "blue", ":hover": { default: null, "@media (hover: hover)": "black" } } },
   link: { color: { default: "black", ":focus": "red", ":focus-visible": "blue" } },
   input: { borderColor: { default: "gray", ":user-invalid": "red", ":focus-visible": "blue" } },
-  drop: { outlineColor: { default: "transparent", ":hover": "gray", ":has(:focus-visible)": "blue" } },
+  drop: { outlineColor: { default: "transparent", ":hover": { default: null, "@media (hover: hover)": "gray" }, ":has(:focus-visible)": "blue" } },
 });
 `,
     errors: Array.from({ length: 5 }, () => "foldkit-stylex-condition-key/focusRank"),
@@ -484,15 +486,54 @@ export const styles = stylex.create({
     code: `${preamble}
 export const styles = stylex.create({
   button: {
-    backgroundColor: { default: "white", ":hover:not(:focus-visible)": "gray", ":focus-visible": "blue" },
+    backgroundColor: { default: "white", "@media (hover: hover)": { default: "white", ":hover:not(:focus-visible)": "gray" }, ":focus-visible": "blue" },
     outlineWidth: { default: 0, ":focus-visible": 2 },
-    opacity: { default: 1, ":hover": 0.8, ":active": 0.6 },
+    opacity: { default: 1, ":hover": { default: null, "@media (hover: hover)": 0.8 }, ":active": 0.6 },
   },
   field: { borderColor: { default: "gray", ":focus": "blue", ":focus-within": "black" } },
   // Ties: StyleX ranks both keys of each pair alike, 40 or 45, and orders them by value, which the
   // rule leaves alone.
   card: { outlineColor: { default: "transparent", ":is([data-theme=dark])": "white", ":focus-visible": "blue" } },
   drop: { outlineColor: { default: "transparent", ":has(:user-invalid)": "red", ":has(:focus-visible)": "blue" } },
+});
+`,
+    errors: [],
+  },
+  {
+    file: "hover-gate-bad.ts",
+    code: `${preamble}
+export const styles = stylex.create({
+  button: { backgroundColor: { default: "white", ":hover": "gray" } },
+  chain: { opacity: { default: 1, ":hover:not(:focus-visible)": 0.8 } },
+  // The default branch applies where the query does not match.
+  partial: { color: { default: "black", ":hover": { default: "gray", "@media (hover: hover)": "navy" } } },
+  // Any pointer that hovers is not the primary one: a phone with a stylus matches.
+  anyHover: { color: { default: "black", ":hover": { default: null, "@media (any-hover: hover)": "gray" } } },
+  focused: { color: { default: "black", ":focus-visible": { default: "blue", ":hover": "navy" } } },
+  wide: { color: { default: "black", "@media (min-width: 640px)": { default: "black", ":hover": "gray" } } },
+  field: { "::placeholder": { color: { default: "gray", ":hover": "black" } } },
+  row: { color: { default: "black", [stylex.when.ancestor(":hover")]: "blue" } },
+  tinted: (tint: string) => ({ color: { default: "black", ":hover": tint } }),
+});
+`,
+    errors: Array.from({ length: 9 }, () => "foldkit-stylex-hover-gate/gate"),
+    messages: [
+      "Put this hover style under @media (hover: hover): touch browsers keep :hover after a tap, so the style sticks.",
+    ],
+  },
+  {
+    file: "hover-gate-good.ts",
+    code: `${preamble}
+export const styles = stylex.create({
+  button: { backgroundColor: { default: "white", ":hover": { default: null, "@media (hover: hover)": "gray" } } },
+  wide: { opacity: { default: 1, ":hover": { default: null, "@media (hover:hover) and (min-width: 640px)": 0.8 } } },
+  // StyleX's valid-styles takes no conditions under a chained or stylex.when key, so their gate
+  // goes around them.
+  chain: { opacity: { default: 1, "@media (hover: hover)": { default: 1, ":hover:not(:focus-visible)": 0.8 } } },
+  row: { color: { default: "black", "@media (hover: hover)": { default: "black", [stylex.when.ancestor(":hover")]: "blue" } } },
+  field: { "::placeholder": { color: { default: "gray", ":hover": { default: null, "@media (hover: hover)": "black" } } } },
+  tinted: (tint: string) => ({ color: { default: "black", ":hover": { default: null, "@media (hover: hover)": tint } } }),
+  focused: { outlineWidth: { default: 0, ":focus-visible": 2 } },
 });
 `,
     errors: [],
@@ -553,7 +594,7 @@ export const exported = defineVars({ "--fks-radius-control": "0" } satisfies Ove
     file: "element-token-bad.ts",
     code: `${preamble}
 export const styles = stylex.create({
-  inverted: { "--fks-color-surface": "black", color: { default: "white", ":hover": "gray" } },
+  inverted: { "--fks-color-surface": "black", color: { default: "white", ":focus-visible": "gray" } },
   tinted: (accent: string) => ({ "--fks-color-accent": accent }),
 });
 
@@ -655,7 +696,7 @@ export const color = stylex.defineVars({ surface: "#ffffff" });
   {
     file: "no-legacy-contextual-styles-bad.ts",
     code: `${preamble}
-export const styles = stylex.create({ a: { ":hover": { color: "red" } } });
+export const styles = stylex.create({ a: { ":active": { color: "red" } } });
 `,
     // valid-styles rejects the same key, as a condition outside a property.
     errors: ["stylex/no-legacy-contextual-styles", "stylex/valid-styles"],

@@ -1,77 +1,84 @@
 import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Switch } from "@foldkit/ui";
-import { SwitchStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Switch } from "@kutur-kit/foldkit-stylex-theme/switch";
+import { space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { defineMessageUnion } from "foldkit/message";
 
-export const Model = Schema.Struct({ isChecked: Schema.Boolean });
+export const summary = "Turns a setting on or off at once.";
+
+const Setting = Schema.Literals(["notifications", "cleanup"]);
+
+type Setting = typeof Setting.Type;
+
+export const Model = Schema.Struct({ notifications: Schema.Boolean, cleanup: Schema.Boolean });
 
 export type Model = typeof Model.Type;
 
-export const Message = defineMessageUnion({ ToggledNotifications: { isChecked: Schema.Boolean } });
+export const Message = defineMessageUnion({
+  ToggledSetting: { setting: Setting, isChecked: Schema.Boolean },
+});
 
 export type Message = typeof Message.Type;
 
-export const init = (): Update.Return<Model, Message> => ({ model: { isChecked: false } });
+export const init = (): Update.Return<Model, Message> => ({
+  model: { notifications: true, cleanup: false },
+});
 
-export const update = (_model: Model, message: Message): Update.Return<Model, Message> =>
+export const update = (model: Model, message: Message): Update.Return<Model, Message> =>
   Message.match<Update.Return<Model, Message>>(message, {
-    ToggledNotifications: ({ isChecked }) => ({ model: { isChecked } }),
+    ToggledSetting: ({ setting, isChecked }) => ({ model: { ...model, [setting]: isChecked } }),
   });
 
 const styles = stylex.create({
-  row: { display: "flex", alignItems: "center", gap: 8 },
-  track: {
-    display: "inline-flex",
-    alignItems: "center",
-    boxSizing: "border-box",
-    inlineSize: 44,
-    blockSize: 24,
-    padding: 2,
-    borderWidth: 0,
-    borderRadius: 12,
-    backgroundColor: "gray",
-  },
-  checked: { backgroundColor: "black" },
-  disabled: { opacity: 0.5 },
-  // The switch has no thumb part: this is the app's own element, moved from the model.
-  thumb: {
-    inlineSize: 20,
-    blockSize: 20,
-    borderRadius: "50%",
-    backgroundColor: "white",
-    transitionProperty: "margin-inline-start",
-    transitionDuration: { default: "150ms", "@media (prefers-reduced-motion: reduce)": "0s" },
-  },
-  // A logical margin, so the thumb slides toward the inline end in a right-to-left page too.
-  on: { marginInlineStart: 20 },
+  list: { display: "grid", gap: space.lg },
+  // The track centres itself on the label's first line, so the row aligns to the start.
+  row: { display: "flex", alignItems: "flex-start", gap: space.md },
+  // A grid, so the label and description stack.
+  text: { display: "grid", gap: "0.125rem" },
 });
 
-const switchView = SwitchStyle.view(Switch.view, {
-  button: (state) => [
-    styles.track,
-    state.isChecked && styles.checked,
-    state.isDisabled && styles.disabled,
-  ],
-});
+const labels = {
+  notifications: {
+    label: "Notifications",
+    description: "Email me when someone replies.",
+  },
+  cleanup: {
+    label: "Delete old drafts",
+    description: "Drafts untouched for 30 days are deleted for good.",
+  },
+} satisfies Record<Setting, Readonly<{ label: string; description: string }>>;
 
-export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
-  switchView(
+const setting = (name: Setting, model: Model, h: HtmlBuilder<Message>): Html =>
+  Switch.view(
     {
-      id: "notifications",
-      isChecked: model.isChecked,
-      onToggle: (isChecked) => Message.ToggledNotifications({ isChecked }),
-      toView: ({ button, label }) =>
+      id: name,
+      isChecked: model[name],
+      hasDescription: true,
+      onToggle: (isChecked) => Message.ToggledSetting({ setting: name, isChecked }),
+      toView: ({ button, label, description }) =>
         h.div(
           [sx(styles.row)],
           [
-            h.button([...button], [h.span([sx(styles.thumb, model.isChecked && styles.on)], [])]),
-            h.label([...label], ["Notifications"]),
+            h.button([...button], []),
+            h.div(
+              [sx(styles.text)],
+              [
+                h.label([...label], [labels[name].label]),
+                h.span([...description], [labels[name].description]),
+              ],
+            ),
           ],
         ),
     },
     h,
+  );
+
+export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
+  h.div(
+    [sx(styles.list)],
+    Setting.literals.map((name) => setting(name, model, h)),
   );

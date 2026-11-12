@@ -1,5 +1,18 @@
+/* Self-hosted, so the gallery looks the same on every system and loads nothing from a third party. */
+@import "@fontsource-variable/inter";
+
 /* Page-wide settings: anchored panels render in Foldkit's portal root, outside the view's root. */
 :root {
   color-scheme: light dark;
-  font-family: system-ui, sans-serif;
+  font-family: "Inter Variable", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* Focus and scrolling stop below the sticky header, so it never hides what they reach (WCAG
+     2.4.11). The 0.5rem clears the theme's focus ring too, which its offset and width draw 4px
+     outside the control. src/header.stylex.ts defines the property. */
+  scroll-padding-block-start: calc(var(--gallery-header-cover) + 0.5rem);
+}
+
+/* The view's root draws the page's surface to the viewport's edges. */
+body {
+  margin: 0;
 }

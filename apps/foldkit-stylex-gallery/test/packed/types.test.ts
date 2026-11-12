@@ -6,7 +6,8 @@ import { run } from "./run.ts";
 
 const consumer = inject("consumer");
 
-it("type-checks the app, the gallery's demos included, against the packed declarations", async () => {
+// src/playwright-projects.ts holds the toolkit's variations to Playwright's BrowserContextOptions.
+it("type-checks the app, the gallery's demos and Playwright projects included, against the packed declarations", async () => {
   const { code, output } = await run(
     process.execPath,
     [join(consumer, "node_modules/tsrs/bin/tsrs"), "-p", "tsconfig.json"],

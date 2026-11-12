@@ -1,62 +1,85 @@
-import type { Locator, Page } from "playwright";
+import type { Locator } from "playwright";
 
 import { describe, expect, it } from "vitest";
 
-import { computed, schemes, useGallery } from "./gallery.ts";
+import { computed, rgba, schemes, useGallery } from "./gallery.ts";
 
 const { open } = useGallery();
 
-// The danger token, light-dark(#b91c1c, #f87171), as Chromium computes it.
-const danger = { light: "rgb(185, 28, 28)", dark: "rgb(248, 113, 113)" } as const;
-
-// How far the thumb sits from the track's inline start, and whether the track holds it.
-const thumbIn = async (page: Page, control: Locator) => {
-  const [track, thumb] = await Promise.all([
+// How far the thumb's centre sits from the track's inline start, in CSS pixels. The theme draws
+// the thumb as the track's ::after, which has no box to measure, so this reads the middle row of a
+// screenshot. Each pixel inside the track's edge mixes the fill and the thumb's color, and the
+// share of the thumb's color is how much of that pixel the thumb covers.
+const thumbOffset = async (control: Locator) => {
+  const [box, png, fill, thumb] = await Promise.all([
     control.boundingBox(),
-    control.locator("span").boundingBox(),
+    control.screenshot({ animations: "disabled" }),
+    computed(control, "background-color").then((color) => rgba(control.page(), color)),
+    computed(control, "background-color", "::after").then((color) => rgba(control.page(), color)),
   ]);
 
-  if (!track || !thumb) throw new Error("The switch rendered no track or thumb.");
+  if (!box) throw new Error("The switch rendered no track.");
 
-  const isRtl = await page.evaluate(() => document.documentElement.dir === "rtl");
+  return control.evaluate(
+    async (track, [png, x, fill, thumb]) => {
+      const image = new Image();
+      image.src = `data:image/png;base64,${png}`;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = image.width;
+      canvas.height = image.height;
+      const context = canvas.getContext("2d");
 
-  return {
-    offset: isRtl ? track.x + track.width - (thumb.x + thumb.width) : thumb.x - track.x,
-    isInside: thumb.x >= track.x && thumb.x + thumb.width <= track.x + track.width,
-  };
+      if (context === null) throw new Error("No 2D canvas to read the screenshot with.");
+      context.drawImage(image, 0, 0);
+      const row = context.getImageData(0, Math.floor(image.height / 2), image.width, 1).data;
+      const style = getComputedStyle(track);
+      const edge = Number.parseFloat(style.borderInlineStartWidth);
+      const { width } = track.getBoundingClientRect();
+      // The screenshot starts at the whole pixel at or before the track.
+      const start = x - Math.floor(x);
+      const channels = [0, 1, 2] as const;
+      const span = channels.reduce<number>((sum, c) => sum + (thumb[c] - fill[c]) ** 2, 0);
+
+      const pixels = Array.from({ length: image.width }, (_, index) => {
+        const left = index - start;
+
+        const cover = channels.reduce<number>(
+          (sum, c) => sum + ((row[index * 4 + c] ?? 0) - fill[c]) * (thumb[c] - fill[c]),
+          0,
+        );
+
+        return { centre: left + 0.5, cover: Math.min(Math.max(cover / span, 0), 1) };
+      }).filter(({ centre }) => centre - 0.5 >= edge && centre + 0.5 <= width - edge);
+
+      const covered = pixels.reduce((sum, { cover }) => sum + cover, 0);
+      const centre = pixels.reduce((sum, pixel) => sum + pixel.centre * pixel.cover, 0) / covered;
+
+      return style.direction === "rtl" ? width - centre : centre;
+    },
+    [png.toString("base64"), box.x, fill, thumb] as const,
+  );
 };
 
-describe.each(schemes)("Switch in the %s scheme", (scheme) => {
-  it.each([
-    { demo: "core", name: "Notifications", dir: "ltr" },
-    { demo: "themed", name: "Delete old drafts", dir: "ltr" },
-    { demo: "core", name: "Notifications", dir: "rtl" },
-    { demo: "themed", name: "Delete old drafts", dir: "rtl" },
-  ])(
-    "slides the $demo demo's thumb along the track once a click turns it on, in $dir",
-    async ({ demo, name, dir }) => {
+describe.each(schemes)("Switch in the $colorScheme scheme", (scheme) => {
+  // The track's content box is two thumbs wide, so the thumb moves by one thumb: size.mark less 2px,
+  // 14px.
+  it.each(["ltr", "rtl"])(
+    "slides the thumb along the track once a click turns it on, in %s",
+    async (dir) => {
       const { page } = await open("/switch", scheme);
       await page.evaluate((direction) => {
         document.documentElement.dir = direction;
       }, dir);
-      const control = page.locator(`#${demo}-demo`).getByRole("switch", { name });
-      const off = await thumbIn(page, control);
+      const control = page.locator("#demo").getByRole("switch", { name: "Delete old drafts" });
+      const off = await thumbOffset(control);
 
       await control.click();
       await expect.poll(() => control.getAttribute("aria-checked")).toBe("true");
-      const on = await thumbIn(page, control);
 
-      expect(on.offset - off.offset).toBeCloseTo(20, 1);
-      expect([off.isInside, on.isInside]).toEqual([true, true]);
+      // Inside the 1px edge and the 1px padding, so half a thumb further: 9px.
+      expect(off).toBeCloseTo(9, 0);
+      expect((await thumbOffset(control)) - off).toBeCloseTo(14, 0);
     },
   );
-
-  it("fills a switch with the accent token its part overrides", async () => {
-    const { page } = await open("/switch", scheme);
-    const control = page.getByRole("switch", { name: "Delete old drafts" });
-
-    await control.click();
-    await expect.poll(() => control.getAttribute("aria-checked")).toBe("true");
-    expect(await computed(control, "background-color")).toBe(danger[scheme]);
-  });
 });

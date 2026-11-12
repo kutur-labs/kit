@@ -5,7 +5,7 @@ import type { ChildAttribute } from "foldkit/html";
 import * as Predicate from "effect/Predicate";
 import { defineView, type View } from "foldkit/submodel";
 
-import { appendChildClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendChildClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** A slider's state, the same for each of its parts. */
 export interface State {
@@ -62,10 +62,19 @@ const stateOf = (model: Reads["Model"], inputs: Reads["ViewInputs"]): State => (
   orientation: inputs.orientation ?? "Horizontal",
 });
 
+/**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Slider", Before>;
+
 /** `Slider.view` with each part's styles on the bundles `toView` gets. */
 export const view = <const List extends ReadonlyArray<Styles>>(
   sliderView: Supported<"Slider", Has, Reads, typeof Slider.view>,
-  ...layers: Layers<List, Styles, "Slider">
+  ...layers: Layers<List>
 ): View<Slider.Model, Slider.Message, Slider.ViewInputs> =>
   defineView<Slider.Model, Slider.Message, Slider.ViewInputs>((model, inputs, h) => {
     const state = stateOf(model, inputs);

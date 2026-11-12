@@ -2,7 +2,7 @@ import type { Supported } from "./internal/supported.ts";
 import type { Checkbox } from "@foldkit/ui";
 import type { Attribute, Html, HtmlBuilder } from "foldkit/html";
 
-import { appendClass, partsOf, type Layers, type PartStyle } from "./internal/part.ts";
+import { appendClass, partsOf, type CheckedLayers, type PartStyle } from "./internal/part.ts";
 
 /** A checkbox's state, as its config sets it; the same for each part. */
 export interface State {
@@ -55,13 +55,22 @@ const stateOf = (config: Reads["Config"]): State => ({
 });
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Checkbox", Before>;
+
+/**
  * `Checkbox.view` with each part's styles on the attributes `toView` gets. Pass several styles
  * objects to layer them: later ones win property by property.
  */
 export const view =
   <const List extends ReadonlyArray<Styles>>(
     checkboxView: Supported<"Checkbox", Has, Reads, typeof Checkbox.view>,
-    ...layers: Layers<List, Styles, "Checkbox">
+    ...layers: Layers<List>
   ) =>
   <Message>(config: Checkbox.ViewConfig<Message>, h: HtmlBuilder<Message>): Html => {
     const part = partsOf(layers, stateOf(config));

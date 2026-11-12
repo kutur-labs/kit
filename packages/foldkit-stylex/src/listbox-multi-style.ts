@@ -1,6 +1,6 @@
 import type { Callbacks, Has } from "./internal/items.ts";
 import type { Filled, ItemState, Reads, Styles } from "./internal/listbox.ts";
-import type { Layers } from "./internal/part.ts";
+import type { CheckedLayers } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Listbox } from "@foldkit/ui";
 import type { Html, HtmlBuilder } from "foldkit/html";
@@ -26,7 +26,7 @@ export const view = <Item, Value extends string, const List extends ReadonlyArra
       h: HtmlBuilder<Listbox.Message>,
     ) => Html
   >,
-  ...layers: Layers<List, Styles, "Listbox">
+  ...layers: CheckedLayers<List, Styles, "Listbox">
 ): View<Listbox.Multi.Model, Listbox.Message, ViewInputs<Item, Value>> =>
   defineView<Listbox.Multi.Model, Listbox.Message, ViewInputs<Item, Value>>((model, inputs, h) =>
     listboxView(model, { ...inputs, ...styledInputs(layers, model, inputs) }, h),

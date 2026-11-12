@@ -47,8 +47,9 @@ In test files (`*.test.*`, `*.spec.*`, `test/**` and `tests/**`), `/effect` also
 `/foldkit-stylex` checks what the types of `@kutur-kit/foldkit-stylex` cannot see:
 
 - a second Class on an element, or a Class or Style that replaces a @foldkit/ui part's, on a bundle `toView` hands out or `DragAndDropStyle.draggable` returns, or in a `*Attributes` view input;
-- a @foldkit/ui view used without its `XStyle.view` wrapper;
+- a @foldkit/ui view used unstyled, in place of the theme's namespace, such as `Listbox` from `@kutur-kit/foldkit-stylex-theme/listbox`, or a view wrapped with `XStyle.view` for a look of your own;
 - StyleX condition keys that never match or that rank differently than written, such as `:focus-visible` or `:has(:focus-visible)` next to `:hover` or `:user-invalid`;
+- `:hover` styles outside `@media (hover: hover)`, which touch browsers keep after a tap;
 - `createTheme`, `--fks-*` tokens set on an element, theme overrides without `satisfies ThemeOverrides`, styles objects annotated or cast with `as`, and arrays of them annotated, cast or typed as a parameter;
 - StyleX's own Vite plugin.
 
@@ -91,6 +92,19 @@ Blanket comments, `*:off`, `skip-file` and comments that disable `unicorn/no-abu
 A comment that disables `kit/no-suppression-directives` itself turns the rule off for its file, so the comment suppresses nothing and `reportUnusedDisableDirectives` fails on it. `/base` sets that option to `"error"`. Your own `options` merge with the preset's, so it stays on unless you override it.
 
 tsgo also reads `@effect-diagnostics` in string literals, which the rule does not check.
+
+### Functions sent to a page
+
+`kit/self-contained-function` reports an exported function that reads a binding of its own module other than a type, such as a helper, a constant or an import. Playwright's `page.evaluate` and `page.addInitScript` send a function to the page as source, where those bindings do not exist. No preset turns it on. With `/base` or `/effect`, enable it for the modules that export such functions:
+
+```ts
+export default defineConfig({
+  extends: [effect],
+  overrides: [{ files: ["src/testing.ts"], rules: { "kit/self-contained-function": "error" } }],
+});
+```
+
+It checks functions exported where they are declared, not ones exported later with `export { name }`, and reads each module on its own.
 
 ## Prose
 

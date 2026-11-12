@@ -1,11 +1,14 @@
 import type { Update } from "foldkit";
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Checkbox } from "@foldkit/ui";
-import { CheckboxStyle, sx } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Checkbox } from "@kutur-kit/foldkit-stylex-theme/checkbox";
+import { space } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Turns one option on or off.";
 
 export const Model = Schema.Struct({ isChecked: Schema.Boolean });
 
@@ -23,48 +26,35 @@ export const update = (_model: Model, message: Message): Update.Return<Model, Me
   });
 
 const styles = stylex.create({
-  row: { display: "flex", alignItems: "center", gap: 8 },
-  box: {
+  // The box centres itself on the label's first line, so the row aligns to the start.
+  row: {
     display: "grid",
-    placeItems: "center",
-    inlineSize: 24,
-    blockSize: 24,
-    padding: 0,
-    borderWidth: 2,
-    borderStyle: "solid",
-    borderColor: "currentColor",
-    backgroundColor: "transparent",
-    color: "inherit",
+    gridTemplateColumns: "auto 1fr",
+    alignItems: "start",
+    columnGap: space.sm,
   },
-  checked: { backgroundColor: { default: "black", ":hover": "dimgray" }, color: "white" },
-  disabled: { opacity: 0.5 },
-  tick: { opacity: 0 },
-  ticked: { opacity: 1 },
-});
-
-const checkboxView = CheckboxStyle.view(Checkbox.view, {
-  checkbox: (state) => [
-    styles.box,
-    state.isChecked && styles.checked,
-    state.isDisabled && styles.disabled,
-  ],
+  text: { display: "grid", gap: "0.125rem" },
 });
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
-  checkboxView(
+  Checkbox.view(
     {
       id: "terms",
       isChecked: model.isChecked,
+      hasDescription: true,
       onToggle: (isChecked) => Message.ToggledTerms({ isChecked }),
-      toView: ({ checkbox, label }) =>
+      toView: ({ checkbox, label, description }) =>
         h.div(
           [sx(styles.row)],
           [
-            h.button(
-              [...checkbox],
-              [h.span([sx(styles.tick, model.isChecked && styles.ticked)], ["✓"])],
+            h.button([...checkbox], [Checkbox.mark({ isChecked: model.isChecked })]),
+            h.div(
+              [sx(styles.text)],
+              [
+                h.label([...label], ["I accept the terms"]),
+                h.p([...description], ["You can read them again in your settings."]),
+              ],
             ),
-            h.label([...label], ["I accept the terms"]),
           ],
         ),
     },

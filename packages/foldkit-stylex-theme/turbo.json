@@ -1,0 +1,9 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "test:browser": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    }
+  }
+}

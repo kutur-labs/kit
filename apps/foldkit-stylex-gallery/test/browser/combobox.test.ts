@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { computed, openPanel, schemes, useGallery } from "./gallery.ts";
-import { audit } from "./wcag.ts";
 
 const { open } = useGallery();
 
-describe.each(schemes)("Combobox in the %s scheme", (scheme) => {
+describe.each(schemes)("Combobox in the $colorScheme scheme", (scheme) => {
   it("raises the portaled list over a backdrop that closes it on an outside click", async () => {
     const { page } = await open("/combobox", scheme);
 
@@ -19,7 +18,7 @@ describe.each(schemes)("Combobox in the %s scheme", (scheme) => {
       "relative",
     );
     expect(await computed(page.locator("#city-backdrop"), "position")).toBe("fixed");
-    await page.mouse.click(1276, 896);
+    await page.mouse.click(scheme.viewport.width - 4, scheme.viewport.height - 4);
     await expect.poll(() => items.count()).toBe(0);
   });
 
@@ -32,6 +31,19 @@ describe.each(schemes)("Combobox in the %s scheme", (scheme) => {
     await expect.poll(() => page.locator("#city-input").inputValue()).toBe("Kraków");
   });
 
+  // WCAG 2.5.3: the input's name is its visible label, which stays once a city fills the input.
+  it("names the input by a visible label that stays once a city is chosen", async () => {
+    const { page } = await open("/combobox", scheme);
+    await page.locator("#city-button").click();
+    await page.getByRole("option", { name: "Kraków" }).click();
+
+    await expect.poll(() => page.locator("#city-input").inputValue()).toBe("Kraków");
+    expect(await page.getByRole("combobox", { name: "City", exact: true }).getAttribute("id")).toBe(
+      "city-input",
+    );
+    expect(await page.locator("#demo").getByText("City", { exact: true }).isVisible()).toBe(true);
+  });
+
   it("keeps the multi-select list open while it toggles items", async () => {
     const { page } = await open("/combobox", scheme);
     await page.locator("#fairs-input").press("ArrowDown");
@@ -41,44 +53,33 @@ describe.each(schemes)("Combobox in the %s scheme", (scheme) => {
     await expect.poll(() => page.getByText("Poetry, Zines").count()).toBe(1);
   });
 
-  it("puts the themed toggle button over the input's end at a 44px target", async () => {
+  it("puts the toggle button over the input's end, a square as tall as the input", async () => {
     const { page } = await open("/combobox", scheme);
-    const input = await page.locator("#themed-city-input").boundingBox();
-    const button = await page.locator("#themed-city-button").boundingBox();
+    const input = await page.locator("#city-input").boundingBox();
+    const button = await page.locator("#city-button").boundingBox();
 
-    expect(button?.height).toBeGreaterThanOrEqual(44);
-    expect(button?.width).toBeGreaterThanOrEqual(44);
+    expect(button?.height).toBe(input?.height);
+    expect(button?.width).toBe(input?.height);
     expect(button?.y).toBe(input?.y);
     expect((button?.x ?? 0) + (button?.width ?? 0)).toBe((input?.x ?? 0) + (input?.width ?? 0));
   });
 
-  it("opens the themed list below the field, as wide as the app's wider layer", async () => {
+  it("opens the multi-select list below the field, as wide as it", async () => {
     const { page } = await open("/combobox", scheme);
     // At the top of the viewport, so Floating UI has room below and keeps the list there.
     await page
-      .locator("#themed-fairs-input-wrapper")
+      .locator("#fairs-input-wrapper")
       .evaluate((field) => field.scrollIntoView({ block: "start" }));
 
     const items = await openPanel(
-      page.locator("#themed-fairs-button"),
-      page.locator("#foldkit-portal-root #themed-fairs-items"),
+      page.locator("#fairs-button"),
+      page.locator("#foldkit-portal-root #fairs-items"),
     );
 
-    const field = await page.locator("#themed-fairs-input-wrapper").boundingBox();
+    const field = await page.locator("#fairs-input-wrapper").boundingBox();
     const list = await items.boundingBox();
 
-    expect(field?.width).toBe(320);
     expect(list?.width).toBe(field?.width);
     expect(list?.y).toBeGreaterThanOrEqual((field?.y ?? 0) + (field?.height ?? 0));
-  });
-
-  it("keeps the open themed list readable and its options reachable", async () => {
-    const { page } = await open("/combobox", scheme);
-    await openPanel(
-      page.locator("#themed-city-button"),
-      page.locator("#foldkit-portal-root #themed-city-items"),
-    );
-
-    expect(await audit(page, "#foldkit-portal-root")).toEqual([]);
   });
 });

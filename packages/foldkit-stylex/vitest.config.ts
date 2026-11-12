@@ -8,6 +8,7 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     setupFiles: ["./test/setup.ts"],
-    exclude: [...configDefaults.exclude, ".stryker-tmp/**"],
+    // vitest.browser.config.ts runs test/browser in Chromium.
+    exclude: [...configDefaults.exclude, ".stryker-tmp/**", "test/browser/**"],
   },
 });

@@ -1,24 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { computed, schemes, useGallery } from "./gallery.ts";
+import { computed, edgeContrast, schemes, useGallery } from "./gallery.ts";
 
 const { open } = useGallery();
 
-describe.each(schemes)("Input in the %s scheme", (scheme) => {
-  it("rounds only the part whose token the demo overrides", async () => {
+describe.each(schemes)("Input in the $colorScheme scheme", (scheme) => {
+  it("rests the read-only input on its fill alone, where an editable one has an edge", async () => {
     const { page } = await open("/input", scheme);
 
-    expect(await computed(page.locator("#themed-search"), "border-top-left-radius")).toBe("999px");
-    expect(await computed(page.locator("#themed-email"), "border-top-left-radius")).not.toBe(
-      "999px",
-    );
+    expect(await computed(page.locator("#handle"), "border-top-color")).toBe("rgba(0, 0, 0, 0)");
+    expect(await computed(page.locator("#email"), "border-top-color")).not.toBe("rgba(0, 0, 0, 0)");
   });
 
-  it("fills the read-only input, unlike an editable one", async () => {
+  it("turns an editable field's edge to 3:1 under the pointer", async () => {
     const { page } = await open("/input", scheme);
 
-    expect(await computed(page.locator("#themed-handle"), "background-color")).not.toBe(
-      await computed(page.locator("#themed-email"), "background-color"),
-    );
+    const field = page.locator("#email");
+    await field.hover();
+
+    // Polled past the edge's ease-in.
+    await expect.poll(() => edgeContrast(field)).toBeGreaterThanOrEqual(3);
   });
 });

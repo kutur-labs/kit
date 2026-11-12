@@ -1,5 +1,5 @@
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type { Layers, StatelessPart } from "./internal/part.ts";
+import type { CheckedLayers, StatelessPart } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { VirtualList } from "@foldkit/ui";
 
@@ -31,6 +31,15 @@ type Has = Readonly<{ ViewInputs: VirtualList.ViewInputs<unknown> }>;
 export type ViewInputs<Item> = VirtualList.ViewInputs<Item> & Filled;
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "VirtualList", Before>;
+
+/**
  * A `VirtualList.view<Item>()` view with the container's styles; pass it to `h.submodel` as `view`.
  * Pass several styles objects to layer them: later ones win property by property.
  */
@@ -41,7 +50,7 @@ export const view = <Item, const List extends ReadonlyArray<Styles>>(
     Reads,
     View<VirtualList.Model, VirtualList.Message, VirtualList.ViewInputs<Item>>
   >,
-  ...layers: Layers<List, Styles, "VirtualList">
+  ...layers: Layers<List>
 ): View<VirtualList.Model, VirtualList.Message, ViewInputs<Item>> =>
   defineView<VirtualList.Model, VirtualList.Message, ViewInputs<Item>>((model, inputs, h) =>
     virtualListView(

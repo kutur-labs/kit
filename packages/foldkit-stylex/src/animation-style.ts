@@ -1,5 +1,5 @@
 import type { ClassNames, FilledFromStyles } from "./internal/filled.ts";
-import type { Layers, PartStyle } from "./internal/part.ts";
+import type { CheckedLayers, PartStyle } from "./internal/part.ts";
 import type { Supported } from "./internal/supported.ts";
 import type { Animation } from "@foldkit/ui";
 
@@ -57,12 +57,21 @@ const stateOf = ({ isShowing, transitionState }: Reads["Model"]): State => ({
 export type ViewInputs = Animation.ViewInputs & Filled;
 
 /**
+ * Styles objects applied in order after the ones in `Before`, each checked against `Styles`, the
+ * properties its parts cannot set and every styles object before it.
+ */
+export type Layers<
+  List extends ReadonlyArray<Styles>,
+  Before extends ReadonlyArray<Styles> = [],
+> = CheckedLayers<List, Styles, "Animation", Before>;
+
+/**
  * `Animation.view` with the element's styles. Pass several styles objects to layer them: later
  * ones win property by property.
  */
 export const view = <const List extends ReadonlyArray<Styles>>(
   animationView: Supported<"Animation", Has, Reads, typeof Animation.view>,
-  ...layers: Layers<List, Styles, "Animation">
+  ...layers: Layers<List>
 ): View<Animation.Model, Animation.Message, ViewInputs> =>
   defineView<Animation.Model, Animation.Message, ViewInputs>((model, inputs, h) =>
     animationView(

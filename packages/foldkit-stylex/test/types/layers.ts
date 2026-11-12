@@ -48,6 +48,19 @@ const looks = [popoverLook, { panel: styles.paddingInline }];
 
 export const spreadLayers = PopoverStyle.view(Popover.view, ...looks);
 
+// A library's own styles before an app's layers, as a theme's `restyle` puts them: a later layer
+// may set a longhand over the earlier shorthand, and a state function keeps its state type.
+const buttonLook = { button: styles.padding } satisfies ButtonStyle.Styles;
+
+const restyleButton = <const List extends ReadonlyArray<ButtonStyle.Styles>>(
+  ...layers: ButtonStyle.Layers<List, [typeof buttonLook]>
+) => ButtonStyle.view(Button.view, buttonLook, ...layers);
+
+export const layersOverALook = restyleButton(
+  { button: styles.paddingInline },
+  { button: (state) => state.isDisabled && styles.ink },
+);
+
 // DatePicker's calendar layers like any other parts.
 export const calendarLayers = DatePickerStyle.view(
   DatePicker.view,

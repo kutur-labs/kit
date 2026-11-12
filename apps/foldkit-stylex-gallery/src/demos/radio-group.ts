@@ -1,11 +1,11 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { RadioGroup } from "@foldkit/ui";
-import { RadioGroupStyle, sx } from "@kutur-kit/foldkit-stylex";
-import * as stylex from "@stylexjs/stylex";
+import { RadioGroup } from "@kutur-kit/foldkit-stylex-theme/radio-group";
 import { Option, Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Picks one of a few options, all in view.";
 
 const Plan = Schema.Literals(["Free", "Pro", "Team"]);
 
@@ -47,53 +47,15 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
     },
   });
 
-const styles = stylex.create({
-  group: { display: "grid", gap: 8, maxInlineSize: 320 },
-  option: {
-    display: "grid",
-    gridTemplateColumns: "auto 1fr",
-    alignItems: "center",
-    columnGap: 8,
-    minBlockSize: 44,
-    padding: 0,
-    borderWidth: 0,
-    backgroundColor: "transparent",
-    color: "inherit",
-    font: "inherit",
-    textAlign: "start",
-  },
-  disabled: { opacity: 0.5 },
-  // The radio mark is the app's own element, drawn from the option's state.
-  mark: {
-    boxSizing: "border-box",
-    inlineSize: 16,
-    blockSize: 16,
-    borderWidth: 2,
-    borderStyle: "solid",
-    borderRadius: "50%",
-  },
-  marked: { borderWidth: 5 },
-  text: { gridColumn: 2 },
-  description: { fontSize: 14 },
-});
-
-const radioGroupView = RadioGroupStyle.view(Plans.view, {
-  group: styles.group,
-  option: (state) => [styles.option, state.isDisabled && styles.disabled],
-  label: styles.text,
-  description: [styles.text, styles.description],
-});
-
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.submodel({
     slotId: "plan",
     model: model.radioGroup,
-    view: radioGroupView,
+    view: Plans.view,
     viewInputs: {
       options: Plan.literals,
       selectedValue: Option.some(model.plan),
       ariaLabel: "Plan",
-      isOptionDisabled: (plan) => plan === "Team",
       hasOptionDescription: () => true,
       toView: ({ group, options }) =>
         h.div(
@@ -102,7 +64,7 @@ export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
             h.button(
               [...option.option],
               [
-                h.span([sx(styles.mark, option.isSelected && styles.marked)], []),
+                RadioGroup.mark(option),
                 h.span([...option.label], [option.value]),
                 h.span([...option.description], [descriptions[option.value]]),
               ],

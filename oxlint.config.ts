@@ -20,6 +20,11 @@ const foldkitHtml = { name: "foldkit", importNames: ["Html"], message: buildsNoE
 // only passes it on to @foldkit/ui's view.
 const htmlBuilder = { object: "h", message: buildsNoElements };
 
+// The theme's helpers take no `h`: inertHtml binds no handlers, so an app calls them anywhere in its
+// view. One module draws every mark, so they share one size, stroke and motion.
+const marksOnly =
+  "Draw the theme's marks in src/internal/marks.ts with inertHtml and call them from the namespace's helpers. Helpers take no h, and the marks share one size, stroke and motion.";
+
 const uiTypesOnly = {
   name: "@foldkit/ui",
   allowTypeImports: true,
@@ -71,7 +76,7 @@ export default defineConfig({
     },
     {
       // An override's options replace the root's, so this restates the examples pattern.
-      files: ["packages/foldkit-stylex/src/**", "packages/foldkit-stylex-theme/src/**"],
+      files: ["packages/foldkit-stylex/src/**"],
       rules: {
         "no-restricted-imports": [
           "error",
@@ -88,15 +93,35 @@ export default defineConfig({
       },
     },
     {
-      // The files that may define styles: the core's functional CSS, marker and compile guard,
-      // and every theme module.
+      // The files that may define styles: the core's functional CSS, marker and compile guard.
       files: [
         "packages/foldkit-stylex/src/internal/functional-styles.ts",
         "packages/foldkit-stylex/src/internal/markers.stylex.ts",
         "packages/foldkit-stylex/src/internal/compiled.ts",
-        "packages/foldkit-stylex-theme/src/**",
       ],
       rules: { "no-restricted-properties": ["error", htmlBuilder] },
+    },
+    {
+      // The theme imports @foldkit/ui's values to theme them: a peer, so it shares the app's copy.
+      // Its build brands dist with Foldkit's view identity, so it may build elements.
+      files: ["packages/foldkit-stylex-theme/src/**"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [examples],
+            paths: [
+              { name: "foldkit/html", importNames: ["inertHtml"], message: marksOnly },
+              { ...foldkitHtml, message: marksOnly },
+            ],
+          },
+        ],
+        "no-restricted-properties": ["error", { ...htmlBuilder, message: marksOnly }],
+      },
+    },
+    {
+      files: ["packages/foldkit-stylex-theme/src/internal/marks.ts"],
+      rules: { "no-restricted-imports": ["error", { patterns: [examples] }] },
     },
     {
       files: ["packages/foldkit-stylex/src/sx.ts"],
@@ -114,11 +139,40 @@ export default defineConfig({
       },
     },
     {
-      // The gallery and the looks use @kutur-kit/foldkit-stylex as an app does, so they follow the
-      // preset an app extends. An override cannot extend, so it takes the preset's plugins and rules.
-      files: ["apps/foldkit-stylex-gallery/src/**", "packages/foldkit-stylex-theme/src/**"],
+      // The gallery, the looks and the core README's example use @kutur-kit/foldkit-stylex as an app
+      // does, so they follow the preset an app extends. An override cannot extend, so it takes the
+      // preset's plugins and rules.
+      files: [
+        "apps/foldkit-stylex-gallery/src/**",
+        "packages/foldkit-stylex-theme/src/**",
+        "packages/foldkit-stylex/test/app/checkbox.ts",
+      ],
       jsPlugins: foldkitStylex.jsPlugins,
       rules: foldkitStylex.rules,
+    },
+    {
+      // Playwright sends the exported functions of the testing modules to a page as source, where
+      // neither their imports nor the module's other bindings exist.
+      files: [
+        "packages/foldkit-stylex/src/testing.ts",
+        "packages/foldkit-stylex-theme/src/testing.ts",
+      ],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                regex: ".*",
+                allowTypeImports: true,
+                message:
+                  "Import types only. Playwright sends this module's functions to the page as source, where no import resolves.",
+              },
+            ],
+          },
+        ],
+        "kit/self-contained-function": "error",
+      },
     },
   ],
   ignorePatterns: [

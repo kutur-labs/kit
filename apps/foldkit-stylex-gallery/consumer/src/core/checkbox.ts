@@ -1,0 +1,1 @@
+../../../../../packages/foldkit-stylex/test/app/checkbox.ts

@@ -1,11 +1,14 @@
 import type { Html, HtmlBuilder } from "foldkit/html";
 
-import { Tabs } from "@foldkit/ui";
-import { TabsStyle } from "@kutur-kit/foldkit-stylex";
+import { sx } from "@kutur-kit/foldkit-stylex";
+import { Tabs } from "@kutur-kit/foldkit-stylex-theme/tabs";
+import { color, fontSize } from "@kutur-kit/foldkit-stylex-theme/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { Command, type Update } from "foldkit";
 import { defineMessageUnion } from "foldkit/message";
+
+export const summary = "Switches between panels of one page.";
 
 const Section = Schema.Literals(["Poems", "Notes", "Drafts"]);
 
@@ -40,51 +43,37 @@ export const update = (model: Model, message: Message): Update.Return<Model, Mes
   });
 
 const styles = stylex.create({
-  tablist: { display: "flex", gap: 4, borderBlockEndWidth: 1, borderBlockEndStyle: "solid" },
-  tab: {
-    minBlockSize: 44,
-    paddingInline: 16,
-    borderWidth: 0,
-    backgroundColor: "transparent",
-    color: "inherit",
-    font: "inherit",
-  },
-  activeTab: { fontWeight: 700, textDecorationLine: "underline" },
-  disabledTab: { opacity: 0.5 },
-  // Every panel is mounted; the package hides the inactive ones after this display.
-  panel: { display: "block", paddingBlock: 16 },
+  root: { inlineSize: "100%", maxInlineSize: "24rem" },
+  text: { margin: 0, color: color.muted, fontSize: fontSize.md, lineHeight: "1.25rem" },
 });
 
-const tabsView = TabsStyle.view(Sections.view, {
-  tablist: styles.tablist,
-  tab: (state) => [
-    styles.tab,
-    state.isActive && styles.activeTab,
-    state.isDisabled && styles.disabledTab,
-  ],
-  panel: styles.panel,
-});
+const texts = {
+  Poems: "Twelve poems, the newest from last week.",
+  Notes: "Notes on the second stanza and the ending.",
+  Drafts: "Three drafts, none of them shared yet.",
+} satisfies Record<Section, string>;
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Html =>
   h.submodel({
     slotId: "sections",
     model: model.tabs,
-    view: tabsView,
+    view: Sections.view,
     viewInputs: {
       tabs: Section.literals,
       selectedValue: model.selected,
       ariaLabel: "Sections",
       panelMount: "All",
-      isTabDisabled: (section) => section === "Drafts",
       toView: ({ tablist, tabs }) =>
         h.div(
-          [],
+          [sx(styles.root)],
           [
             h.div(
               [...tablist],
               tabs.map((tab) => h.button([...tab.tab], [tab.value])),
             ),
-            ...tabs.map((tab) => h.div([...tab.panel], [`${tab.value} go here.`])),
+            ...tabs.map((tab) =>
+              h.div([...tab.panel], [h.p([sx(styles.text)], [texts[tab.value]])]),
+            ),
           ],
         ),
     },

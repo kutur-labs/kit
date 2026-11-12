@@ -18,6 +18,7 @@ export default async function setup(project: TestProject) {
   // Built by the gallery's `build` task, which test:browser depends on.
   const gallery = await serve(
     await loadServerEntry(new URL("../../dist/server/fetch.js", import.meta.url)),
+    new URL("../../dist/client/", import.meta.url),
   );
 
   const browser = await chromium.launchServer();

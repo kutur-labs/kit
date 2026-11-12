@@ -1,9 +1,9 @@
-// The gallery's themed Popover demo, linked into src/themed/, as a whole app.
+// The gallery's Popover demo, linked into src/demos/, as a whole app.
 import type { Document, HtmlBuilder } from "foldkit/html";
 
-import { view as popover, type Message, type Model } from "./themed/popover.ts";
+import { view as popover, type Message, type Model } from "./demos/popover.ts";
 
-export { Model, init, update } from "./themed/popover.ts";
+export { Model, init, update } from "./demos/popover.ts";
 
 export const view = (model: Model, h: HtmlBuilder<Message>): Document => ({
   title: "Themed",
