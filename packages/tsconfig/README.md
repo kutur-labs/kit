@@ -17,10 +17,8 @@ Strict TypeScript presets with optional Effect diagnostics.
 
 Set output paths and declaration options in your tsconfig. Add any required runtime types through `compilerOptions.types`; the presets include none by default.
 
-Effect diagnostics require a compatible `@effect/tsgo` in `devDependencies` and a compiler it supports: [tsrs](https://github.com/oxc-project/tsrs) or TypeScript 7. Type-check through it, without patching `node_modules`:
+Effect diagnostics require a compatible `@effect/tsgo` and [tsrs](https://github.com/oxc-project/tsrs) in `devDependencies`. Type-check through them, without patching `node_modules`:
 
 ```sh
 effect-tsgo tsrs -p tsconfig.json --noEmit
 ```
-
-`effect-tsgo tsc` does the same with TypeScript 7.

@@ -2,15 +2,15 @@
 
 Oxlint and Oxfmt presets for TypeScript, with optional Effect and `@kutur-kit/foldkit-stylex` rules.
 
-| Export            | Required tools                                 |
-| ----------------- | ---------------------------------------------- |
-| `/base`           | `oxlint`, a type-aware backend                 |
-| `/effect`         | `oxlint`, `@effect/tsgo`, a type-aware backend |
-| `/format`         | `oxfmt`                                        |
-| `/anti-slop`      | `oxlint`                                       |
-| `/foldkit-stylex` | `oxlint`, `@stylexjs/eslint-plugin`            |
+| Export            | Required tools                      |
+| ----------------- | ----------------------------------- |
+| `/base`           | `oxlint`, `tsrs`                    |
+| `/effect`         | `oxlint`, `@effect/tsgo`, `tsrs`    |
+| `/format`         | `oxfmt`                             |
+| `/anti-slop`      | `oxlint`                            |
+| `/foldkit-stylex` | `oxlint`, `@stylexjs/eslint-plugin` |
 
-The type-aware backend is [tsrs](https://github.com/oxc-project/tsrs) or `oxlint-tsgolint`.
+Type-aware rules run on [tsrs](https://github.com/oxc-project/tsrs).
 
 ## Linting
 
@@ -29,12 +29,12 @@ export default defineConfig({
 
 Install the required tools in `devDependencies` and include linted files in your tsconfig. Run Oxlint for each preset:
 
-| Preset    | With tsrs                                                   | With `oxlint-tsgolint` |
-| --------- | ----------------------------------------------------------- | ---------------------- |
-| `/base`   | `OXLINT_TSGOLINT_PATH=node_modules/.bin/tsrs-lint oxlint .` | `oxlint .`             |
-| `/effect` | `effect-tsgo --tsrs-lint oxlint .`                          | `effect-tsgo oxlint .` |
+| Preset    | Command                            |
+| --------- | ---------------------------------- |
+| `/base`   | `oxlint .`                         |
+| `/effect` | `effect-tsgo --tsrs-lint oxlint .` |
 
-`effect-tsgo` runs Oxlint with the Effect rules without patching `node_modules`. Check [supported tool versions](https://github.com/Effect-TS/tsgo#supported-package-versions) when upgrading.
+Oxlint 1.92 and later finds an installed tsrs. `effect-tsgo --tsrs-lint` runs Oxlint with the Effect rules on tsrs without patching `node_modules`; plain `oxlint` cannot load them. Check [supported tool versions](https://github.com/Effect-TS/tsgo#supported-package-versions) when upgrading.
 
 `/effect` also warns where code uses a runtime global that has an Effect service, such as `console`, `Date` or `process.env`. Its rules warn, so set `maxWarnings: 0` to fail on them. Turn a rule off with `overrides` only for files where the global is the point, such as a script that prints its result.
 

@@ -2,7 +2,7 @@
 
 Typed file storage for Effect. An asset declares its bucket, its keys, the content types it accepts and its maximum size. Storage is a Layer per bucket: memory, a directory, S3-compatible storage or an R2 bucket through [alchemy](https://alchemy.run). Clients can upload and download through signed URLs, and objects of public buckets get URLs under a CDN or public domain.
 
-Tested with Effect 4.1.2.
+Tested with Effect 4.1.4.
 
 ```sh
 pnpm add @kutur-kit/assets@alpha effect
@@ -148,8 +148,8 @@ for (const { name, run } of AssetBucketContract.cases)
 ## Requirements
 
 - `effect` 4.1.2 or later 4.x.
-- `@kutur-kit/assets/s3` needs `@distilled.cloud/aws` 1.0.0-rc.18.
-- `@kutur-kit/assets/alchemy/r2` needs `alchemy` and `@alchemy.run/cloudflare` 2.0.0-beta.85.
+- `@kutur-kit/assets/s3` needs `@distilled.cloud/aws` 1.0.0-rc.20.
+- `@kutur-kit/assets/alchemy/r2` needs `alchemy` and `@alchemy.run/cloudflare` 2.0.0-beta.87, which require `effect` 4.1.4 or later.
 
 ## Limitations
 

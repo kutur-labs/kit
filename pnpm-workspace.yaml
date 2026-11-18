@@ -36,39 +36,39 @@ peerDependencyRules:
 catalogs:
   runtime:
     "@tanstack/react-router": 1.170.46
-    "@tanstack/react-start": 1.169.4
+    "@tanstack/react-start": 1.169.5
     "@tanstack/start-static-server-functions": 1.167.44
-    fumadocs-core: 16.18.1
-    fumadocs-mdx: 15.5.0
-    fumadocs-ui: npm:@fumadocs/base-ui@16.18.1
-    lucide-react: 1.70.0
+    fumadocs-core: 16.19.4
+    fumadocs-mdx: 15.6.3
+    fumadocs-ui: npm:@fumadocs/base-ui@16.19.4
+    lucide-react: 1.74.0
     react: 19.3.1
     react-dom: 19.3.1
     zod: 4.6.7
-    "@distilled.cloud/aws": 1.0.0-rc.18
-    alchemy: 2.0.0-beta.85
-    "@alchemy.run/cloudflare": 2.0.0-beta.85
+    "@distilled.cloud/aws": 1.0.0-rc.20
+    alchemy: 2.0.0-beta.87
+    "@alchemy.run/cloudflare": 2.0.0-beta.87
     drizzle-orm: 1.0.0-rc.5
     # foldkit and @foldkit/ui, dev copies for @kutur-kit/foldkit-stylex, require effect ~4.1.x;
     # upgrade Effect once Foldkit supports it.
-    effect: 4.1.2
-    "@effect/platform-browser": 4.1.2
+    effect: 4.1.4
+    "@effect/platform-browser": 4.1.4
     foldkit: 0.170.0
     "@foldkit/ui": 0.170.0
-    "@stylexjs/stylex": 0.19.1
+    "@stylexjs/stylex": 0.19.2
     "@fontsource-variable/inter": 5.3.0
-    "@oxlint/plugins": 1.91.0
+    "@oxlint/plugins": 1.94.0
     eslint-plugin-sonarjs: 4.2.2
-    eslint: 10.14.0
+    eslint: 10.15.0
   tooling:
     "@tailwindcss/vite": 4.3.5
-    "@vitejs/plugin-react": 6.2.1
+    "@vitejs/plugin-react": 6.3.0
     nitro: 3.0.261103-rc
-    vite: 8.3.6
+    vite: 8.3.8
     "@foldkit/vite-plugin": 0.29.0
-    "@stylexjs/unplugin": 0.19.1
+    "@stylexjs/unplugin": 0.19.2
     unplugin: 2.3.11
-    "@stylexjs/eslint-plugin": 0.19.1
+    "@stylexjs/eslint-plugin": 0.19.2
     "@types/mdx": 2.0.14
     "@types/react": 19.3.0
     "@types/react-dom": 19.3.0
@@ -80,20 +80,20 @@ catalogs:
     "@commitlint/config-conventional": 21.2.4
     "@commitlint/types": 21.2.3
     husky: 9.1.7
-    turbo: 2.11.10
-    tsrs: 0.22.0-ts7.1.0-beta
-    "@effect/tsgo": 0.67.4
-    oxlint: 1.91.0
-    oxfmt: 0.77.0
+    turbo: 2.11.11
+    tsrs: 0.25.0-ts7.1.0-beta
+    "@effect/tsgo": 0.70.0
+    oxlint: 1.94.0
+    oxfmt: 0.79.0
     publint: 0.3.25
-    skills: 1.7.6
+    skills: 1.9.0
     "@types/node": 26.6.6
   testing:
-    "@effect/platform-node": 4.1.2
-    "@effect/sql-pg": 4.1.2
+    "@effect/platform-node": 4.1.4
+    "@effect/sql-pg": 4.1.4
     "@testcontainers/postgresql": 12.2.1
     testcontainers: 12.2.1
-    "@effect/vitest": 4.1.2
+    "@effect/vitest": 4.1.4
     "@yielded/auth": 0.1.0-beta.47
     "@yielded/auth-persistence-drizzle": 0.1.0-beta.47
     "@stryker-mutator/core": 10.1.1
@@ -101,14 +101,14 @@ catalogs:
     vitest: 5.1.0
     "@vitest/browser-playwright": 5.1.0
     happy-dom: 21.0.4
-    playwright: 1.65.0
-    playwright-core: 1.65.0
+    playwright: 1.65.1
+    playwright-core: 1.65.1
     "@axe-core/playwright": 4.14.0
-    "@alchemy.run/test": 2.0.0-beta.85
+    "@alchemy.run/test": 2.0.0-beta.87
   peers:
-    "@distilled.cloud/aws": 1.0.0-rc.18
-    alchemy: 2.0.0-beta.85
-    "@alchemy.run/cloudflare": 2.0.0-beta.85
+    "@distilled.cloud/aws": 1.0.0-rc.20
+    alchemy: 2.0.0-beta.87
+    "@alchemy.run/cloudflare": 2.0.0-beta.87
     drizzle-orm: 1.0.0-rc.5
     effect: ^4.1.2
     # Capped at 0.170: the next minor is expected to be Foldkit's Blocks rewrite
@@ -121,9 +121,9 @@ catalogs:
     "@stylexjs/unplugin": ~0.19.1
     "@stylexjs/eslint-plugin": ~0.19.1
     vite: ">=8.3.6 <9.0.0"
-    "@effect/tsgo": ~0.67.4
-    oxlint: ~1.91.0
-    oxfmt: ~0.77.0
+    "@effect/tsgo": ~0.70.0
+    oxlint: ~1.94.0
+    oxfmt: ~0.79.0
 allowBuilds:
   # Testcontainers works without these native and postinstall steps.
   cpu-features: false
@@ -135,34 +135,6 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - drizzle-kit@1.0.0-rc.5
   - drizzle-orm@1.0.0-rc.5
-  - "@effect/tsgo-darwin-arm64@0.67.4"
-  - "@effect/tsgo-darwin-x64@0.67.4"
-  - "@effect/tsgo-linux-arm64@0.67.4"
-  - "@effect/tsgo-linux-arm@0.67.4"
-  - "@effect/tsgo-linux-x64@0.67.4"
-  - "@effect/tsgo-win32-arm64@0.67.4"
-  - "@effect/tsgo-win32-x64@0.67.4"
-  - "@effect/tsgo@0.67.4"
-  - "@fumadocs/base-ui@16.18.1"
-  - "@oxfmt/binding-android-arm-eabi@0.77.0"
-  - "@oxfmt/binding-android-arm64@0.77.0"
-  - "@oxfmt/binding-darwin-arm64@0.77.0"
-  - "@oxfmt/binding-darwin-x64@0.77.0"
-  - "@oxfmt/binding-freebsd-x64@0.77.0"
-  - "@oxfmt/binding-linux-arm-gnueabihf@0.77.0"
-  - "@oxfmt/binding-linux-arm-musleabihf@0.77.0"
-  - "@oxfmt/binding-linux-arm64-gnu@0.77.0"
-  - "@oxfmt/binding-linux-arm64-musl@0.77.0"
-  - "@oxfmt/binding-linux-ppc64-gnu@0.77.0"
-  - "@oxfmt/binding-linux-riscv64-gnu@0.77.0"
-  - "@oxfmt/binding-linux-riscv64-musl@0.77.0"
-  - "@oxfmt/binding-linux-s390x-gnu@0.77.0"
-  - "@oxfmt/binding-linux-x64-gnu@0.77.0"
-  - "@oxfmt/binding-linux-x64-musl@0.77.0"
-  - "@oxfmt/binding-openharmony-arm64@0.77.0"
-  - "@oxfmt/binding-win32-arm64-msvc@0.77.0"
-  - "@oxfmt/binding-win32-ia32-msvc@0.77.0"
-  - "@oxfmt/binding-win32-x64-msvc@0.77.0"
   - "@tailwindcss/node@4.3.5"
   - "@tailwindcss/oxide-android-arm64@4.3.5"
   - "@tailwindcss/oxide-darwin-arm64@4.3.5"
@@ -178,7 +150,4 @@ minimumReleaseAgeExclude:
   - "@tailwindcss/oxide-win32-x64-msvc@4.3.5"
   - "@tailwindcss/oxide@4.3.5"
   - "@tailwindcss/vite@4.3.5"
-  - fumadocs-core@16.18.1
-  - lucide-react@1.70.0
-  - oxfmt@0.77.0
   - tailwindcss@4.3.5

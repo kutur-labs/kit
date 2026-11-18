@@ -33,4 +33,4 @@ Setting `pnpmfile` replaces the default `.pnpmfile.mjs`; list it too if the work
 
 `overrides` and `packageExtensions` in `pnpm-workspace.yaml` may still use ranges.
 
-The command names are those that pnpm 12.18 lists in `pnpm --help`, and its unlisted `pm`. A command added in a later pnpm goes unchecked until the hook lists it.
+The command names are those that pnpm 12.21 lists in `pnpm --help`, and its unlisted `pm`. A command added in a later pnpm goes unchecked until the hook lists it.
