@@ -1,5 +1,13 @@
 # @kutur-kit/access
 
+## 0.1.0-alpha.5
+
+### Patch Changes
+
+- e0a1733: `@kutur-kit/audit/drizzle/postgres` accepts the database of `drizzle-orm/effect-postgres` on Effect 4.1.3 and later, where `PgClient` no longer extends `SqlClient`. Tested with Effect 4.1.4.
+- Updated dependencies [e0a1733]
+  - @kutur-kit/audit@0.1.0-alpha.5
+
 ## 0.1.0-alpha.4
 
 ### Patch Changes
