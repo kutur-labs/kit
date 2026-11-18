@@ -1,5 +1,11 @@
 # @kutur-kit/strict
 
+## 0.2.0-alpha.2
+
+### Patch Changes
+
+- e0a1733: Checks script names against the commands of pnpm 12.21, which adds `fund`.
+
 ## 0.2.0-alpha.1
 
 ### Minor Changes
