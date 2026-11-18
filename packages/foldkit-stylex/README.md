@@ -324,7 +324,7 @@ FileDrop hides its input visually, so style keyboard focus on `root` with `":has
 The `/foldkit-stylex` preset of [`@kutur-kit/oxc`](https://github.com/kutur-labs/kit/tree/main/packages/oxc#kutur-kitfoldkit-stylex) reports what the types cannot see: a second Class on an element, a Class or Style on a part's bundle or in a `*Attributes` input, `sx(...)` before a spread, a @foldkit/ui view used without its wrapper, condition keys that never match or rank differently than written, `:hover` styles outside `@media (hover: hover)`, styles objects and arrays of them annotated or cast with `as` instead of checked with `satisfies`, and StyleX's own Vite plugin. It also turns on StyleX's ESLint rules.
 
 ```sh
-pnpm add -D @kutur-kit/oxc@alpha 'oxlint@~1.91.0' '@stylexjs/eslint-plugin@~0.19.1'
+pnpm add -D @kutur-kit/oxc@alpha 'oxlint@~1.94.0' '@stylexjs/eslint-plugin@~0.19.1'
 ```
 
 Extend it in `oxlint.config.ts`:

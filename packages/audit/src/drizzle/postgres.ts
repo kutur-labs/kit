@@ -21,7 +21,9 @@ interface QueryEffect extends QueryEffectHKTBase {
 
 /** A Drizzle Effect database for PostgreSQL, such as `drizzle-orm/effect-postgres`. */
 export type Database = PgEffectDatabase<QueryEffect, PgQueryResultHKT, AnyRelations> & {
-  readonly $client: SqlClient.SqlClient;
+  // Effect 4.1.3 made driver clients such as PgClient extend `SqlClient.Base`, not `SqlClient`,
+  // so name the one member the adapter reads; it exists on both, back to Effect 4.1.2.
+  readonly $client: Pick<SqlClient.SqlClient, "transactionService">;
 };
 
 /** The entries table. Include it in the app's Drizzle schema so migrations create it. */

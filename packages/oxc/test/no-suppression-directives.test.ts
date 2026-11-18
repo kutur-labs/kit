@@ -126,8 +126,8 @@ const cases = [
   {
     name: "self-disable-region",
     code: "/* oxlint-disable kit/no-suppression-directives */\n// oxlint-disable-next-line no-debugger\ndebugger;\n/* oxlint-enable kit/no-suppression-directives */\n",
-    preset: ["4 unused-directive"],
-    strict: ["4 unused-directive"],
+    preset: ["1 unused-directive"],
+    strict: ["1 unused-directive"],
   },
   {
     // Oxlint ignores JSDoc directives, so the rule must still check the file.
