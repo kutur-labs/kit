@@ -64,6 +64,7 @@ export const pnpmCommands = [
   "fetch",
   "find",
   "find-hash",
+  "fund",
   "get",
   "help",
   "home",
